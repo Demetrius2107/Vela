@@ -26,6 +26,15 @@ import java.util.List;
  */
 public class MessageDecoder extends ByteToMessageDecoder {
 
+    /**
+     * 从 TCP 二进制流中解码出一条完整的消息。
+     * <p>检查可读字节是否满足 28 字节包头长度，满足后委派 {@link ByteBufToMessageUtils#decode(ByteBuf)}
+     * 进行实际解码，解码成功后将 Message 对象加入输出列表。</p>
+     *
+     * @param ctx Netty 通道处理器上下文
+     * @param in  Netty 接收缓冲区（ByteBuf）
+     * @param out 解码结果输出列表，解码成功后将 Message 对象加入此列表
+     */
     @Override
     protected void decode(ChannelHandlerContext ctx,
                           ByteBuf in, List<Object> out) {

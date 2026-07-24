@@ -2,7 +2,6 @@ package com.vela.im.codec.protocol;
 
 
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.codec.protocol.MessagePack;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -25,10 +24,10 @@ import java.util.List;
  *
  * Copyright © 2026 wanqiu All rights reserved
  */
-public class WebSocketMessageEncoder extends MessageToMessageEncoder<MessagePack> {
+public class WebSocketMessageEncoder extends MessageToMessageEncoder<MessagePack<?>> {
 
     /** 日志记录器 */
-    private static Logger log = LoggerFactory.getLogger(WebSocketMessageEncoder.class);
+    private static final Logger log = LoggerFactory.getLogger(WebSocketMessageEncoder.class);
 
     /**
      * 将 MessagePack 编码为 WebSocket BinaryWebSocketFrame。
@@ -39,18 +38,18 @@ public class WebSocketMessageEncoder extends MessageToMessageEncoder<MessagePack
      * @param out 编码后的消息帧列表
      */
     @Override
-    protected void encode(ChannelHandlerContext ctx, MessagePack msg, List<Object> out)  {
+    protected void encode(ChannelHandlerContext ctx, MessagePack<?> msg, List<Object> out)  {
 
         try {
-            String s = JSONObject.toJSONString(msg);
-            ByteBuf byteBuf = Unpooled.directBuffer(8+s.length());
-            byte[] bytes = s.getBytes();
+            ByteBuf byteBuf = Unpooled.directBuffer(8 + msg.toString().length());
+            String json = JSONObject.toJSONString(msg);
+            byte[] bytes = json.getBytes();
             byteBuf.writeInt(msg.getCommand());
             byteBuf.writeInt(bytes.length);
             byteBuf.writeBytes(bytes);
             out.add(new BinaryWebSocketFrame(byteBuf));
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("WebSocket encode error", e);
         }
 
     }
