@@ -14,7 +14,7 @@ import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.DelFlagEnum;
 import com.vela.im.shared.types.enums.UserErrorCode;
 import com.vela.im.shared.types.enums.command.UserEventCommand;
@@ -203,7 +203,7 @@ public class ImUserServiceImpl implements ImUserService {
             // 回调
             if(appConfig.getCallback().isModifyUserAfterCallback()){
                 callbackService.callback(req.getAppId(),
-                        Constants.CallbackCommand.ModifyUserAfter,
+                        ImConstants.CallbackCommand.ModifyUserAfter,
                         JSONObject.toJSONString(req));
             }
             return Result.ok();
@@ -218,9 +218,9 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Override
     public Result getUserSequence(GetUserSequenceReq req) {
-        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
+        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + ImConstants.RedisImConstants.SeqPrefix + ":" + req.getUserId());
         Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(),req.getAppId());
-        map.put(Constants.SeqConstants.Group,groupSeq);
+        map.put(ImConstants.SeqImConstants.Group,groupSeq);
         return Result.ok(map);
     }
 }

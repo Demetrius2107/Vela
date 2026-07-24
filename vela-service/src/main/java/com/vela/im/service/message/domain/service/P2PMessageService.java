@@ -13,7 +13,7 @@ import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.MessageErrorCode;
@@ -109,7 +109,7 @@ public class P2PMessageService {
         // 前置回调（判断在同步管道外，因为回调可能依赖完整上下文）
         if (appConfig.getCallback().isSendMessageAfterCallback()) {
             Result<?> callbackResult = callbackService.beforeCallback(
-                    messageContent.getAppId(), Constants.CallbackCommand.SendMessageBefore,
+                    messageContent.getAppId(), ImConstants.CallbackCommand.SendMessageBefore,
                     com.alibaba.fastjson.JSONObject.toJSONString(messageContent));
             if (!callbackResult.isOk()) {
                 com.vela.im.codec.pack.message.ChatMessageAck ack =

@@ -2,7 +2,7 @@ package com.vela.im.tcp.interfaces.publish;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.command.CommandType;
 import com.vela.im.codec.protocol.Message;
 import com.vela.im.codec.protocol.MessageHeader;
@@ -142,13 +142,13 @@ public class MqMessageProducer {
         String commandSub = com.substring(0, 1);
         CommandType commandType = CommandType.getCommandType(commandSub);
         if (commandType == CommandType.MESSAGE) {
-            return Constants.RabbitConstants.Im2MessageService;
+            return ImConstants.RabbitImConstants.Im2MessageService;
         } else if (commandType == CommandType.GROUP) {
-            return Constants.RabbitConstants.Im2GroupService;
+            return ImConstants.RabbitImConstants.Im2GroupService;
         } else if (commandType == CommandType.FRIEND) {
-            return Constants.RabbitConstants.Im2FriendshipService;
+            return ImConstants.RabbitImConstants.Im2FriendshipService;
         } else if (commandType == CommandType.USER) {
-            return Constants.RabbitConstants.Im2UserService;
+            return ImConstants.RabbitImConstants.Im2UserService;
         }
         return "";
     }
@@ -162,7 +162,7 @@ public class MqMessageProducer {
         Map<String, Object> headers = new HashMap<>(2);
         String traceId = TraceIdContext.get();
         if (traceId != null && !traceId.isEmpty()) {
-            headers.put(Constants.TraceId.MQ_HEADER_NAME, traceId);
+            headers.put(ImConstants.TraceId.MQ_HEADER_NAME, traceId);
         }
         return new AMQP.BasicProperties.Builder()
                 .headers(headers)

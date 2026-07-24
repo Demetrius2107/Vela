@@ -18,7 +18,7 @@ import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.DelFlagEnum;
 import com.vela.im.shared.types.enums.MessageErrorCode;
@@ -217,7 +217,7 @@ public class MessageSyncService {
             req.setLastSequence(0L);
         }
 
-        String key = req.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + req.getOperater();
+        String key = req.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage + ":" + req.getOperater();
 
         try {
             // Fetch the max sequence from the ZSet

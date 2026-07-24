@@ -1,6 +1,6 @@
 package com.vela.im.shared.trace;
 
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import org.slf4j.MDC;
 
 import java.util.Map;
@@ -37,7 +37,7 @@ public class TraceIdContext {
      * @return 当前 TraceId
      */
     public static String get() {
-        return MDC.get(Constants.TraceId.TRACE_ID_KEY);
+        return MDC.get(ImConstants.TraceId.TRACE_ID_KEY);
     }
 
     /**
@@ -50,14 +50,14 @@ public class TraceIdContext {
         if (traceId == null || traceId.isEmpty()) {
             traceId = generate();
         }
-        MDC.put(Constants.TraceId.TRACE_ID_KEY, traceId);
+        MDC.put(ImConstants.TraceId.TRACE_ID_KEY, traceId);
     }
 
     /**
      * 清空当前线程的 TraceId
      */
     public static void clear() {
-        MDC.remove(Constants.TraceId.TRACE_ID_KEY);
+        MDC.remove(ImConstants.TraceId.TRACE_ID_KEY);
     }
 
     /**
@@ -90,7 +90,7 @@ public class TraceIdContext {
             set(null);
             return;
         }
-        Object traceId = headers.get(Constants.TraceId.MQ_HEADER_NAME);
+        Object traceId = headers.get(ImConstants.TraceId.MQ_HEADER_NAME);
         set(traceId != null ? traceId.toString() : null);
     }
 

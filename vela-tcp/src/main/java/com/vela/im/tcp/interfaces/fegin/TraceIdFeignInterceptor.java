@@ -1,6 +1,6 @@
 package com.vela.im.tcp.interfaces.fegin;
 
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.trace.TraceIdContext;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -23,7 +23,7 @@ public class TraceIdFeignInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate template) {
         String traceId = TraceIdContext.get();
         if (traceId != null && !traceId.isEmpty()) {
-            template.header(Constants.TraceId.HTTP_HEADER_NAME, traceId);
+            template.header(ImConstants.TraceId.HTTP_HEADER_NAME, traceId);
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.vela.im.tcp.infrastructure.register;
 
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import org.I0Itec.zkclient.ZkClient;
 
 /**
@@ -34,19 +34,19 @@ public class Zkit {
      * 创建根节点路径：im-coreRoot 及其子路径 tcp/web
      */
     public void createRootNode() {
-        boolean exists = zkClient.exists(Constants.ImCoreZkRoot);
+        boolean exists = zkClient.exists(ImConstants.ImCoreZkRoot);
         if (!exists) {
-            zkClient.createPersistent(Constants.ImCoreZkRoot);
+            zkClient.createPersistent(ImConstants.ImCoreZkRoot);
         }
 
-        boolean tcpExists = zkClient.exists(Constants.ImCoreZkRoot + Constants.ImCoreZkRootTcp);
+        boolean tcpExists = zkClient.exists(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootTcp);
         if (!tcpExists) {
-            zkClient.createPersistent(Constants.ImCoreZkRoot + Constants.ImCoreZkRootTcp);
+            zkClient.createPersistent(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootTcp);
         }
 
-        boolean webExists = zkClient.exists(Constants.ImCoreZkRoot + Constants.ImCoreZkRootWeb);
+        boolean webExists = zkClient.exists(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootWeb);
         if (!webExists) {
-            zkClient.createPersistent(Constants.ImCoreZkRoot + Constants.ImCoreZkRootWeb);
+            zkClient.createPersistent(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootWeb);
         }
     }
 

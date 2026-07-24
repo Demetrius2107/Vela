@@ -1,7 +1,7 @@
 package com.vela.im.service.application.utils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ImConnectStatusEnum;
 import com.vela.im.shared.types.UserSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public class UserSessionUtils {
     public List<UserSession> getUserSession(Integer appId, String userId){
 
         // key appId + UserId 从Redis中获取
-        String userSessionKey = appId + Constants.RedisConstants.UserSessionConstants
+        String userSessionKey = appId + ImConstants.RedisImConstants.UserSessionConstants
                 + userId;
 
         Map<Object, Object> entries =
@@ -63,7 +63,7 @@ public class UserSessionUtils {
     public UserSession getUserSession(Integer appId,String userId
             ,Integer clientType,String imei){
 
-        String userSessionKey = appId + Constants.RedisConstants.UserSessionConstants
+        String userSessionKey = appId + ImConstants.RedisImConstants.UserSessionConstants
                 + userId;
         String hashKey = clientType + ":" + imei;
         Object o = stringRedisTemplate.opsForHash().get(userSessionKey, hashKey);

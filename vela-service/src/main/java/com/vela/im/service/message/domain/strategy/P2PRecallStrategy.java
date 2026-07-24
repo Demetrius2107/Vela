@@ -8,7 +8,7 @@ import com.vela.im.service.conversation.domain.service.ConversationService;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.types.ClientInfo;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.DelFlagEnum;
 import com.vela.im.shared.types.enums.command.MessageCommand;
@@ -54,9 +54,9 @@ public class P2PRecallStrategy implements RecallStrategy {
     public void recall(RecallMessageContent content, RecallMessageNotifyPack pack,
                        ImMessageBodyEntity body) {
         // 构建双方 Redis 离线队列 Key
-        String fromKey = content.getAppId() + ":" + Constants.RedisConstants.OfflineMessage
+        String fromKey = content.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage
                 + ":" + content.getFromId();
-        String toKey = content.getAppId() + ":" + Constants.RedisConstants.OfflineMessage
+        String toKey = content.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage
                 + ":" + content.getToId();
 
         // 构建撤回通知的离线消息体
@@ -69,7 +69,7 @@ public class P2PRecallStrategy implements RecallStrategy {
                 offline.getConversationType(), content.getFromId(), content.getToId()));
         offline.setMessageBody(body.getMessageBody());
 
-        long seq = redisSeq.doGetSeq(content.getAppId() + ":" + Constants.SeqConstants.Message
+        long seq = redisSeq.doGetSeq(content.getAppId() + ":" + ImConstants.SeqImConstants.Message
                 + ":" + ConversationIdGenerate.generateP2PId(content.getFromId(), content.getToId()));
         offline.setMessageSequence(seq);
 

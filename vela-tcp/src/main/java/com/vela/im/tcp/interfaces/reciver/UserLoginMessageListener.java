@@ -1,7 +1,7 @@
 package com.vela.im.tcp.interfaces.reciver;
 
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.DeviceMultiLoginEnum;
 import com.vela.im.shared.types.enums.command.SystemCommand;
 import com.vela.im.shared.types.UserClientDto;
@@ -53,7 +53,7 @@ public class UserLoginMessageListener {
      * 订阅 Redis 用户登录频道，监听用户上线事件，根据 loginModel 执行多端互踢策略
      */
     public void listenerUserLogin(){
-        RTopic topic = RedisManager.getRedissonClient().getTopic(Constants.RedisConstants.UserLoginChannel);
+        RTopic topic = RedisManager.getRedissonClient().getTopic(ImConstants.RedisImConstants.UserLoginChannel);
 
         topic.addListener(String.class, new MessageListener<String>() {
             @Override
@@ -66,13 +66,13 @@ public class UserLoginMessageListener {
                 for (NioSocketChannel nioSocketChannel : nioSocketChannels) {
                     // 单端登录：踢掉除本 clientType+imei 外所有设备
                     if(loginModel == DeviceMultiLoginEnum.ONE.getLoginMode()){
-                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
-                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
+                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.ClientType)).get();
+                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.Imei)).get();
 
                         if(!(clientType + ":" + imei).equals(dto.getClientType()+":"+dto.getImei())){
                             MessagePack<Object> pack = new MessagePack<>();
-                            pack.setToId((String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
-                            pack.setUserId((String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
+                            pack.setToId((String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.UserId)).get());
+                            pack.setUserId((String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.UserId)).get());
                             pack.setCommand(SystemCommand.MUTUALLOGIN.getCommand());
                             nioSocketChannel.writeAndFlush(pack);
                         }
@@ -82,25 +82,25 @@ public class UserLoginMessageListener {
                         if(dto.getClientType() == com.lld.im.common.ClientType.WEB.getCode()){
                             continue;
                         }
-                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
+                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.ClientType)).get();
 
                         if (clientType == com.lld.im.common.ClientType.WEB.getCode()){
                             continue;
                         }
 
-                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
+                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.Imei)).get();
                         if(!(clientType + ":" + imei).equals(dto.getClientType()+":"+dto.getImei())){
                             MessagePack<Object> pack = new MessagePack<>();
-                            pack.setToId((String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
-                            pack.setUserId((String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
+                            pack.setToId((String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.UserId)).get());
+                            pack.setUserId((String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.UserId)).get());
                             pack.setCommand(SystemCommand.MUTUALLOGIN.getCommand());
                             nioSocketChannel.writeAndFlush(pack);
                         }
                     }
                     // 三端登录：手机/PC 同端互踢，Web 不做处理
                     else if(loginModel == DeviceMultiLoginEnum.THREE.getLoginMode()){
-                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
-                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
+                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.ClientType)).get();
+                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.Imei)).get();
                         if(dto.getClientType() == com.lld.im.common.ClientType.WEB.getCode()){
                             continue;
                         }
@@ -123,8 +123,8 @@ public class UserLoginMessageListener {
 
                         if(isSameClient && !(clientType + ":" + imei).equals(dto.getClientType()+":"+dto.getImei())){
                             MessagePack<Object> pack = new MessagePack<>();
-                            pack.setToId((String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
-                            pack.setUserId((String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
+                            pack.setToId((String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.UserId)).get());
+                            pack.setUserId((String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.UserId)).get());
                             pack.setCommand(SystemCommand.MUTUALLOGIN.getCommand());
                             nioSocketChannel.writeAndFlush(pack);
                         }

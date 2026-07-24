@@ -1,7 +1,7 @@
 package com.vela.im.service.application.utils;
 
 import com.alibaba.fastjson.JSON;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import org.I0Itec.zkclient.ZkClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class ZKit {
      * @return
      */
     public List<String> getAllTcpNode() {
-        List<String> children = zkClient.getChildren(Constants.ImCoreZkRoot + Constants.ImCoreZkRootTcp);
+        List<String> children = zkClient.getChildren(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootTcp);
         logger.info("Query all node =[{}] success.", JSON.toJSONString(children));
         return children;
     }
@@ -51,7 +51,7 @@ public class ZKit {
      * @return
      */
     public List<String> getAllWebNode() {
-        List<String> children = zkClient.getChildren(Constants.ImCoreZkRoot + Constants.ImCoreZkRootWeb);
+        List<String> children = zkClient.getChildren(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootWeb);
         logger.info("Query all node =[{}] success.", JSON.toJSONString(children));
         return children;
     }

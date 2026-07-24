@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.vela.im.service.message.domain.service.MessageSyncService;
 import com.vela.im.service.message.domain.service.P2PMessageService;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 
 import com.vela.im.shared.trace.TraceIdContext;
 import com.vela.im.shared.types.enums.command.MessageCommand;
@@ -57,8 +57,8 @@ public class ChatOperateReceiver {
 
     @RabbitListener(
             bindings = @QueueBinding(
-                 value = @Queue(value = Constants.RabbitConstants.Im2MessageService,durable = "true"),
-                 exchange = @Exchange(value = Constants.RabbitConstants.Im2MessageService,durable = "true")
+                 value = @Queue(value = ImConstants.RabbitImConstants.Im2MessageService,durable = "true"),
+                 exchange = @Exchange(value = ImConstants.RabbitImConstants.Im2MessageService,durable = "true")
             ),concurrency = "1"
     )
     public void onChatMessage(@Payload Message message,

@@ -7,7 +7,7 @@ import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.shared.exception.BaseErrorCode;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.GateWayErrorCode;
 import com.vela.im.shared.types.enums.ImUserTypeEnum;
 import com.vela.im.shared.exception.ApplicationExceptionEnum;
@@ -66,7 +66,7 @@ public class IdentityCheck {
                                                  String appId, String userSig){
 
         String cacheUserSig = stringRedisTemplate.opsForValue()
-                .get(appId + ":" + Constants.RedisConstants.userSign + ":"
+                .get(appId + ":" + ImConstants.RedisImConstants.userSign + ":"
                 + identifier + userSig);
         if(!StringUtils.isBlank(cacheUserSig) && Long.valueOf(cacheUserSig)
          >  System.currentTimeMillis() / 1000){
@@ -123,7 +123,7 @@ public class IdentityCheck {
         String genSig = sigAPI.genUserSig(identifier, expireSec,time,null);
         if (genSig.toLowerCase().equals(userSig.toLowerCase()))
         {
-            String key = appId + ":" + Constants.RedisConstants.userSign + ":"
+            String key = appId + ":" + ImConstants.RedisImConstants.userSign + ":"
                     +identifier + userSig;
 
             Long etime = expireTime - System.currentTimeMillis() / 1000;

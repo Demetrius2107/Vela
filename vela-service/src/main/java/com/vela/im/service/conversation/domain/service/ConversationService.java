@@ -12,7 +12,7 @@ import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.WriteUserSeq;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ConversationErrorCode;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.command.ConversationEventCommand;
@@ -79,7 +79,7 @@ public class ConversationService {
         ImConversationSetEntity imConversationSetEntity = imConversationSetMapper.selectOne(query);
         if(imConversationSetEntity == null){
             imConversationSetEntity = new ImConversationSetEntity();
-            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + Constants.SeqConstants.Conversation);
+            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + ImConstants.SeqImConstants.Conversation);
             imConversationSetEntity.setConversationId(conversationId);
             BeanUtils.copyProperties(messageReadedContent,imConversationSetEntity);
             imConversationSetEntity.setReadedSequence(messageReadedContent.getMessageSequence());
@@ -87,14 +87,14 @@ public class ConversationService {
             imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.insert(imConversationSetEntity);
             writeUserSeq.writeUserSeq(messageReadedContent.getAppId(),
-                    messageReadedContent.getFromId(),Constants.SeqConstants.Conversation,seq);
+                    messageReadedContent.getFromId(),ImConstants.SeqImConstants.Conversation,seq);
         }else{
-            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + Constants.SeqConstants.Conversation);
+            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + ImConstants.SeqImConstants.Conversation);
             imConversationSetEntity.setSequence(seq);
             imConversationSetEntity.setReadedSequence(messageReadedContent.getMessageSequence());
             imConversationSetMapper.readMark(imConversationSetEntity);
             writeUserSeq.writeUserSeq(messageReadedContent.getAppId(),
-                    messageReadedContent.getFromId(),Constants.SeqConstants.Conversation,seq);
+                    messageReadedContent.getFromId(),ImConstants.SeqImConstants.Conversation,seq);
         }
     }
 
@@ -147,7 +147,7 @@ public class ConversationService {
         queryWrapper.eq("app_id",req.getAppId());
         ImConversationSetEntity imConversationSetEntity = imConversationSetMapper.selectOne(queryWrapper);
         if(imConversationSetEntity != null){
-            long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Conversation);
+            long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Conversation);
 
             if(req.getIsMute() != null){
                 imConversationSetEntity.setIsTop(req.getIsTop());
@@ -158,7 +158,7 @@ public class ConversationService {
             imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.update(imConversationSetEntity,queryWrapper);
             writeUserSeq.writeUserSeq(req.getAppId(), req.getFromId(),
-                    Constants.SeqConstants.Conversation, seq);
+                    ImConstants.SeqImConstants.Conversation, seq);
 
             UpdateConversationPack pack = new UpdateConversationPack();
             pack.setConversationId(req.getConversationId());

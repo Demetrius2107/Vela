@@ -11,7 +11,7 @@ import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.message.domain.service.MessageStoreService;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.command.MessageCommand;
@@ -62,7 +62,7 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
 
         // 生成消息序列号
         long seq = redisSeq.doGetSeq(msg.getAppId() + ":"
-                + Constants.SeqConstants.Message + ":"
+                + ImConstants.SeqImConstants.Message + ":"
                 + msg.getFromId() + ":" + msg.getToId());
         msg.setMessageSequence(seq);
 
@@ -102,7 +102,7 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
 
         // 后置回调
         if (appConfig.getCallback().isSendMessageAfterCallback()) {
-            callbackService.callback(msg.getAppId(), Constants.CallbackCommand.SendMessageAfter,
+            callbackService.callback(msg.getAppId(), ImConstants.CallbackCommand.SendMessageAfter,
                     com.alibaba.fastjson.JSONObject.toJSONString(msg));
         }
 

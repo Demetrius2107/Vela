@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ImConnectStatusEnum;
 import com.vela.im.shared.types.enums.MessageErrorCode;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
@@ -118,17 +118,17 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             /** 登陆事件 **/
             String userId = loginPack.getUserId();
             /** 为channel设置用户id **/
-            ctx.channel().attr(AttributeKey.valueOf(Constants.UserId)).set(userId);
+            ctx.channel().attr(AttributeKey.valueOf(ImConstants.UserId)).set(userId);
             String clientImei = msg.getMessageHeader().getClientType() + ":" + msg.getMessageHeader().getImei();
             /** 为channel设置client和imel **/
-            ctx.channel().attr(AttributeKey.valueOf(Constants.ClientImei)).set(clientImei);
+            ctx.channel().attr(AttributeKey.valueOf(ImConstants.ClientImei)).set(clientImei);
             /** 为channel设置appId **/
-            ctx.channel().attr(AttributeKey.valueOf(Constants.AppId)).set(msg.getMessageHeader().getAppId());
+            ctx.channel().attr(AttributeKey.valueOf(ImConstants.AppId)).set(msg.getMessageHeader().getAppId());
             /** 为channel设置ClientType **/
-            ctx.channel().attr(AttributeKey.valueOf(Constants.ClientType))
+            ctx.channel().attr(AttributeKey.valueOf(ImConstants.ClientType))
                     .set(msg.getMessageHeader().getClientType());
             /** 为channel设置Imei **/
-            ctx.channel().attr(AttributeKey.valueOf(Constants.Imei))
+            ctx.channel().attr(AttributeKey.valueOf(ImConstants.Imei))
                     .set(msg.getMessageHeader().getImei());
 
             UserSession userSession = new UserSession();
@@ -148,7 +148,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             RedissonClient redissonClient = RedisManager.getRedissonClient();
 
             RMap<String, String> map = redissonClient.getMap(msg.getMessageHeader().getAppId()
-                    + Constants.RedisConstants.UserSessionConstants + loginPack.getUserId());
+                    + ImConstants.RedisImConstants.UserSessionConstants + loginPack.getUserId());
             map.put(msg.getMessageHeader().getClientType()
                             + ":"
                             + msg.getMessageHeader().getImei()
@@ -165,7 +165,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             dto.setUserId(loginPack.getUserId());
             dto.setClientType(msg.getMessageHeader().getClientType());
             dto.setAppId(msg.getMessageHeader().getAppId());
-            RTopic topic = redissonClient.getTopic(Constants.RedisConstants.UserLoginChannel);
+            RTopic topic = redissonClient.getTopic(ImConstants.RedisImConstants.UserLoginChannel);
             topic.publish(JSONObject.toJSONString(dto));
 
             UserStatusChangeNotifyPack userStatusChangeNotifyPack = new UserStatusChangeNotifyPack();
@@ -191,7 +191,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
         // ping Command
         else if (command == SystemCommand.PING.getCommand()) {
             ctx.channel()
-                    .attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
+                    .attr(AttributeKey.valueOf(ImConstants.ReadTime)).set(System.currentTimeMillis());
         } else if (command == MessageCommand.MSG_P2P.getCommand()
                 || command == GroupEventCommand.MSG_GROUP.getCommand()) {
             // 私聊/群聊消息：校验发送权限后投递到 MQ

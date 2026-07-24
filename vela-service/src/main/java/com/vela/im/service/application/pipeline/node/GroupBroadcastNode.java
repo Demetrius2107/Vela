@@ -9,7 +9,7 @@ import com.vela.im.service.group.domain.service.ImGroupMemberService;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.message.domain.service.MessageStoreService;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.types.message.GroupChatMessageContent;
@@ -56,7 +56,7 @@ public class GroupBroadcastNode implements PipeNode<MessageContext> {
         GroupChatMessageContent msg = (GroupChatMessageContent) ctx.getMessageContent();
 
         // 生成群聊序列号
-        long seq = redisSeq.doGetSeq(msg.getAppId() + ":" + Constants.SeqConstants.GroupMessage
+        long seq = redisSeq.doGetSeq(msg.getAppId() + ":" + ImConstants.SeqImConstants.GroupMessage
                 + msg.getGroupId());
         msg.setMessageSequence(seq);
 

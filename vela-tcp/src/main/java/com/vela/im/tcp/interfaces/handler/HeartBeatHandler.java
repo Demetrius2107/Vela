@@ -1,6 +1,6 @@
 package com.vela.im.tcp.interfaces.handler;
 
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -53,7 +53,7 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
                 log.info("进入写空闲");
             } else if (event.state() == IdleState.ALL_IDLE) {
                 Long lastReadTime = (Long) ctx.channel()
-                        .attr(AttributeKey.valueOf(Constants.ReadTime)).get();
+                        .attr(AttributeKey.valueOf(ImConstants.ReadTime)).get();
 
                 long now = System.currentTimeMillis();
 

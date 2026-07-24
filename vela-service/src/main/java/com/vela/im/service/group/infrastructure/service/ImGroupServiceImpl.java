@@ -19,7 +19,7 @@ import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.GroupErrorCode;
 import com.vela.im.shared.types.enums.GroupMemberRoleEnum;
 import com.vela.im.shared.types.enums.GroupStatusEnum;
@@ -145,7 +145,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity imGroupEntity = new ImGroupEntity();
-        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Group);
         imGroupEntity.setSequence(seq);
         imGroupEntity.setCreateTime(System.currentTimeMillis());
         imGroupEntity.setStatus(GroupStatusEnum.NORMAL.getCode());
@@ -164,7 +164,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         if(appConfig.getCallback().isCreateGroupAfterCallback()){
-            callbackService.callback(req.getAppId(), Constants.CallbackCommand.CreateGroupAfter,
+            callbackService.callback(req.getAppId(), ImConstants.CallbackCommand.CreateGroupAfter,
                     JSONObject.toJSONString(imGroupEntity));
         }
 
@@ -222,7 +222,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity update = new ImGroupEntity();
-        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Group);
         BeanUtils.copyProperties(req, update);
         update.setUpdateTime(System.currentTimeMillis());
         update.setSequence(seq);
@@ -232,7 +232,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         if(appConfig.getCallback().isModifyGroupAfterCallback()){
-            callbackService.callback(req.getAppId(),Constants.CallbackCommand.UpdateGroupAfter,
+            callbackService.callback(req.getAppId(),ImConstants.CallbackCommand.UpdateGroupAfter,
                     JSONObject.toJSONString(imGroupDataMapper.selectOne(query)));
         }
 
@@ -323,7 +323,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity update = new ImGroupEntity();
-        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Group);
 
         update.setStatus(GroupStatusEnum.DESTROY.getCode());
         update.setSequence(seq);
@@ -336,7 +336,7 @@ public class ImGroupServiceImpl implements ImGroupService {
             DestroyGroupCallbackDto dto = new DestroyGroupCallbackDto();
             dto.setGroupId(req.getGroupId());
             callbackService.callback(req.getAppId()
-                    ,Constants.CallbackCommand.DestoryGroupAfter,
+                    ,ImConstants.CallbackCommand.DestoryGroupAfter,
                     JSONObject.toJSONString(dto));
         }
 

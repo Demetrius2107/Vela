@@ -8,7 +8,7 @@ import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.conversation.domain.service.ConversationService;
 import com.vela.im.service.group.domain.service.ImGroupMemberService;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.DelFlagEnum;
 import com.vela.im.shared.types.enums.command.MessageCommand;
@@ -64,7 +64,7 @@ public class GroupRecallStrategy implements RecallStrategy {
         List<String> memberIds = imGroupMemberService.getGroupMemberId(
                 content.getToId(), content.getAppId());
 
-        long seq = redisSeq.doGetSeq(content.getAppId() + ":" + Constants.SeqConstants.Message
+        long seq = redisSeq.doGetSeq(content.getAppId() + ":" + ImConstants.SeqImConstants.Message
                 + ":" + ConversationIdGenerate.generateP2PId(content.getFromId(), content.getToId()));
 
         // ACK 给撤回发起方
@@ -75,7 +75,7 @@ public class GroupRecallStrategy implements RecallStrategy {
 
         // 遍历群成员，写入离线通知 + 推送
         for (String memberId : memberIds) {
-            String toKey = content.getAppId() + ":" + Constants.RedisConstants.OfflineMessage
+            String toKey = content.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage
                     + ":" + memberId;
 
             OfflineMessageContent offline = new OfflineMessageContent();

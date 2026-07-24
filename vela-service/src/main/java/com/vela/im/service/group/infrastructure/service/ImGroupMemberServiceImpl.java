@@ -22,7 +22,7 @@ import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.GroupErrorCode;
 import com.vela.im.shared.types.enums.GroupMemberRoleEnum;
 import com.vela.im.shared.types.enums.GroupStatusEnum;
@@ -278,7 +278,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         // 回调
         if(appConfig.getCallback().isAddGroupMemberBeforeCallback()){
 
-            Result responseVO = callbackService.beforeCallback(req.getAppId(), Constants.CallbackCommand.GroupMemberAddBefore
+            Result responseVO = callbackService.beforeCallback(req.getAppId(), ImConstants.CallbackCommand.GroupMemberAddBefore
                     , JSONObject.toJSONString(req));
             if(!responseVO.isOk()){
                 return responseVO;
@@ -345,7 +345,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
             dto.setMemberId(resp);
             dto.setOperater(req.getOperater());
             callbackService.callback(req.getAppId()
-                    ,Constants.CallbackCommand.GroupMemberAddAfter,
+                    ,ImConstants.CallbackCommand.GroupMemberAddAfter,
                     JSONObject.toJSONString(dto));
         }
 
@@ -417,7 +417,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
                     , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
             if(appConfig.getCallback().isDeleteGroupMemberAfterCallback()){
                 callbackService.callback(req.getAppId(),
-                        Constants.CallbackCommand.GroupMemberDeleteAfter,
+                        ImConstants.CallbackCommand.GroupMemberDeleteAfter,
                         JSONObject.toJSONString(req));
             }
         }

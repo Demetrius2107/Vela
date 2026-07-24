@@ -13,7 +13,7 @@ import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.WriteUserSeq;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ApproverFriendRequestStatusEnum;
 import com.vela.im.shared.types.enums.FriendShipErrorCode;
 import com.vela.im.shared.types.enums.command.FriendshipEventCommand;
@@ -85,7 +85,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         ImFriendShipRequestEntity request = imFriendShipRequestMapper.selectOne(queryWrapper);
 
         long seq = redisSeq.doGetSeq(appId+":"+
-                Constants.SeqConstants.FriendshipRequest);
+                ImConstants.SeqImConstants.FriendshipRequest);
 
         if(request == null){
             request = new ImFriendShipRequestEntity();
@@ -119,7 +119,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         }
 
         writeUserSeq.writeUserSeq(appId,dto.getToId(),
-                Constants.SeqConstants.FriendshipRequest,seq);
+                ImConstants.SeqImConstants.FriendshipRequest,seq);
 
         //发送好友申请的tcp给接收方
         messageProducer.sendToUser(dto.getToId(),
@@ -143,7 +143,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         }
 
         long seq = redisSeq.doGetSeq(req.getAppId()+":"+
-                Constants.SeqConstants.FriendshipRequest);
+                ImConstants.SeqImConstants.FriendshipRequest);
 
         ImFriendShipRequestEntity update = new ImFriendShipRequestEntity();
         update.setApproveStatus(req.getStatus());
@@ -153,7 +153,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         imFriendShipRequestMapper.updateById(update);
 
         writeUserSeq.writeUserSeq(req.getAppId(),req.getOperater(),
-                Constants.SeqConstants.FriendshipRequest,seq);
+                ImConstants.SeqImConstants.FriendshipRequest,seq);
 
         if(ApproverFriendRequestStatusEnum.AGREE.getCode() == req.getStatus()){
             //同意 ===> 去执行添加好友逻辑
@@ -198,13 +198,13 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         query.eq("to_id", req.getFromId());
 
         long seq = redisSeq.doGetSeq(req.getAppId()+":"+
-                Constants.SeqConstants.FriendshipRequest);
+                ImConstants.SeqImConstants.FriendshipRequest);
         ImFriendShipRequestEntity update = new ImFriendShipRequestEntity();
         update.setReadStatus(1);
         update.setSequence(seq);
         imFriendShipRequestMapper.update(update, query);
         writeUserSeq.writeUserSeq(req.getAppId(),req.getOperater(),
-                Constants.SeqConstants.FriendshipRequest,seq);
+                ImConstants.SeqImConstants.FriendshipRequest,seq);
         //TCP通知
         ReadAllFriendRequestPack readAllFriendRequestPack = new ReadAllFriendRequestPack();
         readAllFriendRequestPack.setFromId(req.getFromId());
