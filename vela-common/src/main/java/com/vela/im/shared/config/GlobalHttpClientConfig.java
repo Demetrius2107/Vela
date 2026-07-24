@@ -1,5 +1,6 @@
 package com.vela.im.shared.config;
 
+import lombok.Data;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -21,42 +22,34 @@ import org.springframework.context.annotation.Configuration;
  *
  * Copyright © 2026 wanqiu All rights reserved
  */
+@Data
 @Configuration
 @ConfigurationProperties(prefix = "httpclient")
 public class GlobalHttpClientConfig {
 
-    /**
-     * 最大连接数
-     */
+    /** 最大连接数 */
     private Integer maxTotal;
 
-    /**
-     * 最大并发链接数
-     */
+    /** 最大并发链接数 */
     private Integer defaultMaxPerRoute;
 
-    /**
-     * 创建链接的最大时间
-     */
+    /** 创建链接的最大时间 */
     private Integer connectTimeout;
 
-    /**
-     * 链接获取超时时间
-     */
+    /** 链接获取超时时间 */
     private Integer connectionRequestTimeout;
 
-    /**
-     * 数据传输最长时间
-     */
+    /** 数据传输最长时间 */
     private Integer socketTimeout;
 
-    /**
-     * 提交时检查链接是否可用
-     */
+    /** 提交时检查链接是否可用 */
     private boolean staleConnectionCheckEnabled;
 
-    PoolingHttpClientConnectionManager manager = null;
-    HttpClientBuilder httpClientBuilder = null;
+    /** HttpClient 连接池管理器 */
+    private PoolingHttpClientConnectionManager manager;
+
+    /** HttpClient 构建器 */
+    private HttpClientBuilder httpClientBuilder;
 
     /**
      * 获取 HttpClient 连接池管理器（Bean）
@@ -95,7 +88,6 @@ public class GlobalHttpClientConfig {
         return httpClientBuilder;
     }
 
-
     /**
      * 获取 CloseableHttpClient 实例（注入 builder）
      *
@@ -132,8 +124,7 @@ public class GlobalHttpClientConfig {
         RequestConfig.Builder builder = RequestConfig.custom();
         return builder.setConnectTimeout(connectTimeout)
                 .setConnectionRequestTimeout(connectionRequestTimeout)
-                .setSocketTimeout(socketTimeout)
-                .setStaleConnectionCheckEnabled(staleConnectionCheckEnabled);
+                .setSocketTimeout(socketTimeout);
     }
 
     /**
@@ -145,53 +136,5 @@ public class GlobalHttpClientConfig {
     @Bean
     public RequestConfig getRequestConfig(@Qualifier("builder") RequestConfig.Builder builder) {
         return builder.build();
-    }
-
-    public Integer getMaxTotal() {
-        return maxTotal;
-    }
-
-    public void setMaxTotal(Integer maxTotal) {
-        this.maxTotal = maxTotal;
-    }
-
-    public Integer getDefaultMaxPerRoute() {
-        return defaultMaxPerRoute;
-    }
-
-    public void setDefaultMaxPerRoute(Integer defaultMaxPerRoute) {
-        this.defaultMaxPerRoute = defaultMaxPerRoute;
-    }
-
-    public Integer getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    public void setConnectTimeout(Integer connectTimeout) {
-        this.connectTimeout = connectTimeout;
-    }
-
-    public Integer getConnectionRequestTimeout() {
-        return connectionRequestTimeout;
-    }
-
-    public void setConnectionRequestTimeout(Integer connectionRequestTimeout) {
-        this.connectionRequestTimeout = connectionRequestTimeout;
-    }
-
-    public Integer getSocketTimeout() {
-        return socketTimeout;
-    }
-
-    public void setSocketTimeout(Integer socketTimeout) {
-        this.socketTimeout = socketTimeout;
-    }
-
-    public boolean isStaleConnectionCheckEnabled() {
-        return staleConnectionCheckEnabled;
-    }
-
-    public void setStaleConnectionCheckEnabled(boolean staleConnectionCheckEnabled) {
-        this.staleConnectionCheckEnabled = staleConnectionCheckEnabled;
     }
 }
