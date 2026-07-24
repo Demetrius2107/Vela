@@ -16,39 +16,55 @@ import org.springframework.context.annotation.Configuration;
  * <p>项目名称: Vela</p>
  *
  * @author wanqiu
- * @since 1.0
  * @createTime 2025-03-03
  * @updateTime 2026-07-24
- *
+ * <p>
  * Copyright © 2026 wanqiu All rights reserved
+ * @since 1.0
  */
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "httpclient")
 public class GlobalHttpClientConfig {
 
-    /** 最大连接数 */
+    /**
+     * 最大连接数
+     */
     private Integer maxTotal;
 
-    /** 最大并发链接数 */
+    /**
+     * 最大并发链接数
+     */
     private Integer defaultMaxPerRoute;
 
-    /** 创建链接的最大时间 */
+    /**
+     * 创建链接的最大时间
+     */
     private Integer connectTimeout;
 
-    /** 链接获取超时时间 */
+    /**
+     * 链接获取超时时间
+     */
     private Integer connectionRequestTimeout;
 
-    /** 数据传输最长时间 */
+    /**
+     * 数据传输最长时间
+     */
     private Integer socketTimeout;
 
-    /** 提交时检查链接是否可用 */
+    /**
+     * 提交时检查链接是否可用
+     */
     private boolean staleConnectionCheckEnabled;
 
-    /** HttpClient 连接池管理器 */
+    /**
+     * HttpClient 连接池管理器
+     */
     private PoolingHttpClientConnectionManager manager;
 
-    /** HttpClient 构建器 */
+    /**
+     * HttpClient 构建器
+     */
     private HttpClientBuilder httpClientBuilder;
 
     /**

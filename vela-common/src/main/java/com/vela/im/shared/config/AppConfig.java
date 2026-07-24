@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
  * <p>项目名称: Vela</p>
  *
  * @author wanqiu
- * @createTime 2025-03-03
- * @updateTime 2026-07-19
- * <p>
- * Copyright © 2026 wanqiu All rights reserved
  * @since 1.0
+ * @createTime 2025-03-03
+ * @updateTime 2026-07-24
+ *
+ * Copyright © 2026 wanqiu All rights reserved
  */
 @Data
 @Component
@@ -27,14 +27,14 @@ public class AppConfig {
     private String privateKey;
 
     /**
-     * ZooKeeper连接地址
+     * ZooKeeper 连接地址
      */
-    private String zkAddr;
+    private String zookeeperAddr;
 
     /**
-     * ZooKeeper连接超时时间（毫秒）
+     * ZooKeeper 连接超时时间（毫秒）
      */
-    private Integer zkConnectTimeOut;
+    private Integer zookeeperConnectTimeOut;
 
     /**
      * 路由策略：1-轮询，2-随机，3-一致性哈希

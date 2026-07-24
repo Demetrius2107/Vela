@@ -42,7 +42,7 @@ public class BeanConfig {
      */
     @Bean
     public ZkClient buildZKClient(){
-        return new ZkClient(appConfig.getZkAddr(),appConfig.getZkConnectTimeOut());
+        return new ZkClient(appConfig.getZookeeperAddr(),appConfig.getZookeeperConnectTimeOut());
     }
 
 
