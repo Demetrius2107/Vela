@@ -8,19 +8,23 @@ import com.vela.im.shared.exception.ApplicationExceptionEnum;
  * <p>项目名称: Vela</p>
  *
  * @author wanqiu
- * @since 1.0
  * @createTime 2025-03-03
  * @updateTime 2026-07-19
- *
+ * <p>
  * Copyright © 2026 wanqiu All rights reserved
+ * @since 1.0
  */
 public enum BaseErrorCode implements ApplicationExceptionEnum {
 
-    /** 成功 */
-    SUCCESS(200,"success"),
-    /** 服务器内部错误，请联系管理员 */
-    SYSTEM_ERROR(90000,"服务器内部错误,请联系管理员"),
-    PARAMETER_ERROR(90001,"参数校验错误"),
+    /**
+     * 成功
+     */
+    SUCCESS(200, "success"),
+    /**
+     * 服务器内部错误，请联系管理员
+     */
+    SYSTEM_ERROR(90000, "服务器内部错误,请联系管理员"),
+    PARAMETER_ERROR(90001, "参数校验错误"),
 
 
     ;
@@ -28,10 +32,11 @@ public enum BaseErrorCode implements ApplicationExceptionEnum {
     private int code;
     private String error;
 
-    BaseErrorCode(int code, String error){
+    BaseErrorCode(int code, String error) {
         this.code = code;
         this.error = error;
     }
+
     public int getCode() {
         return this.code;
     }

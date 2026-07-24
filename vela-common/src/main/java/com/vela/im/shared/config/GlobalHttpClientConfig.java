@@ -15,11 +15,11 @@ import org.springframework.context.annotation.Configuration;
  * <p>项目名称: Vela</p>
  *
  * @author wanqiu
+ * @since 1.0
  * @createTime 2025-03-03
  * @updateTime 2026-07-24
- * <p>
+ *
  * Copyright © 2026 wanqiu All rights reserved
- * @since 1.0
  */
 @Configuration
 @ConfigurationProperties(prefix = "httpclient")
@@ -58,32 +58,38 @@ public class GlobalHttpClientConfig {
     PoolingHttpClientConnectionManager manager = null;
     HttpClientBuilder httpClientBuilder = null;
 
-    // 定义httpClient链接池
+    /**
+     * 获取 HttpClient 连接池管理器（Bean）
+     *
+     * @return 连接池管理器实例
+     */
     @Bean(name = "httpClientConnectionManager")
     public PoolingHttpClientConnectionManager getPoolingHttpClientConnectionManager() {
         return getManager();
     }
 
+    /**
+     * 获取或创建连接池管理器（单例模式）
+     */
     private PoolingHttpClientConnectionManager getManager() {
         if (manager != null) {
             return manager;
         }
         manager = new PoolingHttpClientConnectionManager();
-        manager.setMaxTotal(maxTotal); // 设定最大链接数
-        manager.setDefaultMaxPerRoute(defaultMaxPerRoute); // 设定并发链接数
+        manager.setMaxTotal(maxTotal);
+        manager.setDefaultMaxPerRoute(defaultMaxPerRoute);
         return manager;
     }
 
     /**
-     * 实例化连接池，设置连接池管理器。 这里需要以参数形式注入上面实例化的连接池管理器
+     * 实例化 HttpClientBuilder，注入连接池管理器
      *
-     * @Qualifier 指定bean标签进行注入
+     * @param httpClientConnectionManager 连接池管理器
+     * @return HttpClientBuilder 实例
      */
     @Bean(name = "httpClientBuilder")
     public HttpClientBuilder getHttpClientBuilder(
             @Qualifier("httpClientConnectionManager") PoolingHttpClientConnectionManager httpClientConnectionManager) {
-
-        // HttpClientBuilder中的构造方法被protected修饰，所以这里不能直接使用new来实例化一个HttpClientBuilder,可以使用HttpClientBuilder提供的静态方法create()来获取HttpClientBuilder对象
         httpClientBuilder = HttpClientBuilder.create();
         httpClientBuilder.setConnectionManager(httpClientConnectionManager);
         return httpClientBuilder;
@@ -91,18 +97,22 @@ public class GlobalHttpClientConfig {
 
 
     /**
-     * 注入连接池，用于获取httpClient
+     * 获取 CloseableHttpClient 实例（注入 builder）
      *
-     * @param httpClientBuilder
-     * @return
+     * @param httpClientBuilder 已配置的 HttpClientBuilder
+     * @return CloseableHttpClient 实例
      */
     @Bean
     public CloseableHttpClient getCloseableHttpClient(
             @Qualifier("httpClientBuilder") HttpClientBuilder httpClientBuilder) {
-
         return httpClientBuilder.build();
     }
 
+    /**
+     * 获取或创建 CloseableHttpClient 实例（无注入时使用默认配置）
+     *
+     * @return CloseableHttpClient 实例
+     */
     public CloseableHttpClient getCloseableHttpClient() {
         if (httpClientBuilder != null) {
             return httpClientBuilder.build();
@@ -113,23 +123,24 @@ public class GlobalHttpClientConfig {
     }
 
     /**
-     * Builder是RequestConfig的一个内部类 通过RequestConfig的custom方法来获取到一个Builder对象
-     * 设置builder的连接信息
+     * 配置连接超时参数并构建 RequestConfig.Builder
      *
-     * @return
+     * @return RequestConfig.Builder
      */
     @Bean(name = "builder")
     public RequestConfig.Builder getBuilder() {
         RequestConfig.Builder builder = RequestConfig.custom();
-        return builder.setConnectTimeout(connectTimeout).setConnectionRequestTimeout(connectionRequestTimeout)
-                .setSocketTimeout(socketTimeout).setStaleConnectionCheckEnabled(staleConnectionCheckEnabled);
+        return builder.setConnectTimeout(connectTimeout)
+                .setConnectionRequestTimeout(connectionRequestTimeout)
+                .setSocketTimeout(socketTimeout)
+                .setStaleConnectionCheckEnabled(staleConnectionCheckEnabled);
     }
 
     /**
-     * 使用builder构建一个RequestConfig对象
+     * 构建 RequestConfig 对象
      *
-     * @param builder
-     * @return
+     * @param builder 已配置的 RequestConfig.Builder
+     * @return RequestConfig 实例
      */
     @Bean
     public RequestConfig getRequestConfig(@Qualifier("builder") RequestConfig.Builder builder) {
