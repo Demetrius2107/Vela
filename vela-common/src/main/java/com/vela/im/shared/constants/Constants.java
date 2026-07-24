@@ -3,7 +3,7 @@ package com.vela.im.shared.constants;
 /**
  * <p>Title: </p>
  * <p>Description: </p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @createTime 2025-03-03

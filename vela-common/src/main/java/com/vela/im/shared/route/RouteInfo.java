@@ -3,7 +3,16 @@ package com.vela.im.shared.route;
 import lombok.Data;
 
 /**
- * @since JDK 1.8
+ * <p>Title: RouteInfo</p>
+ * <p>Description: 路由节点信息，包含目标服务器的 IP 和端口号。</p>
+ * <p>项目名称: Vela</p>
+ *
+ * @author wanqiu
+ * @since 1.0
+ * @createTime 2025-03-03
+ * @updateTime 2026-07-24
+ *
+ * Copyright © 2026 wanqiu All rights reserved
  */
 
 @Data

@@ -19,7 +19,7 @@ import java.util.zip.Inflater;
 /**
  * <p>Title: SigAPI</p>
  * <p>Description: 用户签名 API 工具类，基于 HMAC-SHA256 生成和校验用户签名（userSig）。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

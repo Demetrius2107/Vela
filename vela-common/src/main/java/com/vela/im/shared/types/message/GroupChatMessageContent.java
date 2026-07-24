@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * <p>Title: </p>
  * <p>Description: </p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

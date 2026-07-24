@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * <p>Title: SyncReq</p>
  * <p>Description: 增量同步请求，继承 RequestBase，携带客户端最大序列号和拉取数量限制。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

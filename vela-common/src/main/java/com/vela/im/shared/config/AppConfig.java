@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 /**
  * <p>Title: AppConfig</p>
  * <p>Description: 应用配置类，映射 application.yml 中 appconfig 前缀的配置项，包含路由/回调/多端登录等开关。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @createTime 2025-03-03

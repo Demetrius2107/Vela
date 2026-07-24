@@ -3,7 +3,7 @@ package com.vela.im.shared.exception;
 /**
  * <p>Title: ApplicationException</p>
  * <p>Description: 应用业务异常，继承 RuntimeException，携带错误码和错误消息，由全局异常处理器统一捕获。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

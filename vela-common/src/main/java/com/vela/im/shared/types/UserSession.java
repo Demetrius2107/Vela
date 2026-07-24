@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * <p>Title: UserSession</p>
  * <p>Description: 用户会话值对象，存储用户在Redis中的会话信息，包括连接状态、网关节点等。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

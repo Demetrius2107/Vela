@@ -5,7 +5,7 @@ import com.vela.im.shared.exception.ApplicationExceptionEnum;
 /**
  * <p>Title: BaseErrorCode</p>
  * <p>Description: 基础错误码枚举，实现 ApplicationExceptionEnum 接口，定义通用成功/系统错误码。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0
