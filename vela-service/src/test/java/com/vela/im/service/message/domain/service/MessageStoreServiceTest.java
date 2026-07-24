@@ -8,7 +8,7 @@ import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.message.GroupChatMessageContent;
@@ -65,7 +65,7 @@ class MessageStoreServiceTest {
     @Mock
     private ConversationService conversationService;
     @Mock
-    private AppConfig appConfig;
+    private ImServerProperties appConfig;
 
     private MessageStoreService service;
 

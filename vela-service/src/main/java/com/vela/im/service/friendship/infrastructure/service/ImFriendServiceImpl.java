@@ -22,7 +22,7 @@ import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.WriteUserSeq;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.AllowFriendTypeEnum;
 import com.vela.im.shared.types.enums.CheckFriendShipTypeEnum;
@@ -66,7 +66,7 @@ public class ImFriendServiceImpl implements ImFriendService {
 
     private final ImFriendShipMapper imFriendShipMapper;
     private final ImUserService imUserService;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final CallbackService callbackService;
     private final MessageProducer messageProducer;
     private final ImFriendService imFriendService;
@@ -76,7 +76,7 @@ public class ImFriendServiceImpl implements ImFriendService {
 
     public ImFriendServiceImpl(ImFriendShipMapper imFriendShipMapper,
                                ImUserService imUserService,
-                               AppConfig appConfig,
+                               ImServerProperties appConfig,
                                CallbackService callbackService,
                                MessageProducer messageProducer,
                                ImFriendService imFriendService,
@@ -144,7 +144,7 @@ public class ImFriendServiceImpl implements ImFriendService {
         }
 
         // 添加好友之前回调
-        if(appConfig.isAddFriendBeforeCallback()){
+        if(appConfig.getCallback().isAddFriendBeforeCallback()){
             Result callbackResp = callbackService
                     .beforeCallback(req.getAppId(),
                             Constants.CallbackCommand.AddFriendBefore
@@ -202,7 +202,7 @@ public class ImFriendServiceImpl implements ImFriendService {
                     req.getClientType(),req.getImei(), FriendshipEventCommand
                             .FRIEND_UPDATE,updateFriendPack,req.getAppId());
 
-            if (appConfig.isModifyFriendAfterCallback()) {
+            if (appConfig.getCallback().isModifyFriendAfterCallback()) {
                 AddFriendAfterCallbackDto callbackDto = new AddFriendAfterCallbackDto();
                 callbackDto.setFromId(req.getFromId());
                 callbackDto.setToItem(req.getToItem());
@@ -231,7 +231,7 @@ public class ImFriendServiceImpl implements ImFriendService {
         int update = imFriendShipMapper.update(null, updateWrapper);
         if(update == 1){
             //之后回调
-//            if (appConfig.isModifyFriendAfterCallback()){
+//            if (appConfig.getCallback().isModifyFriendAfterCallback()){
 //                AddFriendAfterCallbackDto callbackDto = new AddFriendAfterCallbackDto();
 //                callbackDto.setFromId(fromId);
 //                callbackDto.setToItem(dto);
@@ -356,7 +356,7 @@ public class ImFriendServiceImpl implements ImFriendService {
                 ,requestBase.getAppId());
 
         //之后回调
-        if (appConfig.isAddFriendAfterCallback()){
+        if (appConfig.getCallback().isAddFriendAfterCallback()){
             AddFriendAfterCallbackDto callbackDto = new AddFriendAfterCallbackDto();
             callbackDto.setFromId(fromId);
             callbackDto.setToItem(dto);
@@ -397,7 +397,7 @@ public class ImFriendServiceImpl implements ImFriendService {
                         deleteFriendPack, req.getAppId());
 
                 //之后回调
-                if (appConfig.isAddFriendAfterCallback()){
+                if (appConfig.getCallback().isAddFriendAfterCallback()){
                     DeleteFriendAfterCallbackDto callbackDto = new DeleteFriendAfterCallbackDto();
                     callbackDto.setFromId(req.getFromId());
                     callbackDto.setToId(req.getToId());
@@ -589,7 +589,7 @@ public class ImFriendServiceImpl implements ImFriendService {
                 FriendshipEventCommand.FRIEND_BLACK_ADD, addFriendBlackPack, req.getAppId());
 
         //之后回调
-        if (appConfig.isAddFriendShipBlackAfterCallback()){
+        if (appConfig.getCallback().isAddFriendShipBlackAfterCallback()){
             AddFriendBlackAfterCallbackDto callbackDto = new AddFriendBlackAfterCallbackDto();
             callbackDto.setFromId(req.getFromId());
             callbackDto.setToId(req.getToId());
@@ -628,7 +628,7 @@ public class ImFriendServiceImpl implements ImFriendService {
                     deleteFriendPack, req.getAppId());
 
             //之后回调
-            if (appConfig.isAddFriendShipBlackAfterCallback()){
+            if (appConfig.getCallback().isAddFriendShipBlackAfterCallback()){
                 AddFriendBlackAfterCallbackDto callbackDto = new AddFriendBlackAfterCallbackDto();
                 callbackDto.setFromId(req.getFormId());
                 callbackDto.setToId(req.getToId());

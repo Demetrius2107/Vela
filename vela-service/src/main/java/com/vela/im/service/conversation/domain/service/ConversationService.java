@@ -11,7 +11,7 @@ import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.WriteUserSeq;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.ConversationErrorCode;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
@@ -45,13 +45,13 @@ public class ConversationService {
 
     private final ImConversationSetMapper imConversationSetMapper;
     private final MessageProducer messageProducer;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final RedisSeq redisSeq;
     private final WriteUserSeq writeUserSeq;
 
     public ConversationService(ImConversationSetMapper imConversationSetMapper,
                                MessageProducer messageProducer,
-                               AppConfig appConfig,
+                               ImServerProperties appConfig,
                                RedisSeq redisSeq,
                                WriteUserSeq writeUserSeq) {
         this.imConversationSetMapper = imConversationSetMapper;

@@ -18,7 +18,7 @@ import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.GroupErrorCode;
 import com.vela.im.shared.types.enums.GroupMemberRoleEnum;
@@ -60,14 +60,14 @@ public class ImGroupServiceImpl implements ImGroupService {
 
     private final ImGroupMapper imGroupDataMapper;
     private final ImGroupMemberService groupMemberService;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final CallbackService callbackService;
     private final GroupMessageProducer groupMessageProducer;
     private final RedisSeq redisSeq;
 
     public ImGroupServiceImpl(ImGroupMapper imGroupDataMapper,
                               ImGroupMemberService groupMemberService,
-                              AppConfig appConfig,
+                              ImServerProperties appConfig,
                               CallbackService callbackService,
                               GroupMessageProducer groupMessageProducer,
                               RedisSeq redisSeq) {
@@ -163,7 +163,7 @@ public class ImGroupServiceImpl implements ImGroupService {
             groupMemberService.addGroupMember(req.getGroupId(), req.getAppId(), dto);
         }
 
-        if(appConfig.isCreateGroupAfterCallback()){
+        if(appConfig.getCallback().isCreateGroupAfterCallback()){
             callbackService.callback(req.getAppId(), Constants.CallbackCommand.CreateGroupAfter,
                     JSONObject.toJSONString(imGroupEntity));
         }
@@ -231,7 +231,7 @@ public class ImGroupServiceImpl implements ImGroupService {
             throw new ApplicationException(GroupErrorCode.THIS_OPERATE_NEED_MANAGER_ROLE);
         }
 
-        if(appConfig.isModifyGroupAfterCallback()){
+        if(appConfig.getCallback().isModifyGroupAfterCallback()){
             callbackService.callback(req.getAppId(),Constants.CallbackCommand.UpdateGroupAfter,
                     JSONObject.toJSONString(imGroupDataMapper.selectOne(query)));
         }
@@ -332,7 +332,7 @@ public class ImGroupServiceImpl implements ImGroupService {
             throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_BASE_INFO_ERROR);
         }
 
-        if(appConfig.isModifyGroupAfterCallback()){
+        if(appConfig.getCallback().isModifyGroupAfterCallback()){
             DestroyGroupCallbackDto dto = new DestroyGroupCallbackDto();
             dto.setGroupId(req.getGroupId());
             callbackService.callback(req.getAppId()

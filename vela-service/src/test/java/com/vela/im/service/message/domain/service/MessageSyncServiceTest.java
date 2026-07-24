@@ -9,7 +9,7 @@ import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.enums.*;
 import com.vela.im.shared.types.enums.command.MessageCommand;
@@ -56,7 +56,7 @@ class MessageSyncServiceTest {
     @Mock
     private GroupMessageProducer groupMessageProducer;
     @Mock
-    private AppConfig appConfig;
+    private ImServerProperties appConfig;
 
     private MessageSyncService service;
 

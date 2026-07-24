@@ -17,7 +17,7 @@ import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.DelFlagEnum;
@@ -70,7 +70,7 @@ public class MessageSyncService {
     private final RedisSeq redisSeq;
     private final ImGroupMemberService imGroupMemberService;
     private final GroupMessageProducer groupMessageProducer;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
     private final RecallStrategy p2pRecallStrategy;
     private final RecallStrategy groupRecallStrategy;
@@ -108,7 +108,7 @@ public class MessageSyncService {
                               RedisSeq redisSeq,
                               ImGroupMemberService imGroupMemberService,
                               GroupMessageProducer groupMessageProducer,
-                              AppConfig appConfig,
+                              ImServerProperties appConfig,
                               P2PRecallStrategy p2pRecallStrategy,
                               GroupRecallStrategy groupRecallStrategy) {
         this.messageProducer = messageProducer;

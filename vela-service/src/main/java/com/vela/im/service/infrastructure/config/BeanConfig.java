@@ -1,7 +1,7 @@
 package com.vela.im.service.infrastructure.config;
 
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.ImUrlRouteWayEnum;
 import com.vela.im.shared.types.enums.RouteHashMethodEnum;
 import com.vela.im.shared.route.RouteHandle;
@@ -29,9 +29,9 @@ import java.lang.reflect.Method;
 @Configuration
 public class BeanConfig {
 
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
-    public BeanConfig(AppConfig appConfig) {
+    public BeanConfig(ImServerProperties appConfig) {
         this.appConfig = appConfig;
     }
 

@@ -5,7 +5,7 @@ import com.vela.im.service.message.application.dto.resp.SendMessageResp;
 import com.vela.im.service.message.domain.service.MessageStoreService;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.MessageProducer;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.types.message.GroupChatMessageContent;
 import com.vela.im.service.application.pipeline.node.DedupNode;
@@ -48,7 +48,7 @@ class GroupMessageServiceTest {
     @Mock
     private RedisSeq redisSeq;
     @Mock
-    private AppConfig appConfig;
+    private ImServerProperties appConfig;
 
     private GroupValidateNode groupValidateNode;
     private RateLimitNode rateLimitNode;

@@ -9,7 +9,7 @@ import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.trace.TraceIdContext;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
@@ -59,7 +59,7 @@ public class MessageStoreService {
     private final RabbitTemplate rabbitTemplate;
     private final StringRedisTemplate stringRedisTemplate;
     private final ConversationService conversationService;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
     /**
      * 构建 TraceId 透传的 MessagePostProcessor
@@ -83,7 +83,7 @@ public class MessageStoreService {
                                RabbitTemplate rabbitTemplate,
                                StringRedisTemplate stringRedisTemplate,
                                ConversationService conversationService,
-                               AppConfig appConfig) {
+                               ImServerProperties appConfig) {
         this.imMessageHistoryMapper = imMessageHistoryMapper;
         this.imMessageBodyMapper = imMessageBodyMapper;
         this.snowflakeIdWorker = snowflakeIdWorker;

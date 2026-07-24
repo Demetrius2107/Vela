@@ -5,7 +5,7 @@ import com.vela.im.service.application.pipeline.PipeChain;
 import com.vela.im.service.application.pipeline.PipeNode;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.MessageErrorCode;
 import com.vela.im.shared.types.enums.command.MessageCommand;
 import com.vela.im.shared.types.message.MessageContent;
@@ -31,12 +31,12 @@ public class RateLimitNode implements PipeNode<MessageContext> {
     private static final Logger logger = LoggerFactory.getLogger(RateLimitNode.class);
 
     private final MessageProducer messageProducer;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
     /** 用户消息频率缓存：userId → 上一次消息的纳秒时间戳 */
     private final ConcurrentHashMap<String, Long> rateLimiter = new ConcurrentHashMap<>();
 
-    public RateLimitNode(MessageProducer messageProducer, AppConfig appConfig) {
+    public RateLimitNode(MessageProducer messageProducer, ImServerProperties appConfig) {
         this.messageProducer = messageProducer;
         this.appConfig = appConfig;
     }

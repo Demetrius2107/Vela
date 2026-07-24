@@ -21,7 +21,7 @@ import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.GroupErrorCode;
 import com.vela.im.shared.types.enums.GroupMemberRoleEnum;
@@ -65,7 +65,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         private final ImGroupMemberService groupMemberService;
         private final CallbackService callbackService;
         private final GroupMessageProducer groupMessageProducer;
-        private final AppConfig appConfig;
+        private final ImServerProperties appConfig;
 
         public ImGroupMemberServiceImpl(ImGroupMemberMapper imGroupMemberMapper,
                                         ImUserService imUserService,
@@ -73,7 +73,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
                                         ImGroupMemberService groupMemberService,
                                         CallbackService callbackService,
                                         GroupMessageProducer groupMessageProducer,
-                                        AppConfig appConfig) {
+                                        ImServerProperties appConfig) {
             this.imGroupMemberMapper = imGroupMemberMapper;
             this.imUserService = imUserService;
             this.groupService = groupService;
@@ -276,7 +276,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
 
         List<GroupMemberDto> memberDtos = req.getMembers();
         // 回调
-        if(appConfig.isAddGroupMemberBeforeCallback()){
+        if(appConfig.getCallback().isAddGroupMemberBeforeCallback()){
 
             Result responseVO = callbackService.beforeCallback(req.getAppId(), Constants.CallbackCommand.GroupMemberAddBefore
                     , JSONObject.toJSONString(req));
@@ -338,7 +338,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         groupMessageProducer.producer(req.getOperater(), GroupEventCommand.ADDED_MEMBER, addGroupMemberPack
                 , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
-        if(appConfig.isAddGroupMemberAfterCallback()){
+        if(appConfig.getCallback().isAddGroupMemberAfterCallback()){
             AddMemberAfterCallback dto = new AddMemberAfterCallback();
             dto.setGroupId(req.getGroupId());
             dto.setGroupType(group.getGroupType());
@@ -415,7 +415,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
             removeGroupMemberPack.setMember(req.getMemberId());
             groupMessageProducer.producer(req.getMemberId(), GroupEventCommand.DELETED_MEMBER, removeGroupMemberPack
                     , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
-            if(appConfig.isDeleteGroupMemberAfterCallback()){
+            if(appConfig.getCallback().isDeleteGroupMemberAfterCallback()){
                 callbackService.callback(req.getAppId(),
                         Constants.CallbackCommand.GroupMemberDeleteAfter,
                         JSONObject.toJSONString(req));

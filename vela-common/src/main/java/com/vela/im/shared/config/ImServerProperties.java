@@ -5,21 +5,21 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * <p>Title: AppConfig</p>
+ * <p>Title: ImServerProperties</p>
  * <p>Description: 应用配置类，映射 application.yml 中 appconfig 前缀的配置项，包含路由/回调/多端登录等开关。</p>
  * <p>项目名称: Vela</p>
  *
  * @author wanqiu
- * @since 1.0
  * @createTime 2025-03-03
  * @updateTime 2026-07-24
- *
+ * <p>
  * Copyright © 2026 wanqiu All rights reserved
+ * @since 1.0
  */
 @Data
 @Component
 @ConfigurationProperties(prefix = "appconfig")
-public class AppConfig {
+public class ImServerProperties {
 
     /**
      * 私钥，用于用户签名校验
@@ -92,79 +92,102 @@ public class AppConfig {
     private String callbackUrl;
 
     /**
-     * 用户资料变更后回调开关
+     * 回调配置
      */
-    private boolean modifyUserAfterCallback;
+    private CallbackConfig callback = new CallbackConfig();
 
     /**
-     * 添加好友后回调开关
+     * <p>Title: CallbackConfig</p>
+     * <p>Description: 回调配置，控制各类事件是否触发回调。</p>
      */
-    private boolean addFriendAfterCallback;
+    @Data
+    public static class CallbackConfig {
 
-    /**
-     * 添加好友前回调开关
-     */
-    private boolean addFriendBeforeCallback;
+        /**
+         * 用户资料变更后回调开关
+         */
+        private boolean modifyUserAfterCallback;
 
-    /**
-     * 修改好友后回调开关
-     */
-    private boolean modifyFriendAfterCallback;
+        /**
+         * 添加好友后回调开关
+         */
+        private boolean addFriendAfterCallback;
 
-    /**
-     * 删除好友后回调开关
-     */
-    private boolean deleteFriendAfterCallback;
+        /**
+         * 添加好友前回调开关
+         */
+        private boolean addFriendBeforeCallback;
 
-    /**
-     * 添加黑名单后回调开关
-     */
-    private boolean addFriendShipBlackAfterCallback;
+        /**
+         * 修改好友后回调开关
+         */
+        private boolean modifyFriendAfterCallback;
 
-    /**
-     * 删除黑名单后回调开关
-     */
-    private boolean deleteFriendShipBlackAfterCallback;
+        /**
+         * 删除好友后回调开关
+         */
+        private boolean deleteFriendAfterCallback;
 
-    /**
-     * 创建群聊后回调开关
-     */
-    private boolean createGroupAfterCallback;
+        /**
+         * 添加黑名单后回调开关
+         */
+        private boolean addFriendShipBlackAfterCallback;
 
-    /**
-     * 修改群聊后回调开关
-     */
-    private boolean modifyGroupAfterCallback;
+        /**
+         * 删除黑名单后回调开关
+         */
+        private boolean deleteFriendShipBlackAfterCallback;
 
-    /**
-     * 解散群聊后回调开关
-     */
-    private boolean destroyGroupAfterCallback;
+        /**
+         * 创建群聊后回调开关
+         */
+        private boolean createGroupAfterCallback;
 
-    /**
-     * 删除群成员后回调开关
-     */
-    private boolean deleteGroupMemberAfterCallback;
+        /**
+         * 修改群聊后回调开关
+         */
+        private boolean modifyGroupAfterCallback;
 
-    /**
-     * 拉人入群前回调开关
-     */
-    private boolean addGroupMemberBeforeCallback;
+        /**
+         * 解散群聊后回调开关
+         */
+        private boolean destroyGroupAfterCallback;
 
-    /**
-     * 拉人入群后回调开关
-     */
-    private boolean addGroupMemberAfterCallback;
+        /**
+         * 删除群成员后回调开关
+         */
+        private boolean deleteGroupMemberAfterCallback;
 
-    /**
-     * 发送单聊消息后回调开关
-     */
-    private boolean sendMessageAfterCallback;
+        /**
+         * 拉人入群前回调开关
+         */
+        private boolean addGroupMemberBeforeCallback;
 
-    /**
-     * 发送单聊消息前回调开关
-     */
-    private boolean sendMessageBeforeCallback;
+        /**
+         * 拉人入群后回调开关
+         */
+        private boolean addGroupMemberAfterCallback;
+
+        /**
+         * 发送单聊消息后回调开关
+         */
+        private boolean sendMessageAfterCallback;
+
+        /**
+         * 发送单聊消息前回调开关
+         */
+        private boolean sendMessageBeforeCallback;
+
+        /**
+         * 发送群聊消息后回调开关
+         */
+        private boolean sendGroupMessageAfterCallback;
+
+        /**
+         * 发送群聊消息前回调开关
+         */
+        private boolean sendGroupMessageBeforeCallback;
+    }
 
     /**
      * 会话删除同步模式：1-多端同步

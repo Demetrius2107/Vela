@@ -12,7 +12,7 @@ import com.vela.im.service.application.utils.ConversationIdGenerate;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
@@ -60,7 +60,7 @@ public class P2PMessageService {
     private final MessageProducer messageProducer;
     private final MessageStoreService messageStoreService;
     private final RedisSeq redisSeq;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final CallbackService callbackService;
 
     private final ThreadPoolExecutor threadPoolExecutor;
@@ -69,7 +69,7 @@ public class P2PMessageService {
                              MessageProducer messageProducer,
                              MessageStoreService messageStoreService,
                              RedisSeq redisSeq,
-                             AppConfig appConfig,
+                             ImServerProperties appConfig,
                              CallbackService callbackService,
                              ValidateNode validateNode,
                              RateLimitNode rateLimitNode,
@@ -107,7 +107,7 @@ public class P2PMessageService {
         logger.info("Processing message: msgId={}", messageContent.getMessageId());
 
         // 前置回调（判断在同步管道外，因为回调可能依赖完整上下文）
-        if (appConfig.isSendMessageAfterCallback()) {
+        if (appConfig.getCallback().isSendMessageAfterCallback()) {
             Result<?> callbackResult = callbackService.beforeCallback(
                     messageContent.getAppId(), Constants.CallbackCommand.SendMessageBefore,
                     com.alibaba.fastjson.JSONObject.toJSONString(messageContent));

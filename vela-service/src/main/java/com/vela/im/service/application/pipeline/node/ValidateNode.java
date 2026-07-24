@@ -5,7 +5,7 @@ import com.vela.im.service.application.pipeline.PipeChain;
 import com.vela.im.service.application.pipeline.PipeNode;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.MessageErrorCode;
 import com.vela.im.shared.types.enums.command.MessageCommand;
 import com.vela.im.shared.types.message.MessageContent;
@@ -30,9 +30,9 @@ public class ValidateNode implements PipeNode<MessageContext> {
     private static final Logger logger = LoggerFactory.getLogger(ValidateNode.class);
 
     private final MessageProducer messageProducer;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
-    public ValidateNode(MessageProducer messageProducer, AppConfig appConfig) {
+    public ValidateNode(MessageProducer messageProducer, ImServerProperties appConfig) {
         this.messageProducer = messageProducer;
         this.appConfig = appConfig;
     }

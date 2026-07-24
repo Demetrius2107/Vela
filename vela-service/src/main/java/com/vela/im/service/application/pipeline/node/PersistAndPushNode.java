@@ -10,7 +10,7 @@ import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.message.domain.service.MessageStoreService;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
@@ -42,13 +42,13 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
     private final MessageProducer messageProducer;
     private final RedisSeq redisSeq;
     private final CallbackService callbackService;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
     public PersistAndPushNode(MessageStoreService messageStoreService,
                               MessageProducer messageProducer,
                               RedisSeq redisSeq,
                               CallbackService callbackService,
-                              AppConfig appConfig) {
+                              ImServerProperties appConfig) {
         this.messageStoreService = messageStoreService;
         this.messageProducer = messageProducer;
         this.redisSeq = redisSeq;
@@ -101,7 +101,7 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
         }
 
         // 后置回调
-        if (appConfig.isSendMessageAfterCallback()) {
+        if (appConfig.getCallback().isSendMessageAfterCallback()) {
             callbackService.callback(msg.getAppId(), Constants.CallbackCommand.SendMessageAfter,
                     com.alibaba.fastjson.JSONObject.toJSONString(msg));
         }

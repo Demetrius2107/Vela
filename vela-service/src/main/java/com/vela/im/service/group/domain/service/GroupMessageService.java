@@ -13,7 +13,7 @@ import com.vela.im.service.message.domain.service.MessageStoreService;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.types.message.GroupChatMessageContent;
 import com.vela.im.shared.types.message.OfflineMessageContent;
@@ -53,7 +53,7 @@ public class GroupMessageService {
     private final ImGroupMemberService imGroupMemberService;
     private final MessageStoreService messageStoreService;
     private final RedisSeq redisSeq;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
     private final ThreadPoolExecutor threadPoolExecutor;
 
@@ -61,7 +61,7 @@ public class GroupMessageService {
                                ImGroupMemberService imGroupMemberService,
                                MessageStoreService messageStoreService,
                                RedisSeq redisSeq,
-                               AppConfig appConfig,
+                               ImServerProperties appConfig,
                                GroupValidateNode groupValidateNode,
                                RateLimitNode rateLimitNode,
                                DedupNode dedupNode,

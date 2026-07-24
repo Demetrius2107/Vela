@@ -6,7 +6,7 @@ import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.enums.FriendShipErrorCode;
 import com.vela.im.shared.types.enums.MessageErrorCode;
@@ -52,7 +52,7 @@ class P2PMessageServiceTest {
     @Mock
     private RedisSeq redisSeq;
     @Mock
-    private AppConfig appConfig;
+    private ImServerProperties appConfig;
     @Mock
     private CallbackService callbackService;
 

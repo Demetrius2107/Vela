@@ -6,7 +6,7 @@ import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.shared.exception.BaseErrorCode;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.GateWayErrorCode;
 import com.vela.im.shared.types.enums.ImUserTypeEnum;
@@ -41,11 +41,11 @@ public class IdentityCheck {
     private static final Logger logger = LoggerFactory.getLogger(IdentityCheck.class);
 
     private final ImUserService imUserService;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final StringRedisTemplate stringRedisTemplate;
 
     public IdentityCheck(ImUserService imUserService,
-                         AppConfig appConfig,
+                         ImServerProperties appConfig,
                          StringRedisTemplate stringRedisTemplate) {
         this.imUserService = imUserService;
         this.appConfig = appConfig;

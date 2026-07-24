@@ -13,7 +13,7 @@ import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.Constants;
 import com.vela.im.shared.types.enums.DelFlagEnum;
 import com.vela.im.shared.types.enums.UserErrorCode;
@@ -47,14 +47,14 @@ import java.util.Map;
 public class ImUserServiceImpl implements ImUserService {
 
     private final ImUserDataMapper imUserDataMapper;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final CallbackService callbackService;
     private final MessageProducer messageProducer;
     private final StringRedisTemplate stringRedisTemplate;
     private final ImGroupService imGroupService;
 
     public ImUserServiceImpl(ImUserDataMapper imUserDataMapper,
-                             AppConfig appConfig,
+                             ImServerProperties appConfig,
                              CallbackService callbackService,
                              MessageProducer messageProducer,
                              StringRedisTemplate stringRedisTemplate,
@@ -201,7 +201,7 @@ public class ImUserServiceImpl implements ImUserService {
                     UserEventCommand.USER_MODIFY,pack,req.getAppId());
 
             // 回调
-            if(appConfig.isModifyUserAfterCallback()){
+            if(appConfig.getCallback().isModifyUserAfterCallback()){
                 callbackService.callback(req.getAppId(),
                         Constants.CallbackCommand.ModifyUserAfter,
                         JSONObject.toJSONString(req));

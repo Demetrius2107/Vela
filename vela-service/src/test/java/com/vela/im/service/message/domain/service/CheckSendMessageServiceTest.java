@@ -10,7 +10,7 @@ import com.vela.im.service.group.domain.service.ImGroupService;
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,7 +46,7 @@ class CheckSendMessageServiceTest {
     @Mock
     private ImGroupMemberService imGroupMemberService;
     @Mock
-    private AppConfig appConfig;
+    private ImServerProperties appConfig;
 
     private CheckSendMessageService service;
 
