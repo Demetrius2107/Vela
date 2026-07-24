@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.vela.im.service.conversation.domain.service.ConversationService;
 import com.vela.im.service.group.domain.service.ImGroupMemberService;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
+import com.vela.im.service.message.domain.strategy.GroupRecallStrategy;
+import com.vela.im.service.message.domain.strategy.P2PRecallStrategy;
+import com.vela.im.service.message.domain.strategy.RecallStrategy;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.ConversationIdGenerate;
@@ -69,6 +72,9 @@ public class MessageSyncService {
     private final GroupMessageProducer groupMessageProducer;
     private final AppConfig appConfig;
 
+    private final RecallStrategy p2pRecallStrategy;
+    private final RecallStrategy groupRecallStrategy;
+
     private static final Logger logger = LoggerFactory.getLogger(MessageSyncService.class);
 
     /** Concurrent lock per messageKey to prevent concurrent recall operations */
@@ -102,7 +108,9 @@ public class MessageSyncService {
                               RedisSeq redisSeq,
                               ImGroupMemberService imGroupMemberService,
                               GroupMessageProducer groupMessageProducer,
-                              AppConfig appConfig) {
+                              AppConfig appConfig,
+                              P2PRecallStrategy p2pRecallStrategy,
+                              GroupRecallStrategy groupRecallStrategy) {
         this.messageProducer = messageProducer;
         this.conversationService = conversationService;
         this.redisTemplate = redisTemplate;
@@ -111,6 +119,8 @@ public class MessageSyncService {
         this.imGroupMemberService = imGroupMemberService;
         this.groupMessageProducer = groupMessageProducer;
         this.appConfig = appConfig;
+        this.p2pRecallStrategy = p2pRecallStrategy;
+        this.groupRecallStrategy = groupRecallStrategy;
     }
 
     /**
@@ -332,69 +342,9 @@ public class MessageSyncService {
                 imMessageBodyMapper.update(body,query);
 
                 if(content.getConversationType() == ConversationTypeEnum.P2P.getCode()){
-
-                    // Build Redis keys for sender and receiver offline queues
-                    String fromKey = content.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + content.getFromId();
-                    String toKey = content.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + content.getToId();
-
-                    OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
-                    BeanUtils.copyProperties(content,offlineMessageContent);
-                    offlineMessageContent.setDelFlag(DelFlagEnum.DELETE.getCode());
-                    offlineMessageContent.setMessageKey(content.getMessageKey());
-                    offlineMessageContent.setConversationType(ConversationTypeEnum.P2P.getCode());
-                    offlineMessageContent.setConversationId(conversationService.convertConversationId(offlineMessageContent.getConversationType()
-                            ,content.getFromId(),content.getToId()));
-                    offlineMessageContent.setMessageBody(body.getMessageBody());
-
-                    long seq = redisSeq.doGetSeq(content.getAppId() + ":" + Constants.SeqConstants.Message + ":" + ConversationIdGenerate.generateP2PId(content.getFromId(),content.getToId()));
-                    offlineMessageContent.setMessageSequence(seq);
-
-                    long newMessageKey = SnowflakeIdWorker.nextId();
-
-                    // Insert recall notification into offline queues (with retry)
-                    retryOnce(() -> redisTemplate.opsForZSet().add(fromKey,
-                            JSONObject.toJSONString(offlineMessageContent), newMessageKey),
-                            "recall-zset-from-" + content.getMessageKey(), null);
-                    retryOnce(() -> redisTemplate.opsForZSet().add(toKey,
-                            JSONObject.toJSONString(offlineMessageContent), newMessageKey),
-                            "recall-zset-to-" + content.getMessageKey(), null);
-
-                    // Send ACK to the recall initiator
-                    recallAck(pack, Result.ok(), content);
-                    // Sync to sender's other devices
-                    retryOnce(() -> messageProducer.sendToUserExceptClient(content.getFromId(),
-                            MessageCommand.MSG_RECALL_NOTIFY, pack, content),
-                            "recall-notify-sender-" + content.getMessageKey(), null);
-                    // Notify the receiver
-                    retryOnce(() -> messageProducer.sendToUser(content.getToId(),
-                            MessageCommand.MSG_RECALL_NOTIFY, pack, content.getAppId()),
-                            "recall-notify-receiver-" + content.getMessageKey(), null);
+                    p2pRecallStrategy.recall(content, pack, body);
                 }else{
-                    List<String> groupMemberId = imGroupMemberService.getGroupMemberId(content.getToId(), content.getAppId());
-                    long seq = redisSeq.doGetSeq(content.getAppId() + ":" + Constants.SeqConstants.Message + ":" + ConversationIdGenerate.generateP2PId(content.getFromId(),content.getToId()));
-                    // Send ACK to the recall initiator
-                    recallAck(pack,Result.ok(),content);
-                    // Sync to sender's other devices
-                    messageProducer.sendToUserExceptClient(content.getFromId(), MessageCommand.MSG_RECALL_NOTIFY, pack
-                            , content);
-                    for (String memberId : groupMemberId) {
-                        String toKey = content.getAppId() + ":" + Constants.SeqConstants.Message + ":" + memberId;
-                        OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
-                        offlineMessageContent.setDelFlag(DelFlagEnum.DELETE.getCode());
-                        BeanUtils.copyProperties(content,offlineMessageContent);
-                        offlineMessageContent.setConversationType(ConversationTypeEnum.GROUP.getCode());
-                        offlineMessageContent.setConversationId(conversationService.convertConversationId(offlineMessageContent.getConversationType()
-                                ,content.getFromId(),content.getToId()));
-                        offlineMessageContent.setMessageBody(body.getMessageBody());
-                        offlineMessageContent.setMessageSequence(seq);
-                        retryOnce(() -> redisTemplate.opsForZSet().add(toKey,
-                                JSONObject.toJSONString(offlineMessageContent), seq),
-                                "recall-group-zset-" + memberId, null);
-
-                        retryOnce(() -> groupMessageProducer.producer(content.getFromId(),
-                                        MessageCommand.MSG_RECALL_NOTIFY, pack, content),
-                                "recall-group-notify-" + memberId, null);
-                    }
+                    groupRecallStrategy.recall(content, pack, body);
                 }
             } finally {
                 // Clean up lock to prevent memory leak

@@ -12,6 +12,10 @@ import com.vela.im.shared.types.enums.FriendShipErrorCode;
 import com.vela.im.shared.types.enums.MessageErrorCode;
 import com.vela.im.shared.types.enums.command.MessageCommand;
 import com.vela.im.shared.types.message.MessageContent;
+import com.vela.im.service.application.pipeline.node.DedupNode;
+import com.vela.im.service.application.pipeline.node.PersistAndPushNode;
+import com.vela.im.service.application.pipeline.node.RateLimitNode;
+import com.vela.im.service.application.pipeline.node.ValidateNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -52,6 +56,11 @@ class P2PMessageServiceTest {
     @Mock
     private CallbackService callbackService;
 
+    private ValidateNode validateNode;
+    private RateLimitNode rateLimitNode;
+    private DedupNode dedupNode;
+    private PersistAndPushNode persistAndPushNode;
+
     @Captor
     private ArgumentCaptor<MessageContent> messageCaptor;
 
@@ -59,8 +68,15 @@ class P2PMessageServiceTest {
 
     @BeforeEach
     void setUp() {
+        // 使用真实管道节点实例（依赖已通过 @Mock 注入）
+        validateNode = new ValidateNode(messageProducer, appConfig);
+        rateLimitNode = new RateLimitNode(messageProducer, appConfig);
+        dedupNode = new DedupNode(messageStoreService, messageProducer);
+        persistAndPushNode = new PersistAndPushNode(messageStoreService, messageProducer, redisSeq, callbackService, appConfig);
+
         service = new P2PMessageService(checkSendMessageService, messageProducer,
-                messageStoreService, redisSeq, appConfig, callbackService);
+                messageStoreService, redisSeq, appConfig, callbackService,
+                validateNode, rateLimitNode, dedupNode, persistAndPushNode);
     }
 
     @Nested

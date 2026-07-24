@@ -6,32 +6,40 @@ package com.vela.im.shared.constants;
  * <p>项目名称: IM-System</p>
  *
  * @author wanqiu
- * @since 1.0
  * @createTime 2025-03-03
  * @updateTime 2026-07-19
- *
+ * <p>
  * Copyright © 2026 wanqiu All rights reserved
+ * @since 1.0
  */
 public class Constants {
 
-    /** 链路追踪 ID 在 MDC、HTTP Header、MQ Header 中的 Key */
+    /**
+     * 链路追踪 ID 在 MDC、HTTP Header、MQ Header 中的 Key
+     */
     public static class TraceId {
         public static final String TRACE_ID_KEY = "traceId";
         public static final String HTTP_HEADER_NAME = "X-Trace-Id";
         public static final String MQ_HEADER_NAME = "x-trace-id";
     }
 
-    /** channel绑定的userId Key*/
+    /**
+     * channel绑定的userId Key
+     */
     public static final String UserId = "userId";
 
-    /** channel绑定的appId */
+    /**
+     * channel绑定的appId
+     */
     public static final String AppId = "appId";
 
     public static final String ClientType = "clientType";
 
     public static final String Imei = "imei";
 
-    /** channel绑定的clientType 和 imel Key*/
+    /**
+     * channel绑定的clientType 和 imel Key
+     */
     public static final String ClientImei = "clientImei";
 
     public static final String ReadTime = "readTime";
@@ -43,7 +51,7 @@ public class Constants {
     public static final String ImCoreZkRootWeb = "/web";
 
 
-    public static class RedisConstants{
+    public static class RedisConstants {
 
         /**
          * userSign，格式：appId:userSign:
@@ -86,7 +94,7 @@ public class Constants {
 
     }
 
-    public static class RabbitConstants{
+    public static class RabbitConstants {
 
         public static final String Im2UserService = "pipeline2UserService";
 
@@ -109,7 +117,7 @@ public class Constants {
 
     }
 
-    public static class CallbackCommand{
+    public static class CallbackCommand {
         public static final String ModifyUserAfter = "user.modify.after";
 
         public static final String CreateGroupAfter = "group.create.after";
