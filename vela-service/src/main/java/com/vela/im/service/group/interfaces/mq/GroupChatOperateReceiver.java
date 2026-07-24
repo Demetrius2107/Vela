@@ -53,8 +53,8 @@ public class GroupChatOperateReceiver {
 
     @RabbitListener(
             bindings = @QueueBinding(
-                 value = @Queue(value = ImConstants.RabbitImConstants.Im2GroupService,durable = "true"),
-                 exchange = @Exchange(value = ImConstants.RabbitImConstants.Im2GroupService,durable = "true")
+                 value = @Queue(value = ImConstants.RabbitMQ.IM_TO_GROUP_SERVICE,durable = "true"),
+                 exchange = @Exchange(value = ImConstants.RabbitMQ.IM_TO_GROUP_SERVICE,durable = "true")
             ),concurrency = "1"
     )
     public void onChatMessage(@Payload Message message,

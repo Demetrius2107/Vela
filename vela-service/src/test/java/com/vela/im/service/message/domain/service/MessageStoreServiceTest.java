@@ -88,7 +88,7 @@ class MessageStoreServiceTest {
             service.storeP2PMessage(msg);
 
             verify(rabbitTemplate, times(1)).convertAndSend(
-                    eq(ImConstants.RabbitImConstants.StoreP2PMessage), eq(""), anyString(), any(MessagePostProcessor.class));
+                    eq(ImConstants.RabbitMQ.STORE_P2P_MESSAGE), eq(""), anyString(), any(MessagePostProcessor.class));
             verify(imMessageBodyMapper, never()).insert(any());
         }
 
@@ -98,13 +98,13 @@ class MessageStoreServiceTest {
             MessageContent msg = createP2PMessage();
             doThrow(new RuntimeException("MQ connection refused"))
                     .when(rabbitTemplate).convertAndSend(
-                            eq(ImConstants.RabbitImConstants.StoreP2PMessage), eq(""), anyString(), any(MessagePostProcessor.class));
+                            eq(ImConstants.RabbitMQ.STORE_P2P_MESSAGE), eq(""), anyString(), any(MessagePostProcessor.class));
 
             service.storeP2PMessage(msg);
 
             // MQ was attempted
             verify(rabbitTemplate, times(1)).convertAndSend(
-                    eq(ImConstants.RabbitImConstants.StoreP2PMessage), eq(""), anyString(), any(MessagePostProcessor.class));
+                    eq(ImConstants.RabbitMQ.STORE_P2P_MESSAGE), eq(""), anyString(), any(MessagePostProcessor.class));
             // Fallback writes to DB
             verify(imMessageBodyMapper, atLeastOnce()).insert(any(ImMessageBodyEntity.class));
         }
@@ -130,12 +130,12 @@ class MessageStoreServiceTest {
             GroupChatMessageContent msg = createGroupMessage();
             doThrow(new RuntimeException("MQ timeout"))
                     .when(rabbitTemplate).convertAndSend(
-                            eq(ImConstants.RabbitImConstants.StoreGroupMessage), eq(""), anyString(), any(MessagePostProcessor.class));
+                            eq(ImConstants.RabbitMQ.STORE_GROUP_MESSAGE), eq(""), anyString(), any(MessagePostProcessor.class));
 
             service.storeGroupMessage(msg);
 
             verify(rabbitTemplate, times(1)).convertAndSend(
-                    eq(ImConstants.RabbitImConstants.StoreGroupMessage), eq(""), anyString(), any(MessagePostProcessor.class));
+                    eq(ImConstants.RabbitMQ.STORE_GROUP_MESSAGE), eq(""), anyString(), any(MessagePostProcessor.class));
             verify(imMessageBodyMapper, atLeastOnce()).insert(any(ImMessageBodyEntity.class));
         }
 
@@ -147,7 +147,7 @@ class MessageStoreServiceTest {
             service.storeGroupMessage(msg);
 
             verify(rabbitTemplate, times(1)).convertAndSend(
-                    eq(ImConstants.RabbitImConstants.StoreGroupMessage), eq(""), anyString(), any(MessagePostProcessor.class));
+                    eq(ImConstants.RabbitMQ.STORE_GROUP_MESSAGE), eq(""), anyString(), any(MessagePostProcessor.class));
             verify(imMessageBodyMapper, never()).insert(any());
         }
 

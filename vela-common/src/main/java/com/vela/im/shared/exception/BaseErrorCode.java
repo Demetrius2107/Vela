@@ -1,6 +1,7 @@
 package com.vela.im.shared.exception;
 
 import com.vela.im.shared.exception.ApplicationExceptionEnum;
+import lombok.Getter;
 
 /**
  * <p>Title: BaseErrorCode</p>
@@ -14,6 +15,7 @@ import com.vela.im.shared.exception.ApplicationExceptionEnum;
  * Copyright © 2026 wanqiu All rights reserved
  * @since 1.0
  */
+@Getter
 public enum BaseErrorCode implements ApplicationExceptionEnum {
 
     /**
@@ -35,14 +37,6 @@ public enum BaseErrorCode implements ApplicationExceptionEnum {
     BaseErrorCode(int code, String error) {
         this.code = code;
         this.error = error;
-    }
-
-    public int getCode() {
-        return this.code;
-    }
-
-    public String getError() {
-        return this.error;
     }
 
 }

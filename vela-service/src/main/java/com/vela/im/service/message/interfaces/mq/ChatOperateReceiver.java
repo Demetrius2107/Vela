@@ -57,8 +57,8 @@ public class ChatOperateReceiver {
 
     @RabbitListener(
             bindings = @QueueBinding(
-                 value = @Queue(value = ImConstants.RabbitImConstants.Im2MessageService,durable = "true"),
-                 exchange = @Exchange(value = ImConstants.RabbitImConstants.Im2MessageService,durable = "true")
+                 value = @Queue(value = ImConstants.RabbitMQ.IM_TO_MESSAGE_SERVICE,durable = "true"),
+                 exchange = @Exchange(value = ImConstants.RabbitMQ.IM_TO_MESSAGE_SERVICE,durable = "true")
             ),concurrency = "1"
     )
     public void onChatMessage(@Payload Message message,

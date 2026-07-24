@@ -109,7 +109,7 @@ public class MessageStoreService {
         messageContent.setMessageKey(imMessageBodyEntity.getMessageKey());
         try {
             // Send to MQ for async persistence
-            rabbitTemplate.convertAndSend(ImConstants.RabbitImConstants.StoreP2PMessage, "",
+            rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_P2P_MESSAGE, "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
         } catch (Exception e) {
             logger.error("MQ send failed for P2P message, fallback to direct DB write, msgKey={}, error={}",
@@ -201,7 +201,7 @@ public class MessageStoreService {
         dto.setGroupChatMessageContent(messageContent);
         messageContent.setMessageKey(imMessageBody.getMessageKey());
         try {
-            rabbitTemplate.convertAndSend(ImConstants.RabbitImConstants.StoreGroupMessage,
+            rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_GROUP_MESSAGE,
                     "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
         } catch (Exception e) {

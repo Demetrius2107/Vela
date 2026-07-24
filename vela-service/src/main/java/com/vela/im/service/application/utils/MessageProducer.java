@@ -42,7 +42,7 @@ public class MessageProducer {
     private final RabbitTemplate rabbitTemplate;
     private final UserSessionUtils userSessionUtils;
 
-    private final String queueName = ImConstants.RabbitImConstants.MessageService2Im;
+    private final String queueName = ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM;
 
     public MessageProducer(RabbitTemplate rabbitTemplate,
                            UserSessionUtils userSessionUtils) {

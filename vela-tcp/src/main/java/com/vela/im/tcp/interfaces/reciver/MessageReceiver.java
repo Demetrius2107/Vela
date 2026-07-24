@@ -40,14 +40,14 @@ public class MessageReceiver {
      */
     private static void startReceiverMessage() {
         try {
-            Channel channel = MqFactory.getChannel(ImConstants.RabbitImConstants.MessageService2Im + brokerId);
-            channel.queueDeclare(ImConstants.RabbitImConstants.MessageService2Im + brokerId,
+            Channel channel = MqFactory.getChannel(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId);
+            channel.queueDeclare(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId,
                     true, false, false, null);
 
-            channel.queueBind(ImConstants.RabbitImConstants.MessageService2Im + brokerId,
-                    ImConstants.RabbitImConstants.MessageService2Im, brokerId);
+            channel.queueBind(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId,
+                    ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM, brokerId);
 
-            channel.basicConsume(ImConstants.RabbitImConstants.MessageService2Im + brokerId, false,
+            channel.basicConsume(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId, false,
                     new DefaultConsumer(channel) {
 
                         /**

@@ -142,13 +142,13 @@ public class MqMessageProducer {
         String commandSub = com.substring(0, 1);
         CommandType commandType = CommandType.getCommandType(commandSub);
         if (commandType == CommandType.MESSAGE) {
-            return ImConstants.RabbitImConstants.Im2MessageService;
+            return ImConstants.RabbitMQ.IM_TO_MESSAGE_SERVICE;
         } else if (commandType == CommandType.GROUP) {
-            return ImConstants.RabbitImConstants.Im2GroupService;
+            return ImConstants.RabbitMQ.IM_TO_GROUP_SERVICE;
         } else if (commandType == CommandType.FRIEND) {
-            return ImConstants.RabbitImConstants.Im2FriendshipService;
+            return ImConstants.RabbitMQ.Im2FriendshipService;
         } else if (commandType == CommandType.USER) {
-            return ImConstants.RabbitImConstants.Im2UserService;
+            return ImConstants.RabbitMQ.Im2UserService;
         }
         return "";
     }
