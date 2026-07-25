@@ -208,6 +208,13 @@
                 <version>2.9.3</version>
             </dependency>
 
+            <!-- prometheus -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+                <version>1.5.5</version>
+            </dependency>
+
             <!-- feign调用依赖 -->
             <dependency>
                 <groupId>com.netflix.feign</groupId>
