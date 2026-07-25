@@ -177,6 +177,30 @@ services:
     volumes:
       - ./vela-tcp/src/main/resources/config-docker.yml:/app/config.yml
 
+# ==================== 监控服务 ====================
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: vela-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docs/monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: vela-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+
 # ==================== 持久化卷 ====================
 
 volumes:
@@ -185,3 +209,5 @@ volumes:
   rabbitmq-data:
   zk-data:
   zk-datalog:
+  prometheus-data:
+  grafana-data:
