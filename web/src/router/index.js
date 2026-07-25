@@ -8,18 +8,65 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../views/Login.vue')
+    component: () => import('../views/login/Index.vue')
+  },
+  {
+    path: '/splash',
+    name: 'Splash',
+    component: () => import('../views/splash/Index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/register/Index.vue')
   },
   {
     path: '/chat',
     name: 'Chat',
-    component: () => import('../views/Chat.vue'),
+    component: () => import('../views/chat/Index.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/contacts',
     name: 'Contacts',
-    component: () => import('../views/Contacts.vue'),
+    component: () => import('../views/contacts/Index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('../views/profile/Index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('../views/search/Index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/search/message',
+    name: 'SearchMessage',
+    component: () => import('../views/search/Message.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/group/:id',
+    name: 'GroupDetail',
+    component: () => import('../views/group/Index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/group/create',
+    name: 'GroupCreate',
+    component: () => import('../views/group/Create.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('../views/settings/Index.vue'),
     meta: { requiresAuth: true }
   }
 ]
@@ -29,9 +76,8 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫：未登录跳转登录页
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('vela_token')
   if (to.meta.requiresAuth && !token) {
     next('/login')
   } else {
