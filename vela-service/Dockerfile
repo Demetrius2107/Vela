@@ -13,10 +13,18 @@ WORKDIR /app
 # 从本地编译产物中复制 jar
 COPY vela-service/target/vela-service-*.jar app.jar
 
+# 下载 SkyWalking Java Agent
+ADD https://dlcdn.apache.org/skywalking/java-agent/8.16.0/apache-skywalking-java-agent-8.16.0.tgz /skywalking-agent.tgz
+RUN tar -xzf /skywalking-agent.tgz -C / && rm /skywalking-agent.tgz
+
 # 时区
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
 EXPOSE 8000
+
+ENV SW_AGENT_NAME=vela-service
+ENV SW_AGENT_COLLECTOR_BACKEND_SERVICES=skywalking-oap:11800
+ENV JAVA_TOOL_OPTIONS="-javaagent:/skywalking-agent/skywalking-agent.jar"
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -179,6 +179,33 @@ services:
 
 # ==================== 监控服务 ====================
 
+  skywalking-oap:
+    image: apache/skywalking-oap-server:8.9.1
+    container_name: vela-skywalking-oap
+    restart: always
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    environment:
+      SW_STORAGE: h2
+      SW_RECEIVER_GRPC: default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12800"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  skywalking-ui:
+    image: apache/skywalking-ui:8.9.1
+    container_name: vela-skywalking-ui
+    restart: always
+    ports:
+      - "8088:8080"
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    depends_on:
+      - skywalking-oap
+
   prometheus:
     image: prom/prometheus:v2.45.0
     container_name: vela-prometheus
