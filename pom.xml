@@ -215,6 +215,18 @@
                 <version>1.5.5</version>
             </dependency>
 
+            <!-- sentinel -->
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-core</artifactId>
+                <version>1.8.6</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-annotation-aspectj</artifactId>
+                <version>1.8.6</version>
+            </dependency>
+
             <!-- feign调用依赖 -->
             <dependency>
                 <groupId>com.netflix.feign</groupId>
