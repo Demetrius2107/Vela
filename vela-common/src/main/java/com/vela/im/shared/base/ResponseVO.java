@@ -9,24 +9,29 @@ import lombok.Data;
  * <p>项目名称: Vela</p>
  *
  * @author wanqiu
- * @since 1.1
  * @createTime 2025-03-03
  * @updateTime 2026-07-20
- *
+ * <p>
  * Copyright © 2026 wanqiu All rights reserved
-
+ * @since 1.1
  */
 @SuppressWarnings("rawtypes")
 @Data
 public class ResponseVO<T> {
 
-    /** 返回码，0-成功，非0-失败 */
+    /**
+     * 返回码，0-成功，非0-失败
+     */
     private int code;
 
-    /** 返回消息 */
+    /**
+     * 返回消息
+     */
     private String msg;
 
-    /** 返回数据 */
+    /**
+     * 返回数据
+     */
     private T data;
 
     public ResponseVO() {
@@ -74,7 +79,7 @@ public class ResponseVO<T> {
         return resp;
     }
 
-    public boolean isOk(){
+    public boolean isOk() {
         return this.code == 200;
     }
 

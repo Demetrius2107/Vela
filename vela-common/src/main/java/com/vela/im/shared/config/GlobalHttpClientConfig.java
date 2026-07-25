@@ -1,5 +1,6 @@
 package com.vela.im.shared.config;
 
+import lombok.Data;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -10,144 +11,146 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Http请求公共配置类
+ * <p>Title: GlobalHttpClientConfig</p>
+ * <p>Description: HttpClient 连接池配置类，配置最大连接数、超时时间等参数。</p>
+ * <p>项目名称: Vela</p>
+ *
+ * @author wanqiu
+ * @createTime 2025-03-03
+ * @updateTime 2026-07-24
+ * <p>
+ * Copyright © 2026 wanqiu All rights reserved
+ * @since 1.0
  */
+@Data
 @Configuration
 @ConfigurationProperties(prefix = "httpclient")
 public class GlobalHttpClientConfig {
-	private Integer maxTotal; // 最大连接数
-	private Integer defaultMaxPerRoute; // 最大并发链接数
-	private Integer connectTimeout; // 创建链接的最大时间
-	private Integer connectionRequestTimeout; // 链接获取超时时间
-	private Integer socketTimeout; // 数据传输最长时间
-	private boolean staleConnectionCheckEnabled; // 提交时检查链接是否可用
 
-	PoolingHttpClientConnectionManager manager = null;
-	HttpClientBuilder httpClientBuilder = null;
+    /**
+     * 最大连接数
+     */
+    private Integer maxTotal;
 
-	// 定义httpClient链接池
-	@Bean(name = "httpClientConnectionManager")
-	public PoolingHttpClientConnectionManager getPoolingHttpClientConnectionManager() {
-		return getManager();
-	}
+    /**
+     * 最大并发链接数
+     */
+    private Integer defaultMaxPerRoute;
 
-	private PoolingHttpClientConnectionManager getManager() {
-		if (manager != null) {
-			return manager;
-		}
-		manager = new PoolingHttpClientConnectionManager();
-		manager.setMaxTotal(maxTotal); // 设定最大链接数
-		manager.setDefaultMaxPerRoute(defaultMaxPerRoute); // 设定并发链接数
-		return manager;
-	}
+    /**
+     * 创建链接的最大时间
+     */
+    private Integer connectTimeout;
 
-	/**
-	 * 实例化连接池，设置连接池管理器。 这里需要以参数形式注入上面实例化的连接池管理器
-	 * 
-	 * @Qualifier 指定bean标签进行注入
-	 */
-	@Bean(name = "httpClientBuilder")
-	public HttpClientBuilder getHttpClientBuilder(
-			@Qualifier("httpClientConnectionManager") PoolingHttpClientConnectionManager httpClientConnectionManager) {
+    /**
+     * 链接获取超时时间
+     */
+    private Integer connectionRequestTimeout;
 
-		// HttpClientBuilder中的构造方法被protected修饰，所以这里不能直接使用new来实例化一个HttpClientBuilder,可以使用HttpClientBuilder提供的静态方法create()来获取HttpClientBuilder对象
-		httpClientBuilder = HttpClientBuilder.create();
-		httpClientBuilder.setConnectionManager(httpClientConnectionManager);
-		return httpClientBuilder;
-	}
+    /**
+     * 数据传输最长时间
+     */
+    private Integer socketTimeout;
 
+    /**
+     * 提交时检查链接是否可用
+     */
+    private boolean staleConnectionCheckEnabled;
 
-	/**
-	 * 注入连接池，用于获取httpClient
-	 * 
-	 * @param httpClientBuilder
-	 * @return
-	 */
-	@Bean
-	public CloseableHttpClient getCloseableHttpClient(
-			@Qualifier("httpClientBuilder") HttpClientBuilder httpClientBuilder) {
+    /**
+     * HttpClient 连接池管理器
+     */
+    private PoolingHttpClientConnectionManager manager;
 
-		return httpClientBuilder.build();
-	}
+    /**
+     * HttpClient 构建器
+     */
+    private HttpClientBuilder httpClientBuilder;
 
-	public CloseableHttpClient getCloseableHttpClient() {
-		if (httpClientBuilder != null) {
-			return httpClientBuilder.build();
-		}
-		httpClientBuilder = HttpClientBuilder.create();
-		httpClientBuilder.setConnectionManager(getManager());
-		return httpClientBuilder.build();
-	}
+    /**
+     * 获取 HttpClient 连接池管理器（Bean）
+     *
+     * @return 连接池管理器实例
+     */
+    @Bean(name = "httpClientConnectionManager")
+    public PoolingHttpClientConnectionManager getPoolingHttpClientConnectionManager() {
+        return getManager();
+    }
 
-	/**
-	 * Builder是RequestConfig的一个内部类 通过RequestConfig的custom方法来获取到一个Builder对象
-	 * 设置builder的连接信息
-	 * 
-	 * @return
-	 */
-	@Bean(name = "builder")
-	public RequestConfig.Builder getBuilder() {
-		RequestConfig.Builder builder = RequestConfig.custom();
-		return builder.setConnectTimeout(connectTimeout).setConnectionRequestTimeout(connectionRequestTimeout)
-				.setSocketTimeout(socketTimeout).setStaleConnectionCheckEnabled(staleConnectionCheckEnabled);
-	}
+    /**
+     * 获取或创建连接池管理器（单例模式）
+     */
+    private PoolingHttpClientConnectionManager getManager() {
+        if (manager != null) {
+            return manager;
+        }
+        manager = new PoolingHttpClientConnectionManager();
+        manager.setMaxTotal(maxTotal);
+        manager.setDefaultMaxPerRoute(defaultMaxPerRoute);
+        return manager;
+    }
 
-	/**
-	 * 使用builder构建一个RequestConfig对象
-	 * 
-	 * @param builder
-	 * @return
-	 */
-	@Bean
-	public RequestConfig getRequestConfig(@Qualifier("builder") RequestConfig.Builder builder) {
-		return builder.build();
-	}
+    /**
+     * 实例化 HttpClientBuilder，注入连接池管理器
+     *
+     * @param httpClientConnectionManager 连接池管理器
+     * @return HttpClientBuilder 实例
+     */
+    @Bean(name = "httpClientBuilder")
+    public HttpClientBuilder getHttpClientBuilder(
+            @Qualifier("httpClientConnectionManager") PoolingHttpClientConnectionManager httpClientConnectionManager) {
+        httpClientBuilder = HttpClientBuilder.create();
+        httpClientBuilder.setConnectionManager(httpClientConnectionManager);
+        return httpClientBuilder;
+    }
 
-	public Integer getMaxTotal() {
-		return maxTotal;
-	}
+    /**
+     * 获取 CloseableHttpClient 实例（注入 builder）
+     *
+     * @param httpClientBuilder 已配置的 HttpClientBuilder
+     * @return CloseableHttpClient 实例
+     */
+    @Bean
+    public CloseableHttpClient getCloseableHttpClient(
+            @Qualifier("httpClientBuilder") HttpClientBuilder httpClientBuilder) {
+        return httpClientBuilder.build();
+    }
 
-	public void setMaxTotal(Integer maxTotal) {
-		this.maxTotal = maxTotal;
-	}
+    /**
+     * 获取或创建 CloseableHttpClient 实例（无注入时使用默认配置）
+     *
+     * @return CloseableHttpClient 实例
+     */
+    public CloseableHttpClient getCloseableHttpClient() {
+        if (httpClientBuilder != null) {
+            return httpClientBuilder.build();
+        }
+        httpClientBuilder = HttpClientBuilder.create();
+        httpClientBuilder.setConnectionManager(getManager());
+        return httpClientBuilder.build();
+    }
 
-	public Integer getDefaultMaxPerRoute() {
-		return defaultMaxPerRoute;
-	}
+    /**
+     * 配置连接超时参数并构建 RequestConfig.Builder
+     *
+     * @return RequestConfig.Builder
+     */
+    @Bean(name = "builder")
+    public RequestConfig.Builder getBuilder() {
+        RequestConfig.Builder builder = RequestConfig.custom();
+        return builder.setConnectTimeout(connectTimeout)
+                .setConnectionRequestTimeout(connectionRequestTimeout)
+                .setSocketTimeout(socketTimeout);
+    }
 
-	public void setDefaultMaxPerRoute(Integer defaultMaxPerRoute) {
-		this.defaultMaxPerRoute = defaultMaxPerRoute;
-	}
-
-	public Integer getConnectTimeout() {
-		return connectTimeout;
-	}
-
-	public void setConnectTimeout(Integer connectTimeout) {
-		this.connectTimeout = connectTimeout;
-	}
-
-	public Integer getConnectionRequestTimeout() {
-		return connectionRequestTimeout;
-	}
-
-	public void setConnectionRequestTimeout(Integer connectionRequestTimeout) {
-		this.connectionRequestTimeout = connectionRequestTimeout;
-	}
-
-	public Integer getSocketTimeout() {
-		return socketTimeout;
-	}
-
-	public void setSocketTimeout(Integer socketTimeout) {
-		this.socketTimeout = socketTimeout;
-	}
-
-	public boolean isStaleConnectionCheckEnabled() {
-		return staleConnectionCheckEnabled;
-	}
-
-	public void setStaleConnectionCheckEnabled(boolean staleConnectionCheckEnabled) {
-		this.staleConnectionCheckEnabled = staleConnectionCheckEnabled;
-	}
+    /**
+     * 构建 RequestConfig 对象
+     *
+     * @param builder 已配置的 RequestConfig.Builder
+     * @return RequestConfig 实例
+     */
+    @Bean
+    public RequestConfig getRequestConfig(@Qualifier("builder") RequestConfig.Builder builder) {
+        return builder.build();
+    }
 }

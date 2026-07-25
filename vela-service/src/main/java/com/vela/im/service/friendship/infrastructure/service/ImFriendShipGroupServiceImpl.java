@@ -15,7 +15,7 @@ import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.WriteUserSeq;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.DelFlagEnum;
 import com.vela.im.shared.types.enums.FriendShipErrorCode;
 import com.vela.im.shared.types.enums.command.FriendshipEventCommand;
@@ -85,7 +85,7 @@ public class ImFriendShipGroupServiceImpl implements ImFriendShipGroupService {
         insert.setCreateTime(System.currentTimeMillis());
         insert.setDelFlag(DelFlagEnum.NORMAL.getCode());
         insert.setGroupName(req.getGroupName());
-        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.FriendshipGroup);
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.Sequence.FRIENDSHIP_GROUP);
         insert.setSequence(seq);
         insert.setFromId(req.getFromId());
         try {
@@ -104,7 +104,6 @@ public class ImFriendShipGroupServiceImpl implements ImFriendShipGroupService {
                 return Result.ok();
             }
         } catch (DuplicateKeyException e) {
-            e.getStackTrace();
             return Result.fail(FriendShipErrorCode.FRIEND_SHIP_GROUP_IS_EXIST);
         }
 
@@ -115,7 +114,7 @@ public class ImFriendShipGroupServiceImpl implements ImFriendShipGroupService {
         messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_ADD,
                 addFriendGropPack,new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
         //写入seq
-        writeUserSeq.writeUserSeq(req.getAppId(), req.getFromId(), Constants.SeqConstants.FriendshipGroup, seq);
+        writeUserSeq.writeUserSeq(req.getAppId(), req.getFromId(), ImConstants.Sequence.FRIENDSHIP_GROUP, seq);
 
         return Result.ok();
     }
@@ -134,7 +133,7 @@ public class ImFriendShipGroupServiceImpl implements ImFriendShipGroupService {
             ImFriendShipGroupEntity entity = imFriendShipGroupMapper.selectOne(query);
 
             if (entity != null) {
-                long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.FriendshipGroup);
+                long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.Sequence.FRIENDSHIP_GROUP);
                 ImFriendShipGroupEntity update = new ImFriendShipGroupEntity();
                 update.setSequence(seq);
                 update.setGroupId(entity.getGroupId());
@@ -149,7 +148,7 @@ public class ImFriendShipGroupServiceImpl implements ImFriendShipGroupService {
                 messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_DELETE,
                         deleteFriendGroupPack,new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
                 //写入seq
-                writeUserSeq.writeUserSeq(req.getAppId(), req.getFromId(), Constants.SeqConstants.FriendshipGroup, seq);
+                writeUserSeq.writeUserSeq(req.getAppId(), req.getFromId(), ImConstants.Sequence.FRIENDSHIP_GROUP, seq);
             }
         }
         return Result.ok();
@@ -179,7 +178,7 @@ public class ImFriendShipGroupServiceImpl implements ImFriendShipGroupService {
 
         ImFriendShipGroupEntity entity = imFriendShipGroupMapper.selectOne(query);
 
-        long seq = redisSeq.doGetSeq(appId + ":" + Constants.SeqConstants.FriendshipGroup);
+        long seq = redisSeq.doGetSeq(appId + ":" + ImConstants.Sequence.FRIENDSHIP_GROUP);
 
         ImFriendShipGroupEntity group = new ImFriendShipGroupEntity();
         group.setGroupId(entity.getGroupId());

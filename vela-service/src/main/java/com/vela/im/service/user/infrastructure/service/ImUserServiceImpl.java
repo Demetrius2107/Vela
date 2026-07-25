@@ -13,8 +13,8 @@ import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.config.ImServerProperties;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.DelFlagEnum;
 import com.vela.im.shared.types.enums.UserErrorCode;
 import com.vela.im.shared.types.enums.command.UserEventCommand;
@@ -47,14 +47,14 @@ import java.util.Map;
 public class ImUserServiceImpl implements ImUserService {
 
     private final ImUserDataMapper imUserDataMapper;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final CallbackService callbackService;
     private final MessageProducer messageProducer;
     private final StringRedisTemplate stringRedisTemplate;
     private final ImGroupService imGroupService;
 
     public ImUserServiceImpl(ImUserDataMapper imUserDataMapper,
-                             AppConfig appConfig,
+                             ImServerProperties appConfig,
                              CallbackService callbackService,
                              MessageProducer messageProducer,
                              StringRedisTemplate stringRedisTemplate,
@@ -201,9 +201,9 @@ public class ImUserServiceImpl implements ImUserService {
                     UserEventCommand.USER_MODIFY,pack,req.getAppId());
 
             // 回调
-            if(appConfig.isModifyUserAfterCallback()){
+            if(appConfig.getCallback().isModifyUserAfterCallback()){
                 callbackService.callback(req.getAppId(),
-                        Constants.CallbackCommand.ModifyUserAfter,
+                        ImConstants.CallbackCommand.MODIFY_USER_AFTER,
                         JSONObject.toJSONString(req));
             }
             return Result.ok();
@@ -218,9 +218,9 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Override
     public Result getUserSequence(GetUserSequenceReq req) {
-        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
+        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + ImConstants.Redis.SEQ_PREFIX + ":" + req.getUserId());
         Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(),req.getAppId());
-        map.put(Constants.SeqConstants.Group,groupSeq);
+        map.put(ImConstants.Sequence.GROUP,groupSeq);
         return Result.ok(map);
     }
 }

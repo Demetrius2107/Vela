@@ -1,9 +1,17 @@
 package com.lld.im.common;
 
 /**
+ * <p>Title: ClientType</p>
+ * <p>Description: 客户端类型枚举，标识消息来源的端类型：WebApi/Web/IOS/Android/Windows/Mac。</p>
+ * <p>项目名称: Vela</p>
+ *
  * @author wanqiu
- * @description:
- **/
+ * @since 1.0
+ * @createTime 2025-03-03
+ * @updateTime 2026-07-24
+ *
+ * Copyright © 2026 wanqiu All rights reserved
+ */
 public enum ClientType {
 
     WEBAPI(0,"webApi"),
@@ -28,7 +36,5 @@ public enum ClientType {
     public String getError() {
         return this.error;
     }
-
-
 
 }

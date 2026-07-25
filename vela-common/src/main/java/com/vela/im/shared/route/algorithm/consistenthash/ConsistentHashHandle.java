@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * <p>Title: ConsistentHashHandle</p>
  * <p>Description: 一致性哈希算法路由策略，基于 TreeMap 实现哈希环。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

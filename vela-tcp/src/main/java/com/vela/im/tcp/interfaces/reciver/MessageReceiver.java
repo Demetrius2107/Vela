@@ -1,7 +1,7 @@
 package com.vela.im.tcp.interfaces.reciver;
 
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.codec.protocol.MessagePack;
 import com.vela.im.tcp.interfaces.reciver.process.BaseProcess;
 import com.vela.im.tcp.interfaces.reciver.process.ProcessFactory;
@@ -40,14 +40,14 @@ public class MessageReceiver {
      */
     private static void startReceiverMessage() {
         try {
-            Channel channel = MqFactory.getChannel(Constants.RabbitConstants.MessageService2Im + brokerId);
-            channel.queueDeclare(Constants.RabbitConstants.MessageService2Im + brokerId,
+            Channel channel = MqFactory.getChannel(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId);
+            channel.queueDeclare(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId,
                     true, false, false, null);
 
-            channel.queueBind(Constants.RabbitConstants.MessageService2Im + brokerId,
-                    Constants.RabbitConstants.MessageService2Im, brokerId);
+            channel.queueBind(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId,
+                    ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM, brokerId);
 
-            channel.basicConsume(Constants.RabbitConstants.MessageService2Im + brokerId, false,
+            channel.basicConsume(ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM + brokerId, false,
                     new DefaultConsumer(channel) {
 
                         /**

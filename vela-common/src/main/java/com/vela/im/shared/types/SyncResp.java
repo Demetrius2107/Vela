@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * <p>Title: SyncResp</p>
  * <p>Description: 增量同步响应，包含最大序列号、是否拉取完毕和数据列表。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

@@ -1,7 +1,7 @@
 package com.vela.im.service.application.utils;
 
 
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class WriteUserSeq {
     }
 
     public void writeUserSeq(Integer appId,String userId,String type,Long seq){
-        String key = appId + ":" + Constants.RedisConstants.SeqPrefix + ":" + userId;
+        String key = appId + ":" + ImConstants.Redis.SEQ_PREFIX + ":" + userId;
         redisTemplate.opsForHash().put(key,type,seq);
     }
 

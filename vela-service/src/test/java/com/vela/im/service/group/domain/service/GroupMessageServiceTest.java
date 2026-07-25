@@ -5,9 +5,13 @@ import com.vela.im.service.message.application.dto.resp.SendMessageResp;
 import com.vela.im.service.message.domain.service.MessageStoreService;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.MessageProducer;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.types.message.GroupChatMessageContent;
+import com.vela.im.service.application.pipeline.node.DedupNode;
+import com.vela.im.service.application.pipeline.node.GroupBroadcastNode;
+import com.vela.im.service.application.pipeline.node.GroupValidateNode;
+import com.vela.im.service.application.pipeline.node.RateLimitNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -44,14 +48,26 @@ class GroupMessageServiceTest {
     @Mock
     private RedisSeq redisSeq;
     @Mock
-    private AppConfig appConfig;
+    private ImServerProperties appConfig;
+
+    private GroupValidateNode groupValidateNode;
+    private RateLimitNode rateLimitNode;
+    private DedupNode dedupNode;
+    private GroupBroadcastNode groupBroadcastNode;
 
     private GroupMessageService service;
 
     @BeforeEach
     void setUp() {
+        // 使用真实管道节点实例（依赖已通过 @Mock 注入）
+        groupValidateNode = new GroupValidateNode(messageProducer, appConfig);
+        rateLimitNode = new RateLimitNode(messageProducer, appConfig);
+        dedupNode = new DedupNode(messageStoreService, messageProducer);
+        groupBroadcastNode = new GroupBroadcastNode(messageStoreService, messageProducer, redisSeq, imGroupMemberService);
+
         service = new GroupMessageService(messageProducer, imGroupMemberService,
-                messageStoreService, redisSeq, appConfig);
+                messageStoreService, redisSeq, appConfig,
+                groupValidateNode, rateLimitNode, dedupNode, groupBroadcastNode);
     }
 
     @Nested

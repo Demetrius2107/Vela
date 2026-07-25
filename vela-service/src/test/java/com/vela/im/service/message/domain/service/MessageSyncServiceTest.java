@@ -3,13 +3,15 @@ package com.vela.im.service.message.domain.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.vela.im.service.conversation.domain.service.ConversationService;
 import com.vela.im.service.group.domain.service.ImGroupMemberService;
+import com.vela.im.service.message.domain.strategy.GroupRecallStrategy;
+import com.vela.im.service.message.domain.strategy.P2PRecallStrategy;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.enums.*;
 import com.vela.im.shared.types.enums.command.MessageCommand;
@@ -56,7 +58,11 @@ class MessageSyncServiceTest {
     @Mock
     private GroupMessageProducer groupMessageProducer;
     @Mock
-    private AppConfig appConfig;
+    private ImServerProperties appConfig;
+    @Mock
+    private P2PRecallStrategy p2PRecallStrategy;
+    @Mock
+    private GroupRecallStrategy groupRecallStrategy;
 
     private MessageSyncService service;
 
@@ -64,7 +70,7 @@ class MessageSyncServiceTest {
     void setUp() {
         service = new MessageSyncService(messageProducer, conversationService,
                 redisTemplate, imMessageBodyMapper, redisSeq, imGroupMemberService,
-                groupMessageProducer, appConfig);
+                groupMessageProducer, appConfig, p2PRecallStrategy, groupRecallStrategy);
     }
 
     @Nested

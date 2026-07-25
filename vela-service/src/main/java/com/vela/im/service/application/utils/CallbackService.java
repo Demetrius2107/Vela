@@ -1,7 +1,7 @@
 package com.vela.im.service.application.utils;
 
 import com.vela.im.shared.base.Result;
-import com.vela.im.shared.config.AppConfig;
+import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.utils.HttpRequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +29,11 @@ public class CallbackService {
     private static final Logger logger = LoggerFactory.getLogger(CallbackService.class);
 
     private final HttpRequestUtils httpRequestUtils;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
     private final ShareThreadPool shareThreadPool;
 
     public CallbackService(HttpRequestUtils httpRequestUtils,
-                           AppConfig appConfig,
+                           ImServerProperties appConfig,
                            ShareThreadPool shareThreadPool) {
         this.httpRequestUtils = httpRequestUtils;
         this.appConfig = appConfig;

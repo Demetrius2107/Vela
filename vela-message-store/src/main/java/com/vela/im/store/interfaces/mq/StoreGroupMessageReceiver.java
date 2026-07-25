@@ -2,7 +2,7 @@ package com.vela.im.store.interfaces.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.trace.TraceIdContext;
 import com.vela.im.store.domain.entity.ImMessageBodyEntity;
 import com.vela.im.store.application.dto.DoStoreGroupMessageDto;
@@ -44,8 +44,8 @@ public class StoreGroupMessageReceiver {
 
     @RabbitListener(
             bindings = @QueueBinding(
-                    value = @Queue(value = Constants.RabbitConstants.StoreGroupMessage, durable = "true"),
-                    exchange = @Exchange(value = Constants.RabbitConstants.StoreGroupMessage, durable = "true")
+                    value = @Queue(value = ImConstants.RabbitMQ.STORE_GROUP_MESSAGE, durable = "true"),
+                    exchange = @Exchange(value = ImConstants.RabbitMQ.STORE_GROUP_MESSAGE, durable = "true")
             ), concurrency = "1"
     )
     public void onChatMessage(@Payload Message message,

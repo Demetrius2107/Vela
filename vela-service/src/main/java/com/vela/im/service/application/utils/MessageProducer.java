@@ -1,7 +1,7 @@
 package com.vela.im.service.application.utils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.trace.TraceIdContext;
 import com.vela.im.shared.types.enums.command.Command;
 import com.vela.im.shared.types.ClientInfo;
@@ -42,7 +42,7 @@ public class MessageProducer {
     private final RabbitTemplate rabbitTemplate;
     private final UserSessionUtils userSessionUtils;
 
-    private final String queueName = Constants.RabbitConstants.MessageService2Im;
+    private final String queueName = ImConstants.RabbitMQ.MESSAGE_SERVICE_TO_IM;
 
     public MessageProducer(RabbitTemplate rabbitTemplate,
                            UserSessionUtils userSessionUtils) {
@@ -72,7 +72,7 @@ public class MessageProducer {
             public Message postProcessMessage(Message message) throws AmqpException {
                 String traceId = TraceIdContext.get();
                 if (traceId != null && !traceId.isEmpty()) {
-                    message.getMessageProperties().setHeader(Constants.TraceId.MQ_HEADER_NAME, traceId);
+                    message.getMessageProperties().setHeader(ImConstants.TraceId.MQ_HEADER_NAME, traceId);
                 }
                 return message;
             }

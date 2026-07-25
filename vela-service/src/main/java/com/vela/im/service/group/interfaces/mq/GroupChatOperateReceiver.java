@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.vela.im.service.group.domain.service.GroupMessageService;
 import com.vela.im.service.message.domain.service.MessageSyncService;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.trace.TraceIdContext;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.types.message.GroupChatMessageContent;
@@ -53,8 +53,8 @@ public class GroupChatOperateReceiver {
 
     @RabbitListener(
             bindings = @QueueBinding(
-                 value = @Queue(value = Constants.RabbitConstants.Im2GroupService,durable = "true"),
-                 exchange = @Exchange(value = Constants.RabbitConstants.Im2GroupService,durable = "true")
+                 value = @Queue(value = ImConstants.RabbitMQ.IM_TO_GROUP_SERVICE,durable = "true"),
+                 exchange = @Exchange(value = ImConstants.RabbitMQ.IM_TO_GROUP_SERVICE,durable = "true")
             ),concurrency = "1"
     )
     public void onChatMessage(@Payload Message message,

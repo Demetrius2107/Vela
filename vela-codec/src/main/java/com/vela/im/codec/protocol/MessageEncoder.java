@@ -18,10 +18,10 @@ import io.netty.handler.codec.MessageToByteEncoder;
  *
  * Copyright © 2026 wanqiu All rights reserved
  */
-public class MessageEncoder extends MessageToByteEncoder<MessagePack> {
+public class MessageEncoder extends MessageToByteEncoder<MessagePack<?>> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, MessagePack msg, ByteBuf out) {
+    protected void encode(ChannelHandlerContext ctx, MessagePack<?> msg, ByteBuf out) {
         String json = JSONObject.toJSONString(msg.getData());
         byte[] bytes = json.getBytes();
         out.writeInt(msg.getCommand());

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 /**
  * <p>Title: ClientInfo</p>
  * <p>Description: 客户端信息值对象，标识客户端的应用ID、端类型和设备唯一标识。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

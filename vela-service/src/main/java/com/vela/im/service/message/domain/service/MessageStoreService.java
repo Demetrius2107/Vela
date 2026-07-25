@@ -9,8 +9,8 @@ import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
-import com.vela.im.shared.config.AppConfig;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.config.ImServerProperties;
+import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.trace.TraceIdContext;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.DelFlagEnum;
@@ -59,7 +59,7 @@ public class MessageStoreService {
     private final RabbitTemplate rabbitTemplate;
     private final StringRedisTemplate stringRedisTemplate;
     private final ConversationService conversationService;
-    private final AppConfig appConfig;
+    private final ImServerProperties appConfig;
 
     /**
      * 构建 TraceId 透传的 MessagePostProcessor
@@ -70,7 +70,7 @@ public class MessageStoreService {
         return message -> {
             String traceId = TraceIdContext.get();
             if (traceId != null && !traceId.isEmpty()) {
-                message.getMessageProperties().setHeader(Constants.TraceId.MQ_HEADER_NAME, traceId);
+                message.getMessageProperties().setHeader(ImConstants.TraceId.MQ_HEADER_NAME, traceId);
             }
             return message;
         };
@@ -83,7 +83,7 @@ public class MessageStoreService {
                                RabbitTemplate rabbitTemplate,
                                StringRedisTemplate stringRedisTemplate,
                                ConversationService conversationService,
-                               AppConfig appConfig) {
+                               ImServerProperties appConfig) {
         this.imMessageHistoryMapper = imMessageHistoryMapper;
         this.imMessageBodyMapper = imMessageBodyMapper;
         this.snowflakeIdWorker = snowflakeIdWorker;
@@ -109,7 +109,7 @@ public class MessageStoreService {
         messageContent.setMessageKey(imMessageBodyEntity.getMessageKey());
         try {
             // Send to MQ for async persistence
-            rabbitTemplate.convertAndSend(Constants.RabbitConstants.StoreP2PMessage, "",
+            rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_P2P_MESSAGE, "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
         } catch (Exception e) {
             logger.error("MQ send failed for P2P message, fallback to direct DB write, msgKey={}, error={}",
@@ -201,7 +201,7 @@ public class MessageStoreService {
         dto.setGroupChatMessageContent(messageContent);
         messageContent.setMessageKey(imMessageBody.getMessageKey());
         try {
-            rabbitTemplate.convertAndSend(Constants.RabbitConstants.StoreGroupMessage,
+            rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_GROUP_MESSAGE,
                     "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
         } catch (Exception e) {
@@ -260,7 +260,7 @@ public class MessageStoreService {
      */
     public void setMessageFromMessageIdCache(Integer appId, String messageId, Object messageContent){
         //appid : cache : messageId
-        String key =appId + ":" + Constants.RedisConstants.cacheMessage + ":" + messageId;
+        String key =appId + ":" + ImConstants.Redis.CACHE_MESSAGE + ":" + messageId;
         for (int retry = 0; retry < 2; retry++) {
             try {
                 stringRedisTemplate.opsForValue().set(key, JSONObject.toJSONString(messageContent), 300, TimeUnit.SECONDS);
@@ -294,7 +294,7 @@ public class MessageStoreService {
     public <T> T getMessageFromMessageIdCache(Integer appId,
                                               String messageId, Class<T> clazz){
         //appid : cache : messageId
-        String key = appId + ":" + Constants.RedisConstants.cacheMessage + ":" + messageId;
+        String key = appId + ":" + ImConstants.Redis.CACHE_MESSAGE + ":" + messageId;
         String msg = stringRedisTemplate.opsForValue().get(key);
         if(StringUtils.isBlank(msg)){
             return null;
@@ -310,8 +310,8 @@ public class MessageStoreService {
     public void storeOfflineMessage(OfflineMessageContent offlineMessage){
 
         // Build Redis keys for sender and receiver offline queues
-        String fromKey = offlineMessage.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + offlineMessage.getFromId();
-        String toKey = offlineMessage.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + offlineMessage.getToId();
+        String fromKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getFromId();
+        String toKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getToId();
 
         ZSetOperations<String, String> operations = stringRedisTemplate.opsForZSet();
         try {
@@ -420,7 +420,7 @@ public class MessageStoreService {
         for (String memberId : memberIds) {
             // Build Redis key for each group member's offline queue
             String toKey = offlineMessage.getAppId() + ":" +
-                    Constants.RedisConstants.OfflineMessage + ":" +
+                    ImConstants.Redis.OFFLINE_MESSAGE + ":" +
                     memberId;
             offlineMessage.setConversationId(conversationService.convertConversationId(
                     ConversationTypeEnum.GROUP.getCode(),memberId,offlineMessage.getToId()

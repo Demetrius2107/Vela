@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * <p>Title: RequestBase</p>
  * <p>Description: 请求基础类，所有API请求的基类，包含应用ID、操作人、端类型和设备标识。</p>
- * <p>项目名称: IM-System</p>
+ * <p>项目名称: Vela</p>
  *
  * @author wanqiu
  * @since 1.0

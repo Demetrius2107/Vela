@@ -1,7 +1,7 @@
 package com.vela.im.tcp.infrastructure.register;
 
 import com.vela.im.codec.config.BootStrapConfig;
-import com.vela.im.shared.constants.Constants;
+import com.vela.im.shared.constants.ImConstants;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -48,12 +48,12 @@ public class RegistryZK implements Runnable {
     @Override
     public void run() {
         zkit.createRootNode();
-        String tcpPath = Constants.ImCoreZkRoot + Constants.ImCoreZkRootTcp + "/" + ip + ":" + tcpConfig.getTcpPort();
+        String tcpPath = ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_TCP + "/" + ip + ":" + tcpConfig.getTcpPort();
         zkit.createNode(tcpPath);
         log.info("Registry zookeeper tcpPath success, msg=[{}]", tcpPath);
 
         String webPath =
-                Constants.ImCoreZkRoot + Constants.ImCoreZkRootWeb + "/" + ip + ":" + tcpConfig.getWebSocketPort();
+                ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_WEB + "/" + ip + ":" + tcpConfig.getWebSocketPort();
         zkit.createNode(webPath);
         log.info("Registry zookeeper webPath success, msg=[{}]", tcpPath);
 
