@@ -13,7 +13,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
 
 /**
  * <p>Title: Knife4jConfig</p>
- * <p>Description: Knife4j/Swagger 接口文档配置，访问地址：http://localhost:8000/doc.html</p>
+ * <p>Description: Knife4j/Swagger 接口文档配置，访问地址：<a href="http://localhost:8000/doc.html">...</a></p>
  * <p>项目名称: Vela</p>
  *
  * @author wanqiu
