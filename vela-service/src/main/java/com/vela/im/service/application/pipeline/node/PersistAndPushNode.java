@@ -62,7 +62,7 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
 
         // 生成消息序列号
         long seq = redisSeq.doGetSeq(msg.getAppId() + ":"
-                + ImConstants.SeqImConstants.Message + ":"
+                + ImConstants.Sequence.MESSAGE + ":"
                 + msg.getFromId() + ":" + msg.getToId());
         msg.setMessageSequence(seq);
 
@@ -102,7 +102,7 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
 
         // 后置回调
         if (appConfig.getCallback().isSendMessageAfterCallback()) {
-            callbackService.callback(msg.getAppId(), ImConstants.CallbackCommand.SendMessageAfter,
+            callbackService.callback(msg.getAppId(), ImConstants.CallbackCommand.SEND_MESSAGE_AFTER,
                     com.alibaba.fastjson.JSONObject.toJSONString(msg));
         }
 

@@ -48,12 +48,12 @@ public class RegistryZK implements Runnable {
     @Override
     public void run() {
         zkit.createRootNode();
-        String tcpPath = ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootTcp + "/" + ip + ":" + tcpConfig.getTcpPort();
+        String tcpPath = ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_TCP + "/" + ip + ":" + tcpConfig.getTcpPort();
         zkit.createNode(tcpPath);
         log.info("Registry zookeeper tcpPath success, msg=[{}]", tcpPath);
 
         String webPath =
-                ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootWeb + "/" + ip + ":" + tcpConfig.getWebSocketPort();
+                ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_WEB + "/" + ip + ":" + tcpConfig.getWebSocketPort();
         zkit.createNode(webPath);
         log.info("Registry zookeeper webPath success, msg=[{}]", tcpPath);
 

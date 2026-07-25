@@ -203,7 +203,7 @@ public class ImUserServiceImpl implements ImUserService {
             // 回调
             if(appConfig.getCallback().isModifyUserAfterCallback()){
                 callbackService.callback(req.getAppId(),
-                        ImConstants.CallbackCommand.ModifyUserAfter,
+                        ImConstants.CallbackCommand.MODIFY_USER_AFTER,
                         JSONObject.toJSONString(req));
             }
             return Result.ok();
@@ -218,9 +218,9 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Override
     public Result getUserSequence(GetUserSequenceReq req) {
-        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + ImConstants.RedisImConstants.SeqPrefix + ":" + req.getUserId());
+        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + ImConstants.Redis.SEQ_PREFIX + ":" + req.getUserId());
         Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(),req.getAppId());
-        map.put(ImConstants.SeqImConstants.Group,groupSeq);
+        map.put(ImConstants.Sequence.GROUP,groupSeq);
         return Result.ok(map);
     }
 }

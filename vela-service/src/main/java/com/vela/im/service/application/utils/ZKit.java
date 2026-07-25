@@ -40,7 +40,7 @@ public class ZKit {
      * @return
      */
     public List<String> getAllTcpNode() {
-        List<String> children = zkClient.getChildren(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootTcp);
+        List<String> children = zkClient.getChildren(ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_TCP);
         logger.info("Query all node =[{}] success.", JSON.toJSONString(children));
         return children;
     }
@@ -51,7 +51,7 @@ public class ZKit {
      * @return
      */
     public List<String> getAllWebNode() {
-        List<String> children = zkClient.getChildren(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootWeb);
+        List<String> children = zkClient.getChildren(ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_WEB);
         logger.info("Query all node =[{}] success.", JSON.toJSONString(children));
         return children;
     }

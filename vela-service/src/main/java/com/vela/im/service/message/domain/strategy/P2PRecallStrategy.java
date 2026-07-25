@@ -54,9 +54,9 @@ public class P2PRecallStrategy implements RecallStrategy {
     public void recall(RecallMessageContent content, RecallMessageNotifyPack pack,
                        ImMessageBodyEntity body) {
         // 构建双方 Redis 离线队列 Key
-        String fromKey = content.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage
+        String fromKey = content.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE
                 + ":" + content.getFromId();
-        String toKey = content.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage
+        String toKey = content.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE
                 + ":" + content.getToId();
 
         // 构建撤回通知的离线消息体
@@ -69,7 +69,7 @@ public class P2PRecallStrategy implements RecallStrategy {
                 offline.getConversationType(), content.getFromId(), content.getToId()));
         offline.setMessageBody(body.getMessageBody());
 
-        long seq = redisSeq.doGetSeq(content.getAppId() + ":" + ImConstants.SeqImConstants.Message
+        long seq = redisSeq.doGetSeq(content.getAppId() + ":" + ImConstants.Sequence.MESSAGE
                 + ":" + ConversationIdGenerate.generateP2PId(content.getFromId(), content.getToId()));
         offline.setMessageSequence(seq);
 

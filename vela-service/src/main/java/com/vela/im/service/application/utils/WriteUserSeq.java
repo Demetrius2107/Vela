@@ -29,7 +29,7 @@ public class WriteUserSeq {
     }
 
     public void writeUserSeq(Integer appId,String userId,String type,Long seq){
-        String key = appId + ":" + ImConstants.RedisImConstants.SeqPrefix + ":" + userId;
+        String key = appId + ":" + ImConstants.Redis.SEQ_PREFIX + ":" + userId;
         redisTemplate.opsForHash().put(key,type,seq);
     }
 

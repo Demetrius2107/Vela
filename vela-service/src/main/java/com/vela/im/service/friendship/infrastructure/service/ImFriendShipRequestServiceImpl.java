@@ -85,7 +85,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         ImFriendShipRequestEntity request = imFriendShipRequestMapper.selectOne(queryWrapper);
 
         long seq = redisSeq.doGetSeq(appId+":"+
-                ImConstants.SeqImConstants.FriendshipRequest);
+                ImConstants.Sequence.FRIENDSHIP_REQUEST);
 
         if(request == null){
             request = new ImFriendShipRequestEntity();
@@ -119,7 +119,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         }
 
         writeUserSeq.writeUserSeq(appId,dto.getToId(),
-                ImConstants.SeqImConstants.FriendshipRequest,seq);
+                ImConstants.Sequence.FRIENDSHIP_REQUEST,seq);
 
         //发送好友申请的tcp给接收方
         messageProducer.sendToUser(dto.getToId(),
@@ -143,7 +143,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         }
 
         long seq = redisSeq.doGetSeq(req.getAppId()+":"+
-                ImConstants.SeqImConstants.FriendshipRequest);
+                ImConstants.Sequence.FRIENDSHIP_REQUEST);
 
         ImFriendShipRequestEntity update = new ImFriendShipRequestEntity();
         update.setApproveStatus(req.getStatus());
@@ -153,7 +153,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         imFriendShipRequestMapper.updateById(update);
 
         writeUserSeq.writeUserSeq(req.getAppId(),req.getOperater(),
-                ImConstants.SeqImConstants.FriendshipRequest,seq);
+                ImConstants.Sequence.FRIENDSHIP_REQUEST,seq);
 
         if(ApproverFriendRequestStatusEnum.AGREE.getCode() == req.getStatus()){
             //同意 ===> 去执行添加好友逻辑
@@ -198,13 +198,13 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
         query.eq("to_id", req.getFromId());
 
         long seq = redisSeq.doGetSeq(req.getAppId()+":"+
-                ImConstants.SeqImConstants.FriendshipRequest);
+                ImConstants.Sequence.FRIENDSHIP_REQUEST);
         ImFriendShipRequestEntity update = new ImFriendShipRequestEntity();
         update.setReadStatus(1);
         update.setSequence(seq);
         imFriendShipRequestMapper.update(update, query);
         writeUserSeq.writeUserSeq(req.getAppId(),req.getOperater(),
-                ImConstants.SeqImConstants.FriendshipRequest,seq);
+                ImConstants.Sequence.FRIENDSHIP_REQUEST,seq);
         //TCP通知
         ReadAllFriendRequestPack readAllFriendRequestPack = new ReadAllFriendRequestPack();
         readAllFriendRequestPack.setFromId(req.getFromId());

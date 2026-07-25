@@ -79,7 +79,7 @@ public class ConversationService {
         ImConversationSetEntity imConversationSetEntity = imConversationSetMapper.selectOne(query);
         if(imConversationSetEntity == null){
             imConversationSetEntity = new ImConversationSetEntity();
-            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + ImConstants.SeqImConstants.Conversation);
+            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + ImConstants.Sequence.CONVERSATION);
             imConversationSetEntity.setConversationId(conversationId);
             BeanUtils.copyProperties(messageReadedContent,imConversationSetEntity);
             imConversationSetEntity.setReadedSequence(messageReadedContent.getMessageSequence());
@@ -87,14 +87,14 @@ public class ConversationService {
             imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.insert(imConversationSetEntity);
             writeUserSeq.writeUserSeq(messageReadedContent.getAppId(),
-                    messageReadedContent.getFromId(),ImConstants.SeqImConstants.Conversation,seq);
+                    messageReadedContent.getFromId(),ImConstants.Sequence.CONVERSATION,seq);
         }else{
-            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + ImConstants.SeqImConstants.Conversation);
+            long seq = redisSeq.doGetSeq(messageReadedContent.getAppId() + ":" + ImConstants.Sequence.CONVERSATION);
             imConversationSetEntity.setSequence(seq);
             imConversationSetEntity.setReadedSequence(messageReadedContent.getMessageSequence());
             imConversationSetMapper.readMark(imConversationSetEntity);
             writeUserSeq.writeUserSeq(messageReadedContent.getAppId(),
-                    messageReadedContent.getFromId(),ImConstants.SeqImConstants.Conversation,seq);
+                    messageReadedContent.getFromId(),ImConstants.Sequence.CONVERSATION,seq);
         }
     }
 
@@ -147,7 +147,7 @@ public class ConversationService {
         queryWrapper.eq("app_id",req.getAppId());
         ImConversationSetEntity imConversationSetEntity = imConversationSetMapper.selectOne(queryWrapper);
         if(imConversationSetEntity != null){
-            long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Conversation);
+            long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.Sequence.CONVERSATION);
 
             if(req.getIsMute() != null){
                 imConversationSetEntity.setIsTop(req.getIsTop());
@@ -158,7 +158,7 @@ public class ConversationService {
             imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.update(imConversationSetEntity,queryWrapper);
             writeUserSeq.writeUserSeq(req.getAppId(), req.getFromId(),
-                    ImConstants.SeqImConstants.Conversation, seq);
+                    ImConstants.Sequence.CONVERSATION, seq);
 
             UpdateConversationPack pack = new UpdateConversationPack();
             pack.setConversationId(req.getConversationId());

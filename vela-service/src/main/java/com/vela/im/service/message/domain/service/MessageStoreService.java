@@ -260,7 +260,7 @@ public class MessageStoreService {
      */
     public void setMessageFromMessageIdCache(Integer appId, String messageId, Object messageContent){
         //appid : cache : messageId
-        String key =appId + ":" + ImConstants.RedisImConstants.cacheMessage + ":" + messageId;
+        String key =appId + ":" + ImConstants.Redis.CACHE_MESSAGE + ":" + messageId;
         for (int retry = 0; retry < 2; retry++) {
             try {
                 stringRedisTemplate.opsForValue().set(key, JSONObject.toJSONString(messageContent), 300, TimeUnit.SECONDS);
@@ -294,7 +294,7 @@ public class MessageStoreService {
     public <T> T getMessageFromMessageIdCache(Integer appId,
                                               String messageId, Class<T> clazz){
         //appid : cache : messageId
-        String key = appId + ":" + ImConstants.RedisImConstants.cacheMessage + ":" + messageId;
+        String key = appId + ":" + ImConstants.Redis.CACHE_MESSAGE + ":" + messageId;
         String msg = stringRedisTemplate.opsForValue().get(key);
         if(StringUtils.isBlank(msg)){
             return null;
@@ -310,8 +310,8 @@ public class MessageStoreService {
     public void storeOfflineMessage(OfflineMessageContent offlineMessage){
 
         // Build Redis keys for sender and receiver offline queues
-        String fromKey = offlineMessage.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage + ":" + offlineMessage.getFromId();
-        String toKey = offlineMessage.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage + ":" + offlineMessage.getToId();
+        String fromKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getFromId();
+        String toKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getToId();
 
         ZSetOperations<String, String> operations = stringRedisTemplate.opsForZSet();
         try {
@@ -420,7 +420,7 @@ public class MessageStoreService {
         for (String memberId : memberIds) {
             // Build Redis key for each group member's offline queue
             String toKey = offlineMessage.getAppId() + ":" +
-                    ImConstants.RedisImConstants.OfflineMessage + ":" +
+                    ImConstants.Redis.OFFLINE_MESSAGE + ":" +
                     memberId;
             offlineMessage.setConversationId(conversationService.convertConversationId(
                     ConversationTypeEnum.GROUP.getCode(),memberId,offlineMessage.getToId()

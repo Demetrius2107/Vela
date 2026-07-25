@@ -146,9 +146,9 @@ public class MqMessageProducer {
         } else if (commandType == CommandType.GROUP) {
             return ImConstants.RabbitMQ.IM_TO_GROUP_SERVICE;
         } else if (commandType == CommandType.FRIEND) {
-            return ImConstants.RabbitMQ.Im2FriendshipService;
+            return ImConstants.RabbitMQ.IM_TO_FRIENDSHIP_SERVICE;
         } else if (commandType == CommandType.USER) {
-            return ImConstants.RabbitMQ.Im2UserService;
+            return ImConstants.RabbitMQ.IM_TO_USER_SERVICE;
         }
         return "";
     }

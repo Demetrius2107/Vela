@@ -26,6 +26,7 @@ import com.vela.im.shared.types.enums.GroupStatusEnum;
 import com.vela.im.shared.types.enums.GroupTypeEnum;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.exception.ApplicationException;
+import com.vela.im.shared.exception.BaseErrorCode;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.types.SyncReq;
 import com.vela.im.shared.types.SyncResp;
@@ -145,7 +146,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity imGroupEntity = new ImGroupEntity();
-        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Group);
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.Sequence.GROUP);
         imGroupEntity.setSequence(seq);
         imGroupEntity.setCreateTime(System.currentTimeMillis());
         imGroupEntity.setStatus(GroupStatusEnum.NORMAL.getCode());
@@ -164,7 +165,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         if(appConfig.getCallback().isCreateGroupAfterCallback()){
-            callbackService.callback(req.getAppId(), ImConstants.CallbackCommand.CreateGroupAfter,
+            callbackService.callback(req.getAppId(), ImConstants.CallbackCommand.CREATE_GROUP_AFTER,
                     JSONObject.toJSONString(imGroupEntity));
         }
 
@@ -222,7 +223,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity update = new ImGroupEntity();
-        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Group);
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.Sequence.GROUP);
         BeanUtils.copyProperties(req, update);
         update.setUpdateTime(System.currentTimeMillis());
         update.setSequence(seq);
@@ -232,7 +233,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         if(appConfig.getCallback().isModifyGroupAfterCallback()){
-            callbackService.callback(req.getAppId(),ImConstants.CallbackCommand.UpdateGroupAfter,
+            callbackService.callback(req.getAppId(),ImConstants.CallbackCommand.UPDATE_GROUP_AFTER,
                     JSONObject.toJSONString(imGroupDataMapper.selectOne(query)));
         }
 
@@ -323,7 +324,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity update = new ImGroupEntity();
-        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.SeqImConstants.Group);
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + ImConstants.Sequence.GROUP);
 
         update.setStatus(GroupStatusEnum.DESTROY.getCode());
         update.setSequence(seq);
@@ -336,7 +337,7 @@ public class ImGroupServiceImpl implements ImGroupService {
             DestroyGroupCallbackDto dto = new DestroyGroupCallbackDto();
             dto.setGroupId(req.getGroupId());
             callbackService.callback(req.getAppId()
-                    ,ImConstants.CallbackCommand.DestoryGroupAfter,
+                    ,ImConstants.CallbackCommand.DESTROY_GROUP_AFTER,
                     JSONObject.toJSONString(dto));
         }
 
@@ -510,7 +511,7 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         Result<Collection<String>> memberJoinedGroup = groupMemberService.syncMemberJoinedGroup(userId, appId);
         if(!memberJoinedGroup.isOk()){
-            throw new ApplicationException(500,"");
+            throw new ApplicationException(BaseErrorCode.SYSTEM_ERROR);
         }
         Long maxSeq =
                 imGroupDataMapper.getGroupMaxSeq(memberJoinedGroup.getData(),

@@ -278,7 +278,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         // 回调
         if(appConfig.getCallback().isAddGroupMemberBeforeCallback()){
 
-            Result responseVO = callbackService.beforeCallback(req.getAppId(), ImConstants.CallbackCommand.GroupMemberAddBefore
+            Result responseVO = callbackService.beforeCallback(req.getAppId(), ImConstants.CallbackCommand.GROUP_MEMBER_ADD_BEFORE
                     , JSONObject.toJSONString(req));
             if(!responseVO.isOk()){
                 return responseVO;
@@ -345,7 +345,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
             dto.setMemberId(resp);
             dto.setOperater(req.getOperater());
             callbackService.callback(req.getAppId()
-                    ,ImConstants.CallbackCommand.GroupMemberAddAfter,
+                    ,ImConstants.CallbackCommand.GROUP_MEMBER_ADD_AFTER,
                     JSONObject.toJSONString(dto));
         }
 
@@ -417,7 +417,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
                     , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
             if(appConfig.getCallback().isDeleteGroupMemberAfterCallback()){
                 callbackService.callback(req.getAppId(),
-                        ImConstants.CallbackCommand.GroupMemberDeleteAfter,
+                        ImConstants.CallbackCommand.GROUP_MEMBER_DELETE_AFTER,
                         JSONObject.toJSONString(req));
             }
         }

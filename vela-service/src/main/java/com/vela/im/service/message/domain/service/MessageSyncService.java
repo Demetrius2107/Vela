@@ -217,7 +217,7 @@ public class MessageSyncService {
             req.setLastSequence(0L);
         }
 
-        String key = req.getAppId() + ":" + ImConstants.RedisImConstants.OfflineMessage + ":" + req.getOperater();
+        String key = req.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + req.getOperater();
 
         try {
             // Fetch the max sequence from the ZSet

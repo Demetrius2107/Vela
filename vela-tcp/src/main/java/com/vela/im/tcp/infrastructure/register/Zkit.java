@@ -34,19 +34,19 @@ public class Zkit {
      * 创建根节点路径：im-coreRoot 及其子路径 tcp/web
      */
     public void createRootNode() {
-        boolean exists = zkClient.exists(ImConstants.ImCoreZkRoot);
+        boolean exists = zkClient.exists(ImConstants.VELA_ZK_ROOT);
         if (!exists) {
-            zkClient.createPersistent(ImConstants.ImCoreZkRoot);
+            zkClient.createPersistent(ImConstants.VELA_ZK_ROOT);
         }
 
-        boolean tcpExists = zkClient.exists(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootTcp);
+        boolean tcpExists = zkClient.exists(ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_TCP);
         if (!tcpExists) {
-            zkClient.createPersistent(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootTcp);
+            zkClient.createPersistent(ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_TCP);
         }
 
-        boolean webExists = zkClient.exists(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootWeb);
+        boolean webExists = zkClient.exists(ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_WEB);
         if (!webExists) {
-            zkClient.createPersistent(ImConstants.ImCoreZkRoot + ImConstants.ImCoreZkRootWeb);
+            zkClient.createPersistent(ImConstants.VELA_ZK_ROOT + ImConstants.VELA_ZK_ROOT_WEB);
         }
     }
 

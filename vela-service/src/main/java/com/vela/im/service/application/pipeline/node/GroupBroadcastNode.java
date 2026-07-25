@@ -56,7 +56,7 @@ public class GroupBroadcastNode implements PipeNode<MessageContext> {
         GroupChatMessageContent msg = (GroupChatMessageContent) ctx.getMessageContent();
 
         // 生成群聊序列号
-        long seq = redisSeq.doGetSeq(msg.getAppId() + ":" + ImConstants.SeqImConstants.GroupMessage
+        long seq = redisSeq.doGetSeq(msg.getAppId() + ":" + ImConstants.Sequence.GROUP_MESSAGE
                 + msg.getGroupId());
         msg.setMessageSequence(seq);
 

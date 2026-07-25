@@ -37,7 +37,7 @@ public class UserSessionUtils {
     public List<UserSession> getUserSession(Integer appId, String userId){
 
         // key appId + UserId 从Redis中获取
-        String userSessionKey = appId + ImConstants.RedisImConstants.UserSessionConstants
+        String userSessionKey = appId + ImConstants.Redis.USER_SESSION_PREFIX
                 + userId;
 
         Map<Object, Object> entries =
@@ -63,7 +63,7 @@ public class UserSessionUtils {
     public UserSession getUserSession(Integer appId,String userId
             ,Integer clientType,String imei){
 
-        String userSessionKey = appId + ImConstants.RedisImConstants.UserSessionConstants
+        String userSessionKey = appId + ImConstants.Redis.USER_SESSION_PREFIX
                 + userId;
         String hashKey = clientType + ":" + imei;
         Object o = stringRedisTemplate.opsForHash().get(userSessionKey, hashKey);

@@ -66,7 +66,7 @@ public class IdentityCheck {
                                                  String appId, String userSig){
 
         String cacheUserSig = stringRedisTemplate.opsForValue()
-                .get(appId + ":" + ImConstants.RedisImConstants.userSign + ":"
+                .get(appId + ":" + ImConstants.Redis.USER_SIGN + ":"
                 + identifier + userSig);
         if(!StringUtils.isBlank(cacheUserSig) && Long.valueOf(cacheUserSig)
          >  System.currentTimeMillis() / 1000){
@@ -123,7 +123,7 @@ public class IdentityCheck {
         String genSig = sigAPI.genUserSig(identifier, expireSec,time,null);
         if (genSig.toLowerCase().equals(userSig.toLowerCase()))
         {
-            String key = appId + ":" + ImConstants.RedisImConstants.userSign + ":"
+            String key = appId + ":" + ImConstants.Redis.USER_SIGN + ":"
                     +identifier + userSig;
 
             Long etime = expireTime - System.currentTimeMillis() / 1000;

@@ -109,7 +109,7 @@ public class P2PMessageService {
         // 前置回调（判断在同步管道外，因为回调可能依赖完整上下文）
         if (appConfig.getCallback().isSendMessageAfterCallback()) {
             Result<?> callbackResult = callbackService.beforeCallback(
-                    messageContent.getAppId(), ImConstants.CallbackCommand.SendMessageBefore,
+                    messageContent.getAppId(), ImConstants.CallbackCommand.SEND_MESSAGE_BEFORE,
                     com.alibaba.fastjson.JSONObject.toJSONString(messageContent));
             if (!callbackResult.isOk()) {
                 com.vela.im.codec.pack.message.ChatMessageAck ack =
