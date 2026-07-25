@@ -1,0 +1,32 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: vela-gateway
+  cloud:
+    gateway:
+      routes:
+        # 业务服务路由
+        - id: vela-service
+          uri: http://localhost:8000
+          predicates:
+            - Path=/v1/**
+          filters:
+            - StripPrefix=0
+
+      # 全局过滤器配置
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter:
+              replenishRate: 100
+              burstCapacity: 200
+
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

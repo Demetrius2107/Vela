@@ -14,6 +14,7 @@
         <module>vela-message-store</module>
         <module>vela-service</module>
         <module>vela-tcp</module>
+        <module>vela-gateway</module>
     </modules>
 
     <parent>
