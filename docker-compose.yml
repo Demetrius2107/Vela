@@ -179,6 +179,17 @@ services:
 
 # ==================== 监控服务 ====================
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: vela-web
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - vela-service
+
   skywalking-oap:
     image: apache/skywalking-oap-server:8.9.1
     container_name: vela-skywalking-oap
