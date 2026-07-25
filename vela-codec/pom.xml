@@ -41,6 +41,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- protobuf -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
+
 
     </dependencies>
 

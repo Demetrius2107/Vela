@@ -14,6 +14,7 @@
         <module>vela-message-store</module>
         <module>vela-service</module>
         <module>vela-tcp</module>
+        <module>vela-gateway</module>
     </modules>
 
     <parent>
@@ -31,15 +32,15 @@
         <mybatis-plus.version>3.4.2</mybatis-plus.version>
         <hutool.version>5.0.6</hutool.version>
         <redisson.version>3.15.6</redisson.version>
-        <snakeyaml.version>1.27</snakeyaml.version>
+        <snakeyaml.version>2.0</snakeyaml.version>
         <protostuff-api>1.0.10</protostuff-api>
         <zkClient.version>0.1</zkClient.version>
-        <apache.httpclient.version>4.5.9</apache.httpclient.version>
+        <apache.httpclient.version>4.5.14</apache.httpclient.version>
         <rabbit.client.version>5.6.0</rabbit.client.version>
         <apache.commons.version>3.12.0</apache.commons.version>
-        <fastjson.version>1.2.51</fastjson.version>
-        <springboot.version>2.3.2.RELEASE</springboot.version>
-        <netty.version>4.1.35.Final</netty.version>
+        <fastjson.version>1.2.83</fastjson.version>
+        <springboot.version>2.3.12.RELEASE</springboot.version>
+        <netty.version>4.1.100.Final</netty.version>
         <feign.version>8.18.0</feign.version>
     </properties>
 
@@ -232,6 +233,13 @@
                 <groupId>org.apache.shardingsphere</groupId>
                 <artifactId>shardingsphere-jdbc-core-spring-boot-starter</artifactId>
                 <version>5.1.1</version>
+            </dependency>
+
+            <!-- protobuf -->
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>3.21.12</version>
             </dependency>
 
             <!-- feign调用依赖 -->
