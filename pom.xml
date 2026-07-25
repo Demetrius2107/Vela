@@ -196,6 +196,18 @@
                 <version>1.4.2.Final</version>
             </dependency>
 
+            <!-- caffeine -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-cache</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>2.9.3</version>
+            </dependency>
+
             <!-- feign调用依赖 -->
             <dependency>
                 <groupId>com.netflix.feign</groupId>
