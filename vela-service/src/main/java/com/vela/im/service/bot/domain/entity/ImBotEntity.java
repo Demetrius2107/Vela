@@ -14,7 +14,10 @@ public class ImBotEntity {
     private String botId;
     private String botName;
     private String botAvatar;
+    private String description;
     private String webhookUrl;
+    private String apiKey;
+    /** 0-禁用, 1-启用 */
     private Integer status;
     private Long createTime;
 }
