@@ -18,6 +18,7 @@ import com.vela.im.service.application.utils.ConversationIdGenerate;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.application.utils.PendingAckTracker;
+import com.vela.im.service.application.utils.MessageLockManager;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
@@ -79,14 +80,12 @@ public class MessageSyncService {
     private final PendingAckTracker pendingAckTracker;
     private final ImMessageHistoryMapper imMessageHistoryMapper;
     private final StringRedisTemplate stringRedisTemplate;
+    private final MessageLockManager messageLockManager;
 
     private final RecallStrategy p2pRecallStrategy;
     private final RecallStrategy groupRecallStrategy;
 
     private static final Logger logger = LoggerFactory.getLogger(MessageSyncService.class);
-
-    /** Concurrent lock per messageKey to prevent concurrent recall operations */
-    private final ConcurrentHashMap<Long, Object> recallLocks = new ConcurrentHashMap<>();
 
     /**
      * Simple retry with fixed delay for recall operations.
@@ -121,7 +120,8 @@ public class MessageSyncService {
                               GroupRecallStrategy groupRecallStrategy,
                               PendingAckTracker pendingAckTracker,
                               ImMessageHistoryMapper imMessageHistoryMapper,
-                              StringRedisTemplate stringRedisTemplate) {
+                              StringRedisTemplate stringRedisTemplate,
+                              MessageLockManager messageLockManager) {
         this.messageProducer = messageProducer;
         this.conversationService = conversationService;
         this.redisTemplate = redisTemplate;
@@ -135,6 +135,7 @@ public class MessageSyncService {
         this.pendingAckTracker = pendingAckTracker;
         this.imMessageHistoryMapper = imMessageHistoryMapper;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.messageLockManager = messageLockManager;
     }
 
     /**
@@ -402,40 +403,42 @@ public class MessageSyncService {
             return;
         }
 
-        // 2. Concurrent conflict protection: lock per messageKey to prevent double-recall
+        // 2. Concurrent conflict protection: acquire write lock to prevent
+        //    concurrent push/read while recalling this message
         Long messageKey = content.getMessageKey();
-        Object lock = recallLocks.computeIfAbsent(messageKey, k -> new Object());
-        synchronized (lock) {
-            try {
-                QueryWrapper<ImMessageBodyEntity> query = new QueryWrapper<>();
-                query.eq("app_id",content.getAppId());
-                query.eq("message_key", content.getMessageKey());
-                ImMessageBodyEntity body = imMessageBodyMapper.selectOne(query);
+        if (!messageLockManager.tryWriteLock(messageKey)) {
+            logger.warn("Recall write lock timeout, msgKey={}, possible concurrent push/read", messageKey);
+            recallAck(pack, Result.fail(MessageErrorCode.MESSAGE_CONCURRENT_OPERATION), content);
+            return;
+        }
+        try {
+            QueryWrapper<ImMessageBodyEntity> query = new QueryWrapper<>();
+            query.eq("app_id",content.getAppId());
+            query.eq("message_key", content.getMessageKey());
+            ImMessageBodyEntity body = imMessageBodyMapper.selectOne(query);
 
-                if(body == null){
-                    logger.warn("Recall target not found, msgKey={}", content.getMessageKey());
-                    recallAck(pack,Result.fail(MessageErrorCode.MESSAGEBODY_IS_NOT_EXIST),content);
-                    return;
-                }
-
-                if(body.getDelFlag() == DelFlagEnum.DELETE.getCode()){
-                    logger.warn("Message already recalled, msgKey={}", content.getMessageKey());
-                    recallAck(pack,Result.fail(MessageErrorCode.MESSAGE_IS_RECALLED),content);
-                    return;
-                }
-
-                body.setDelFlag(DelFlagEnum.DELETE.getCode());
-                imMessageBodyMapper.update(body,query);
-
-                if(content.getConversationType() == ConversationTypeEnum.P2P.getCode()){
-                    p2pRecallStrategy.recall(content, pack, body);
-                }else{
-                    groupRecallStrategy.recall(content, pack, body);
-                }
-            } finally {
-                // Clean up lock to prevent memory leak
-                recallLocks.remove(messageKey);
+            if(body == null){
+                logger.warn("Recall target not found, msgKey={}", content.getMessageKey());
+                recallAck(pack,Result.fail(MessageErrorCode.MESSAGEBODY_IS_NOT_EXIST),content);
+                return;
             }
+
+            if(body.getDelFlag() == DelFlagEnum.DELETE.getCode()){
+                logger.warn("Message already recalled, msgKey={}", content.getMessageKey());
+                recallAck(pack,Result.fail(MessageErrorCode.MESSAGE_IS_RECALLED),content);
+                return;
+            }
+
+            body.setDelFlag(DelFlagEnum.DELETE.getCode());
+            imMessageBodyMapper.update(body,query);
+
+            if(content.getConversationType() == ConversationTypeEnum.P2P.getCode()){
+                p2pRecallStrategy.recall(content, pack, body);
+            }else{
+                groupRecallStrategy.recall(content, pack, body);
+            }
+        } finally {
+            messageLockManager.unlockWrite(messageKey);
         }
     }
     /**

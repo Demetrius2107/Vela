@@ -7,6 +7,7 @@ import com.vela.im.service.application.pipeline.PipeChain;
 import com.vela.im.service.application.pipeline.PipeNode;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.application.utils.MessageLockManager;
 import com.vela.im.service.application.utils.PendingAckTracker;
 import com.vela.im.service.application.utils.RetryUtil;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
@@ -46,19 +47,22 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
     private final CallbackService callbackService;
     private final ImServerProperties appConfig;
     private final PendingAckTracker pendingAckTracker;
+    private final MessageLockManager messageLockManager;
 
     public PersistAndPushNode(MessageStoreService messageStoreService,
                               MessageProducer messageProducer,
                               RedisSeq redisSeq,
                               CallbackService callbackService,
                               ImServerProperties appConfig,
-                              PendingAckTracker pendingAckTracker) {
+                              PendingAckTracker pendingAckTracker,
+                              MessageLockManager messageLockManager) {
         this.messageStoreService = messageStoreService;
         this.messageProducer = messageProducer;
         this.redisSeq = redisSeq;
         this.callbackService = callbackService;
         this.appConfig = appConfig;
         this.pendingAckTracker = pendingAckTracker;
+        this.messageLockManager = messageLockManager;
     }
 
     @Override
@@ -87,8 +91,24 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
         // 同步给发送方的其他设备
         messageProducer.sendToUserExceptClient(msg.getFromId(), MessageCommand.MSG_P2P, msg, msg);
 
-        // 推送给接收方
-        List<ClientInfo> onlineClients = dispatchToReceiver(msg);
+        // 尝试获取读锁后推送（防止与同时发生的撤回冲突）
+        boolean lockHeld = messageLockManager.tryReadLock(msg.getMessageKey());
+        List<ClientInfo> onlineClients;
+        try {
+            // 推送给接收方
+            // 若读锁获取失败（撤回正在写锁中），跳过推送，消息走离线流程
+            if (!lockHeld) {
+                logger.warn("Push skipped due to concurrent recall, msgId={}, msgKey={}, falling back to offline",
+                        msg.getMessageId(), msg.getMessageKey());
+                onlineClients = List.of();
+            } else {
+                onlineClients = dispatchToReceiver(msg);
+            }
+        } finally {
+            if (lockHeld) {
+                messageLockManager.unlockRead(msg.getMessageKey());
+            }
+        }
 
         // 缓存用于幂等校验
         messageStoreService.setMessageFromMessageIdCache(msg.getAppId(), msg.getMessageId(), msg);

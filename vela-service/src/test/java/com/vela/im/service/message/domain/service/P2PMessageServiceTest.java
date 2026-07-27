@@ -58,6 +58,8 @@ class P2PMessageServiceTest {
     private CallbackService callbackService;
     @Mock
     private PendingAckTracker pendingAckTracker;
+    @Mock
+    private com.vela.im.service.application.utils.MessageLockManager messageLockManager;
 
     private ValidateNode validateNode;
     private RateLimitNode rateLimitNode;
@@ -80,7 +82,7 @@ class P2PMessageServiceTest {
         validateNode = new ValidateNode(messageProducer, appConfig);
         rateLimitNode = new RateLimitNode(messageProducer, appConfig);
         dedupNode = new DedupNode(messageStoreService, messageProducer);
-        persistAndPushNode = new PersistAndPushNode(messageStoreService, messageProducer, redisSeq, callbackService, appConfig, pendingAckTracker);
+        persistAndPushNode = new PersistAndPushNode(messageStoreService, messageProducer, redisSeq, callbackService, appConfig, pendingAckTracker, messageLockManager);
 
         service = new P2PMessageService(checkSendMessageService, messageProducer,
                 messageStoreService, redisSeq, appConfig, callbackService,
