@@ -55,4 +55,15 @@ public class OfflineMessageContent {
     /** 被回复消息的正文预览 */
     private String replyToMsgBody;
 
+    // ====== 消息转发 ======
+
+    /** 被转发消息的 messageKey */
+    private Long forwardFromMsgKey;
+
+    /** 被转发消息的发送方 ID */
+    private String forwardFromId;
+
+    /** 被转发消息的正文 */
+    private String forwardFromMsgBody;
+
 }

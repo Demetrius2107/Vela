@@ -51,4 +51,15 @@ public class MessageContent extends ClientInfo {
     /** 被回复消息的正文预览（截取前 N 个字符） */
     private String replyToMsgBody;
 
+    // ====== 消息转发 ======
+
+    /** 被转发消息的 messageKey（为空则不是转发消息） */
+    private Long forwardFromMsgKey;
+
+    /** 被转发消息的发送方 ID */
+    private String forwardFromId;
+
+    /** 被转发消息的正文 */
+    private String forwardFromMsgBody;
+
 }
