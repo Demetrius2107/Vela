@@ -15,6 +15,7 @@ import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.ConversationIdGenerate;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.application.utils.PendingAckTracker;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
@@ -71,6 +72,7 @@ public class MessageSyncService {
     private final ImGroupMemberService imGroupMemberService;
     private final GroupMessageProducer groupMessageProducer;
     private final ImServerProperties appConfig;
+    private final PendingAckTracker pendingAckTracker;
 
     private final RecallStrategy p2pRecallStrategy;
     private final RecallStrategy groupRecallStrategy;
@@ -110,7 +112,8 @@ public class MessageSyncService {
                               GroupMessageProducer groupMessageProducer,
                               ImServerProperties appConfig,
                               P2PRecallStrategy p2pRecallStrategy,
-                              GroupRecallStrategy groupRecallStrategy) {
+                              GroupRecallStrategy groupRecallStrategy,
+                              PendingAckTracker pendingAckTracker) {
         this.messageProducer = messageProducer;
         this.conversationService = conversationService;
         this.redisTemplate = redisTemplate;
@@ -121,10 +124,11 @@ public class MessageSyncService {
         this.appConfig = appConfig;
         this.p2pRecallStrategy = p2pRecallStrategy;
         this.groupRecallStrategy = groupRecallStrategy;
+        this.pendingAckTracker = pendingAckTracker;
     }
 
     /**
-     * Forward receive ACK from receiver to sender.
+     * Forward receive ACK from receiver to sender, and clear pending ACK tracker.
      *
      * @param messageReceiveAckContent receive ACK content
      */
@@ -133,6 +137,9 @@ public class MessageSyncService {
             logger.warn("receiveMark skipped: invalid content");
             return;
         }
+        // Clear from pending ACK tracker (receiver confirmed delivery)
+        pendingAckTracker.acknowledge(messageReceiveAckContent.getFromId(), messageReceiveAckContent.getMessageKey());
+        // Forward the ACK to the original sender
         messageProducer.sendToUser(messageReceiveAckContent.getToId(),
                 MessageCommand.MSG_RECIVE_ACK,messageReceiveAckContent,messageReceiveAckContent.getAppId());
     }
@@ -295,15 +302,24 @@ public class MessageSyncService {
         RecallMessageNotifyPack pack = new RecallMessageNotifyPack();
         BeanUtils.copyProperties(content,pack);
 
-        // 1. Time boundary check: use configurable recall timeout + allow ±5s clock skew
+        // 1. Time boundary check: use configurable recall timeout + configurable clock skew tolerance
         long recallTimeout = appConfig.getMessageRecallTimeOut() != null
                 ? appConfig.getMessageRecallTimeOut() : 120000L;
-        long clockSkewTolerance = 5000L; // 5s clock skew tolerance
+        long clockSkewTolerance = appConfig.getMessageRecallClockSkewTolerance() != null
+                ? appConfig.getMessageRecallClockSkewTolerance() : 5000L;
 
         // Reject if client time is far ahead of server (possible clock desync)
         if (messageTime > now + clockSkewTolerance) {
-            logger.warn("Client clock skew detected, messageTime={}, serverTime={}",
-                    messageTime, now);
+            logger.warn("Client clock skew detected (ahead), messageTime={}, serverTime={}, skew={}ms",
+                    messageTime, now, messageTime - now);
+            recallAck(pack, Result.fail(MessageErrorCode.MESSAGE_CLOCK_SKEW_EXCEEDED), content);
+            return;
+        }
+
+        // Reject if client time is far behind server (backward clock skew)
+        if (messageTime < now - recallTimeout - clockSkewTolerance) {
+            logger.warn("Client clock skew detected (behind), messageTime={}, serverTime={}, skew={}ms",
+                    messageTime, now, now - messageTime);
             recallAck(pack, Result.fail(MessageErrorCode.MESSAGE_CLOCK_SKEW_EXCEEDED), content);
             return;
         }
