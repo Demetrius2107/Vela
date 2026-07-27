@@ -7,6 +7,8 @@ import com.vela.im.service.application.pipeline.PipeChain;
 import com.vela.im.service.application.pipeline.PipeNode;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.application.utils.PendingAckTracker;
+import com.vela.im.service.application.utils.RetryUtil;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.message.domain.service.MessageStoreService;
 import com.vela.im.shared.base.Result;
@@ -43,17 +45,20 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
     private final RedisSeq redisSeq;
     private final CallbackService callbackService;
     private final ImServerProperties appConfig;
+    private final PendingAckTracker pendingAckTracker;
 
     public PersistAndPushNode(MessageStoreService messageStoreService,
                               MessageProducer messageProducer,
                               RedisSeq redisSeq,
                               CallbackService callbackService,
-                              ImServerProperties appConfig) {
+                              ImServerProperties appConfig,
+                              PendingAckTracker pendingAckTracker) {
         this.messageStoreService = messageStoreService;
         this.messageProducer = messageProducer;
         this.redisSeq = redisSeq;
         this.callbackService = callbackService;
         this.appConfig = appConfig;
+        this.pendingAckTracker = pendingAckTracker;
     }
 
     @Override
@@ -88,6 +93,11 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
         // 缓存用于幂等校验
         messageStoreService.setMessageFromMessageIdCache(msg.getAppId(), msg.getMessageId(), msg);
 
+        // 接收方在线，跟踪 ACK 以便超时重推
+        if (!onlineClients.isEmpty()) {
+            pendingAckTracker.track(msg);
+        }
+
         // 接收方不在线，发服务端确认
         if (onlineClients.isEmpty()) {
             MessageReciveServerAckPack serverAck = new MessageReciveServerAckPack();
@@ -111,20 +121,24 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
     }
 
     private List<ClientInfo> dispatchToReceiver(MessageContent msg) {
-        try {
-            return retryDispatch(msg);
-        } catch (Exception e) {
-            logger.error("Failed to dispatch message, msgId={}, toId={}", msg.getMessageId(), msg.getToId(), e);
-            return List.of();
-        }
-    }
+        String taskName = "P2P-dispatch-" + msg.getMessageId();
+        boolean success = RetryUtil.retryWithExponentialBackoff(() -> {
+            List<ClientInfo> clients = messageProducer.sendToUser(
+                    msg.getToId(), MessageCommand.MSG_P2P, msg, msg.getAppId());
+            if (clients == null) {
+                throw new RuntimeException("dispatch returned null");
+            }
+            return true;
+        }, appConfig.getRetry().getMaxRetries(),
+           appConfig.getRetry().getBaseDelayMs(),
+           appConfig.getRetry().getMaxDelayMs(),
+           taskName);
 
-    private List<ClientInfo> retryDispatch(MessageContent msg) {
-        List<ClientInfo> clients = messageProducer.sendToUser(
-                msg.getToId(), MessageCommand.MSG_P2P, msg, msg.getAppId());
-        if (clients == null) {
-            throw new RuntimeException("dispatch returned null");
+        if (success) {
+            // Re-fetch clients for ACK tracking (retry utility doesn't return them)
+            return messageProducer.sendToUser(msg.getToId(), MessageCommand.MSG_P2P, msg, msg.getAppId());
         }
-        return clients;
+        logger.error("P2P dispatch failed after retries, msgId={}, toId={}", msg.getMessageId(), msg.getToId());
+        return List.of();
     }
 }

@@ -67,9 +67,15 @@ public class ImServerProperties {
     private Integer loginModel;
 
     /**
-     * 消息可撤回时间（毫秒），默认1200000ms
+     * 消息可撤回时间（毫秒），默认 120000ms (2分钟)
      */
-    private Long messageRecallTimeOut;
+    private Long messageRecallTimeOut = 120000L;
+
+    /**
+     * 消息撤回时钟偏差容忍度（毫秒），默认 5000ms (5秒)
+     * 客户端与服务端时间差在此范围内仍然允许撤回。
+     */
+    private Long messageRecallClockSkewTolerance = 5000L;
 
     /**
      * 群最大成员数量
@@ -213,5 +219,33 @@ public class ImServerProperties {
      * 消息时间最大偏差（毫秒），默认 5 分钟
      */
     private Long messageTimeMaxDeviation = 300000L;
+
+    /**
+     * 消息重试配置
+     */
+    private RetryConfig retry = new RetryConfig();
+
+    /**
+     * <p>Title: RetryConfig</p>
+     * <p>Description: 消息发送重试配置，使用指数退避策略。</p>
+     */
+    @Data
+    public static class RetryConfig {
+
+        /**
+         * 最大重试次数（含首次尝试），默认 3
+         */
+        private int maxRetries = 3;
+
+        /**
+         * 初始延迟（毫秒），默认 100ms
+         */
+        private long baseDelayMs = 100L;
+
+        /**
+         * 最大延迟（毫秒），默认 2000ms
+         */
+        private long maxDelayMs = 2000L;
+    }
 
 }
