@@ -44,4 +44,15 @@ public class OfflineMessageContent {
 
     private String conversationId;
 
+    // ====== 引用回复 ======
+
+    /** 被回复消息的 messageKey */
+    private Long replyToMsgKey;
+
+    /** 被回复消息的发送方 ID */
+    private String replyToFromId;
+
+    /** 被回复消息的正文预览 */
+    private String replyToMsgBody;
+
 }

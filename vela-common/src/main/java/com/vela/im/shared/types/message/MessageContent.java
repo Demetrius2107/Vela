@@ -25,14 +25,30 @@ public class MessageContent extends ClientInfo {
 
     private String toId;
 
+    /** 消息体 */
     private String messageBody;
 
+    /** 消息时间戳（毫秒） */
     private Long messageTime;
 
+    /** 扩展字段（JSON） */
     private String extra;
 
+    /** messageBodyId，消息体在 DB 中的主键 */
     private Long messageKey;
 
+    /** 消息序列号，用于离线拉取和排序 */
     private long messageSequence;
+
+    // ====== 引用回复 ======
+
+    /** 被回复消息的 messageKey（为空则不是回复消息） */
+    private Long replyToMsgKey;
+
+    /** 被回复消息的发送方 ID */
+    private String replyToFromId;
+
+    /** 被回复消息的正文预览（截取前 N 个字符） */
+    private String replyToMsgBody;
 
 }
