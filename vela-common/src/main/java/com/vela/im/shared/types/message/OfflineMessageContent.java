@@ -74,4 +74,9 @@ public class OfflineMessageContent {
     /** 是否 @所有人 */
     private boolean mentionAll;
 
+    // ====== 贴纸消息 ======
+
+    /** 贴纸 ID */
+    private String stickerId;
+
 }

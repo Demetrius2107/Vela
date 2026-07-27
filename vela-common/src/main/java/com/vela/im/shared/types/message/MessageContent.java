@@ -70,4 +70,9 @@ public class MessageContent extends ClientInfo {
     /** 是否 @所有人 */
     private boolean mentionAll;
 
+    // ====== 贴纸消息 ======
+
+    /** 贴纸 ID（不为空时表示该消息为贴纸消息） */
+    private String stickerId;
+
 }
