@@ -88,4 +88,16 @@ public class OfflineMessageContent {
     private Integer imageWidth;
     private Integer imageHeight;
 
+    // ====== 位置消息 ======
+
+    private Double latitude;
+    private Double longitude;
+    private String locationName;
+
+    // ====== 名片消息 ======
+
+    private String cardUserId;
+    private String cardNickName;
+    private String cardAvatar;
+
 }

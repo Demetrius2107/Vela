@@ -40,6 +40,30 @@ public class FileController {
         }
     }
 
+    @PostMapping("/upload/video")
+    public Result<ImFileEntity> uploadVideo(@RequestParam MultipartFile file,
+                                            @RequestParam Integer appId,
+                                            @RequestParam String uploaderId) {
+        try {
+            ImFileEntity entity = fileStorageService.store(file, appId, uploaderId, "video");
+            return Result.ok(entity);
+        } catch (IllegalArgumentException e) {
+            return Result.fail(400, e.getMessage());
+        }
+    }
+
+    @PostMapping("/upload/audio")
+    public Result<ImFileEntity> uploadAudio(@RequestParam MultipartFile file,
+                                            @RequestParam Integer appId,
+                                            @RequestParam String uploaderId) {
+        try {
+            ImFileEntity entity = fileStorageService.store(file, appId, uploaderId, "audio");
+            return Result.ok(entity);
+        } catch (IllegalArgumentException e) {
+            return Result.fail(400, e.getMessage());
+        }
+    }
+
     @PostMapping("/delete")
     public Result<Void> delete(@RequestParam Long fileId) {
         fileStorageService.delete(fileId);

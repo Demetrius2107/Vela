@@ -95,4 +95,26 @@ public class MessageContent extends ClientInfo {
     /** 图片高度（图片类型） */
     private Integer imageHeight;
 
+    // ====== 位置消息 ======
+
+    /** 纬度 */
+    private Double latitude;
+
+    /** 经度 */
+    private Double longitude;
+
+    /** 位置名称/地址 */
+    private String locationName;
+
+    // ====== 名片消息 ======
+
+    /** 名片用户ID */
+    private String cardUserId;
+
+    /** 名片用户昵称 */
+    private String cardNickName;
+
+    /** 名片用户头像 */
+    private String cardAvatar;
+
 }
