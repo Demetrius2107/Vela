@@ -60,6 +60,7 @@ public class MessageStoreService {
     private final StringRedisTemplate stringRedisTemplate;
     private final ConversationService conversationService;
     private final ImServerProperties appConfig;
+    private final MessageCompensationStore compensationStore;
 
     /**
      * 构建 TraceId 透传的 MessagePostProcessor
@@ -83,7 +84,8 @@ public class MessageStoreService {
                                RabbitTemplate rabbitTemplate,
                                StringRedisTemplate stringRedisTemplate,
                                ConversationService conversationService,
-                               ImServerProperties appConfig) {
+                               ImServerProperties appConfig,
+                               MessageCompensationStore compensationStore) {
         this.imMessageHistoryMapper = imMessageHistoryMapper;
         this.imMessageBodyMapper = imMessageBodyMapper;
         this.snowflakeIdWorker = snowflakeIdWorker;
@@ -92,6 +94,7 @@ public class MessageStoreService {
         this.stringRedisTemplate = stringRedisTemplate;
         this.conversationService = conversationService;
         this.appConfig = appConfig;
+        this.compensationStore = compensationStore;
     }
 
     /**
@@ -135,8 +138,9 @@ public class MessageStoreService {
             imMessageHistoryMapper.insertBatchSomeColumn(histories);
             logger.warn("P2P message persisted to DB (fallback), msgKey={}", messageBody.getMessageKey());
         } catch (Exception dbEx) {
-            logger.error("P2P 消息降级写入 DB 也失败，msgKey={}, error={}",
+            logger.error("P2P 消息降级写入 DB 也失败，加入补偿队列，msgKey={}, error={}",
                     messageBody.getMessageKey(), dbEx.getMessage());
+            compensationStore.compensate(messageBody, messageContent);
         }
     }
 
@@ -228,8 +232,9 @@ public class MessageStoreService {
             imGroupMessageHistoryMapper.insert(groupHistory);
             logger.warn("Group message persisted to DB (fallback), msgKey={}", messageBody.getMessageKey());
         } catch (Exception dbEx) {
-            logger.error("Group message fallback DB write also failed, msgKey={}, error={}",
+            logger.error("Group message fallback DB write also failed, adding to compensation queue, msgKey={}, error={}",
                     messageBody.getMessageKey(), dbEx.getMessage());
+            compensationStore.compensate(messageBody, messageContent);
         }
     }
 
@@ -240,7 +245,7 @@ public class MessageStoreService {
      * @param messageBodyEntity   消息体实体
      * @return 群聊消息历史记录
      */
-    private ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent
+    public ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent
                                                                      messageContent, ImMessageBodyEntity messageBodyEntity){
         ImGroupMessageHistoryEntity result = new ImGroupMessageHistoryEntity();
         BeanUtils.copyProperties(messageContent,result);
