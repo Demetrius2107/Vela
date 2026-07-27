@@ -75,4 +75,24 @@ public class MessageContent extends ClientInfo {
     /** 贴纸 ID（不为空时表示该消息为贴纸消息） */
     private String stickerId;
 
+    // ====== 文件/图片消息 ======
+
+    /** 文件访问URL */
+    private String fileUrl;
+
+    /** 原始文件名 */
+    private String fileName;
+
+    /** 文件大小（字节） */
+    private Long fileSize;
+
+    /** 文件类型：image/file/video/audio */
+    private String fileType;
+
+    /** 图片宽度（图片类型） */
+    private Integer imageWidth;
+
+    /** 图片高度（图片类型） */
+    private Integer imageHeight;
+
 }

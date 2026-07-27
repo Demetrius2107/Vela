@@ -79,4 +79,13 @@ public class OfflineMessageContent {
     /** 贴纸 ID */
     private String stickerId;
 
+    // ====== 文件/图片消息 ======
+
+    private String fileUrl;
+    private String fileName;
+    private Long fileSize;
+    private String fileType;
+    private Integer imageWidth;
+    private Integer imageHeight;
+
 }

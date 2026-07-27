@@ -226,6 +226,11 @@ public class ImServerProperties {
     private RetryConfig retry = new RetryConfig();
 
     /**
+     * 文件存储配置
+     */
+    private FileConfig file = new FileConfig();
+
+    /**
      * <p>Title: RetryConfig</p>
      * <p>Description: 消息发送重试配置，使用指数退避策略。</p>
      */
@@ -246,6 +251,26 @@ public class ImServerProperties {
          * 最大延迟（毫秒），默认 2000ms
          */
         private long maxDelayMs = 2000L;
+    }
+
+    /**
+     * <p>Title: FileConfig</p>
+     * <p>Description: 文件存储配置，控制上传目录、大小限制、允许类型。</p>
+     */
+    @Data
+    public static class FileConfig {
+
+        /** 文件存储根目录 */
+        private String uploadDir = "./uploads";
+
+        /** 单个文件最大字节数，默认 100MB */
+        private long maxFileSize = 104_857_600L;
+
+        /** 图片最大字节数，默认 20MB */
+        private long maxImageSize = 20_971_520L;
+
+        /** 允许的图片扩展名 */
+        private String imageExtensions = "jpg,jpeg,png,gif,webp,bmp";
     }
 
 }
