@@ -8,6 +8,7 @@ import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
 import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
+import com.vela.im.service.application.utils.ServiceDegradationManager;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.ImConstants;
@@ -61,6 +62,7 @@ public class MessageStoreService {
     private final ConversationService conversationService;
     private final ImServerProperties appConfig;
     private final MessageCompensationStore compensationStore;
+    private final ServiceDegradationManager degradationManager;
 
     /**
      * 构建 TraceId 透传的 MessagePostProcessor
@@ -85,7 +87,8 @@ public class MessageStoreService {
                                StringRedisTemplate stringRedisTemplate,
                                ConversationService conversationService,
                                ImServerProperties appConfig,
-                               MessageCompensationStore compensationStore) {
+                               MessageCompensationStore compensationStore,
+                               ServiceDegradationManager degradationManager) {
         this.imMessageHistoryMapper = imMessageHistoryMapper;
         this.imMessageBodyMapper = imMessageBodyMapper;
         this.snowflakeIdWorker = snowflakeIdWorker;
@@ -95,6 +98,7 @@ public class MessageStoreService {
         this.conversationService = conversationService;
         this.appConfig = appConfig;
         this.compensationStore = compensationStore;
+        this.degradationManager = degradationManager;
     }
 
     /**
@@ -110,13 +114,24 @@ public class MessageStoreService {
         dto.setMessageContent(messageContent);
         dto.setMessageBody(imMessageBodyEntity);
         messageContent.setMessageKey(imMessageBodyEntity.getMessageKey());
+
+        // MQ 降级检测：已知不可用时跳过 MQ，直接走 DB
+        if (!degradationManager.isMqAvailable()) {
+            logger.warn("MQ is degraded, skipping MQ send for P2P message, msgKey={}",
+                    imMessageBodyEntity.getMessageKey());
+            storeP2PMessageDirectly(imMessageBodyEntity, messageContent);
+            return;
+        }
+
         try {
             // Send to MQ for async persistence
             rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_P2P_MESSAGE, "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
+            degradationManager.reportMqSuccess();
         } catch (Exception e) {
             logger.error("MQ send failed for P2P message, fallback to direct DB write, msgKey={}, error={}",
                     imMessageBodyEntity.getMessageKey(), e.getMessage());
+            degradationManager.reportMqFailure("storeP2PMessage");
             // Fallback: write directly to DB when MQ is unavailable
             storeP2PMessageDirectly(imMessageBodyEntity, messageContent);
         }
@@ -204,13 +219,24 @@ public class MessageStoreService {
         dto.setMessageBody(imMessageBody);
         dto.setGroupChatMessageContent(messageContent);
         messageContent.setMessageKey(imMessageBody.getMessageKey());
+
+        // MQ 降级检测
+        if (!degradationManager.isMqAvailable()) {
+            logger.warn("MQ is degraded, skipping MQ send for group message, msgKey={}",
+                    imMessageBody.getMessageKey());
+            storeGroupMessageDirectly(imMessageBody, messageContent);
+            return;
+        }
+
         try {
             rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_GROUP_MESSAGE,
                     "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
+            degradationManager.reportMqSuccess();
         } catch (Exception e) {
             logger.error("MQ 发送群聊消息存储任务失败，降级直接写入 DB，msgKey={}, error={}",
                     imMessageBody.getMessageKey(), e.getMessage());
+            degradationManager.reportMqFailure("storeGroupMessage");
             // Fallback: write directly to DB when MQ is unavailable
             storeGroupMessageDirectly(imMessageBody, messageContent);
         }
@@ -318,6 +344,15 @@ public class MessageStoreService {
         String fromKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getFromId();
         String toKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getToId();
 
+        // Redis 降级检测：已知不可用时直接写 DB
+        if (!degradationManager.isRedisAvailable()) {
+            logger.warn("Redis is degraded, writing offline message directly to DB, msgKey={}",
+                    offlineMessage.getMessageKey());
+            persistToMessageHistory(offlineMessage, offlineMessage.getFromId());
+            persistToMessageHistory(offlineMessage, offlineMessage.getToId());
+            return;
+        }
+
         ZSetOperations<String, String> operations = stringRedisTemplate.opsForZSet();
         try {
             // Evict oldest if sender queue exceeds limit, persist to DB as fallback
@@ -338,10 +373,12 @@ public class MessageStoreService {
             // Insert into receiver queue
             operations.add(toKey,JSONObject.toJSONString(offlineMessage),
                     offlineMessage.getMessageKey());
+            degradationManager.reportRedisSuccess();
         } catch (Exception e) {
             logger.error("Redis offline message store failed, falling back to DB, fromId={}, toId={}, msgKey={}, error={}",
                     offlineMessage.getFromId(), offlineMessage.getToId(),
                     offlineMessage.getMessageKey(), e.getMessage());
+            degradationManager.reportRedisFailure("storeOfflineMessage");
             // Fallback: persist directly to DB when Redis is unavailable
             persistToMessageHistory(offlineMessage, offlineMessage.getFromId());
             persistToMessageHistory(offlineMessage, offlineMessage.getToId());
