@@ -44,6 +44,8 @@
             <div style="font-weight: 600; font-size: 15px; color: #333">{{ currentConv.name }}</div>
             <div style="font-size: 12px; color: #31c451">{{ currentConv.online ? '在线' : '离线' }} · {{ currentConv.signature || '这个人很懒什么都没写' }}</div>
           </div>
+          <n-button v-if="!currentConv.isGroup" quaternary size="small" circle @click="startAudioCall" title="语音通话">🎤</n-button>
+          <n-button v-if="!currentConv.isGroup" quaternary size="small" circle @click="startVideoCall" title="视频通话">📹</n-button>
           <n-button quaternary size="small" circle @click="showInfoPanel = !showInfoPanel">⋮</n-button>
         </div>
         <div style="flex: 1; display: flex; overflow: hidden">
@@ -127,15 +129,29 @@
     <div v-if="ctxMenu.show" :style="{ position: 'fixed', top: ctxMenu.y + 'px', left: ctxMenu.x + 'px', zIndex: 9999, background: '#fff', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', padding: '4px 0', minWidth: '140px' }" @mouseleave="ctxMenu.show = false">
       <div v-for="item in ctxMenu.items" :key="item.key" @click="handleCtxAction(item.key)" style="padding: 8px 16px; cursor: pointer; font-size: 13px; color: #333; display: flex; align-items: center; gap: 8px" @mouseenter="$event.target.style.background='#f5f5f5'" @mouseleave="$event.target.style.background='transparent'">{{ item.label }}</div>
     </div>
+    <CallPanel :status="callStatus" :remoteUserId="remoteUserId" :isVideo="isVideoCall" @accept="handleAccept" @reject="handleReject" @end="endCall" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive, nextTick, onBeforeUnmount, h } from 'vue'
+import { ref, computed, reactive, nextTick, onBeforeUnmount, onMounted, h } from 'vue'
 import { useMessage } from 'naive-ui'
 import NavHeader from '../../components/layout/NavHeader.vue'
+import CallPanel from '../../components/call/CallPanel.vue'
+import { useWebRTC } from '../../utils/webrtc'
 
 const msg = useMessage()
+
+// WebRTC 通话
+const { callStatus, remoteUserId, isVideoCall, startCall, acceptCall, rejectCall, endCall, registerHandlers } = useWebRTC()
+
+function startAudioCall() { if (currentConv.value) startCall(currentConv.value.id, false) }
+function startVideoCall() { if (currentConv.value) startCall(currentConv.value.id, true) }
+function handleAccept() { acceptCall(window.__pendingCall) }
+function handleReject() { if (window.__pendingCall) rejectCall(window.__pendingCall) }
+
+onMounted(() => registerHandlers())
+
 const currentConv = ref(null)
 const inputText = ref('')
 const msgListRef = ref(null)
