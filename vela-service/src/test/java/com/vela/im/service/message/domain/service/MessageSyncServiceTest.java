@@ -67,6 +67,10 @@ class MessageSyncServiceTest {
     private GroupRecallStrategy groupRecallStrategy;
     @Mock
     private PendingAckTracker pendingAckTracker;
+    @Mock
+    private com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper imMessageHistoryMapper;
+    @Mock
+    private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
 
     private MessageSyncService service;
 
@@ -75,7 +79,7 @@ class MessageSyncServiceTest {
         service = new MessageSyncService(messageProducer, conversationService,
                 redisTemplate, imMessageBodyMapper, redisSeq, imGroupMemberService,
                 groupMessageProducer, appConfig, p2PRecallStrategy, groupRecallStrategy,
-                pendingAckTracker);
+                pendingAckTracker, imMessageHistoryMapper, stringRedisTemplate);
     }
 
     @Nested

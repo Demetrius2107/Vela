@@ -348,26 +348,74 @@ public class MessageStoreService {
      */
     private void evictIfExceeded(ZSetOperations<String, String> operations, String key) {
         Long size = operations.zCard(key);
-        if (size != null && size > appConfig.getOfflineMessageCount()) {
-            // Fetch the oldest entry (lowest score)
-            Set<ZSetOperations.TypedTuple<String>> oldestSet = operations.rangeWithScores(key, 0, 0);
-            if (oldestSet != null && !oldestSet.isEmpty()) {
-                ZSetOperations.TypedTuple<String> oldest = oldestSet.iterator().next();
-                String oldestValue = oldest.getValue();
-                if (oldestValue != null) {
-                    try {
-                        OfflineMessageContent evictedMsg = JSONObject.parseObject(oldestValue, OfflineMessageContent.class);
-                        // Persist to DB before removal
-                        persistToMessageHistory(evictedMsg, extractOwnerIdFromKey(key));
-                        logger.warn("Offline message ZSet full, evicted to DB, key={}, evictedMsgKey={}",
-                                key, evictedMsg.getMessageKey());
-                    } catch (Exception e) {
-                        logger.warn("Failed to parse evicted offline message, key={}, error={}", key, e.getMessage());
+        if (size == null || size <= appConfig.getOfflineMessageCount()) {
+            return;
+        }
+
+        long excessCount = size - appConfig.getOfflineMessageCount();
+        logger.warn("Offline message ZSet full, key={}, size={}, limit={}, evicting {} entries",
+                key, size, appConfig.getOfflineMessageCount(), excessCount);
+
+        // Batch fetch the oldest entries beyond the limit
+        Set<ZSetOperations.TypedTuple<String>> evictSet = operations.rangeWithScores(key, 0, excessCount - 1);
+        if (evictSet == null || evictSet.isEmpty()) {
+            return;
+        }
+
+        long maxEvictedSeq = 0L;
+        List<ImMessageHistoryEntity> batch = new ArrayList<>();
+        for (ZSetOperations.TypedTuple<String> tuple : evictSet) {
+            String value = tuple.getValue();
+            Double score = tuple.getScore();
+            if (value == null || score == null) continue;
+
+            try {
+                OfflineMessageContent msg = JSONObject.parseObject(value, OfflineMessageContent.class);
+                ImMessageHistoryEntity history = new ImMessageHistoryEntity();
+                history.setAppId(msg.getAppId());
+                history.setFromId(msg.getFromId());
+                history.setToId(msg.getToId());
+                history.setOwnerId(extractOwnerIdFromKey(key));
+                history.setMessageKey(msg.getMessageKey());
+                history.setSequence(msg.getMessageSequence());
+                history.setMessageRandom(msg.getMessageRandom());
+                history.setMessageTime(msg.getMessageTime());
+                history.setCreateTime(System.currentTimeMillis());
+                batch.add(history);
+
+                if (score.longValue() > maxEvictedSeq) {
+                    maxEvictedSeq = score.longValue();
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to parse evicted offline message, key={}, error={}", key, e.getMessage());
+            }
+        }
+
+        // Batch persist to DB
+        if (!batch.isEmpty()) {
+            try {
+                imMessageHistoryMapper.insertBatchSomeColumn(batch);
+                logger.info("Batch evicted {} offline messages to DB, key={}", batch.size(), key);
+            } catch (Exception e) {
+                logger.error("Batch evict to DB failed, key={}, error={}", key, e.getMessage());
+                // Fallback: insert one by one
+                for (ImMessageHistoryEntity entity : batch) {
+                    try { imMessageHistoryMapper.insert(entity); } catch (Exception e2) {
+                        logger.error("Fallback insert failed, msgKey={}, error={}", entity.getMessageKey(), e2.getMessage());
                     }
                 }
             }
-            // Remove the oldest entry
-            operations.removeRange(key, 0, 0);
+        }
+
+        // Remove the evicted entries from ZSet in one call
+        operations.removeRange(key, 0, excessCount - 1);
+
+        // Store eviction watermark: max sequence of evicted messages
+        if (maxEvictedSeq > 0) {
+            String watermarkKey = key.replace(ImConstants.Redis.OFFLINE_MESSAGE,
+                    ImConstants.Redis.OFFLINE_EVICTED_WATERMARK);
+            stringRedisTemplate.opsForValue().set(watermarkKey, String.valueOf(maxEvictedSeq),
+                    7, TimeUnit.DAYS); // 7 day TTL
         }
     }
 

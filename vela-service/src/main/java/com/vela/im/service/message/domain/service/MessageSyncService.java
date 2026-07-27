@@ -7,10 +7,12 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.vela.im.service.conversation.domain.service.ConversationService;
 import com.vela.im.service.group.domain.service.ImGroupMemberService;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
+import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.domain.strategy.GroupRecallStrategy;
 import com.vela.im.service.message.domain.strategy.P2PRecallStrategy;
 import com.vela.im.service.message.domain.strategy.RecallStrategy;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
+import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.ConversationIdGenerate;
 import com.vela.im.service.application.utils.GroupMessageProducer;
@@ -40,10 +42,12 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,6 +77,8 @@ public class MessageSyncService {
     private final GroupMessageProducer groupMessageProducer;
     private final ImServerProperties appConfig;
     private final PendingAckTracker pendingAckTracker;
+    private final ImMessageHistoryMapper imMessageHistoryMapper;
+    private final StringRedisTemplate stringRedisTemplate;
 
     private final RecallStrategy p2pRecallStrategy;
     private final RecallStrategy groupRecallStrategy;
@@ -113,7 +119,9 @@ public class MessageSyncService {
                               ImServerProperties appConfig,
                               P2PRecallStrategy p2pRecallStrategy,
                               GroupRecallStrategy groupRecallStrategy,
-                              PendingAckTracker pendingAckTracker) {
+                              PendingAckTracker pendingAckTracker,
+                              ImMessageHistoryMapper imMessageHistoryMapper,
+                              StringRedisTemplate stringRedisTemplate) {
         this.messageProducer = messageProducer;
         this.conversationService = conversationService;
         this.redisTemplate = redisTemplate;
@@ -125,6 +133,8 @@ public class MessageSyncService {
         this.p2pRecallStrategy = p2pRecallStrategy;
         this.groupRecallStrategy = groupRecallStrategy;
         this.pendingAckTracker = pendingAckTracker;
+        this.imMessageHistoryMapper = imMessageHistoryMapper;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     /**
@@ -194,7 +204,9 @@ public class MessageSyncService {
 
     /**
      * Sync offline messages (incremental pull).
-     * <p>Fetches offline messages from Redis ZSet by sequence range. Falls back to empty list if Redis is unavailable.</p>
+     * <p>Fetches offline messages from Redis ZSet by sequence range.
+     * When messages have been evicted from ZSet due to capacity limits,
+     * also queries the DB message history table to fill the gap.</p>
      *
      * @param req sync request (with lastSequence / maxLimit)
      * @return sync response (with offline message list and max sequence)
@@ -224,13 +236,14 @@ public class MessageSyncService {
             req.setLastSequence(0L);
         }
 
-        String key = req.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + req.getOperater();
+        String offlineKey = req.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + req.getOperater();
+        String watermarkKey = req.getAppId() + ":" + ImConstants.Redis.OFFLINE_EVICTED_WATERMARK + ":" + req.getOperater();
 
         try {
             // Fetch the max sequence from the ZSet
             long maxSeq = 0L;
             ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
-            Set<ZSetOperations.TypedTuple<String>> set = zSetOperations.reverseRangeWithScores(key, 0, 0);
+            Set<ZSetOperations.TypedTuple<String>> set = zSetOperations.reverseRangeWithScores(offlineKey, 0, 0);
             if (!CollectionUtils.isEmpty(set)) {
                 ZSetOperations.TypedTuple<String> typedTuple = set.iterator().next();
                 Double score = typedTuple.getScore();
@@ -239,19 +252,76 @@ public class MessageSyncService {
                 }
             }
 
+            // Use a Set to deduplicate by messageKey
+            Set<Long> seenKeys = new HashSet<>();
             List<OfflineMessageContent> respList = new ArrayList<>();
             resp.setMaxSequence(maxSeq);
 
-            // Query messages by score range (lastSequence, maxSeq]
-            Set<ZSetOperations.TypedTuple<String>> querySet = zSetOperations.rangeByScoreWithScores(key,
+            // Step 1: Query messages from ZSet (current offline queue)
+            Set<ZSetOperations.TypedTuple<String>> querySet = zSetOperations.rangeByScoreWithScores(offlineKey,
                     req.getLastSequence(), maxSeq, 0, req.getMaxLimit());
             if (querySet != null) {
                 for (ZSetOperations.TypedTuple<String> typedTuple : querySet) {
                     String value = typedTuple.getValue();
-                    OfflineMessageContent offlineMessageContent = JSONObject.parseObject(value, OfflineMessageContent.class);
-                    respList.add(offlineMessageContent);
+                    if (value == null) continue;
+                    try {
+                        OfflineMessageContent offlineMsg = JSONObject.parseObject(value, OfflineMessageContent.class);
+                        if (offlineMsg.getMessageKey() != null) {
+                            seenKeys.add(offlineMsg.getMessageKey());
+                        }
+                        respList.add(offlineMsg);
+                    } catch (Exception e) {
+                        logger.warn("Failed to parse offline message from ZSet, error={}", e.getMessage());
+                    }
                 }
             }
+
+            // Step 2: Check eviction watermark — if the client is catching up from before eviction,
+            // also query DB history for messages that may have been evicted
+            String watermarkStr = stringRedisTemplate.opsForValue().get(watermarkKey);
+            if (watermarkStr != null) {
+                try {
+                    long evictedMaxSeq = Long.parseLong(watermarkStr);
+                    // If client's lastSequence is below the watermark, some messages were evicted
+                    if (req.getLastSequence() < evictedMaxSeq && respList.size() < req.getMaxLimit()) {
+                        long historyLimit = req.getMaxLimit() - respList.size();
+                        logger.info("Filling offline sync from DB history: operater={}, lastSeq={}, watermark={}, limit={}",
+                                req.getOperater(), req.getLastSequence(), evictedMaxSeq, historyLimit);
+
+                        QueryWrapper<ImMessageHistoryEntity> historyQuery = new QueryWrapper<>();
+                        historyQuery.eq("owner_id", req.getOperater())
+                                .eq("app_id", req.getAppId())
+                                .gt("sequence", req.getLastSequence())
+                                .le("sequence", evictedMaxSeq)
+                                .orderByAsc("sequence")
+                                .last("LIMIT " + historyLimit);
+                        List<ImMessageHistoryEntity> historyList = imMessageHistoryMapper.selectList(historyQuery);
+
+                        for (ImMessageHistoryEntity history : historyList) {
+                            // Deduplicate against already-fetched messages
+                            if (history.getMessageKey() != null && seenKeys.contains(history.getMessageKey())) {
+                                continue;
+                            }
+                            OfflineMessageContent offlineMsg = new OfflineMessageContent();
+                            offlineMsg.setAppId(history.getAppId());
+                            offlineMsg.setFromId(history.getFromId());
+                            offlineMsg.setToId(history.getToId());
+                            offlineMsg.setMessageKey(history.getMessageKey());
+                            offlineMsg.setMessageSequence(history.getSequence());
+                            offlineMsg.setMessageRandom(history.getMessageRandom());
+                            offlineMsg.setMessageTime(history.getMessageTime());
+                            offlineMsg.setConversationType(ConversationTypeEnum.P2P.getCode());
+                            respList.add(offlineMsg);
+                            if (history.getMessageKey() != null) {
+                                seenKeys.add(history.getMessageKey());
+                            }
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    logger.warn("Invalid eviction watermark value: {}, key={}", watermarkStr, watermarkKey);
+                }
+            }
+
             resp.setDataList(respList);
 
             if (!CollectionUtils.isEmpty(respList)) {

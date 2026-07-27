@@ -108,6 +108,13 @@ public class ImConstants {
         public static final String OFFLINE_MESSAGE = "offlineMessage";
 
         /**
+         * 离线消息降级水位线 Key 前缀，格式：appId + :offlineEvicted: + userId
+         * 存储值为已降级到 DB 的最大 sequence，客户端同步时若 lastSequence 低于此值，
+         * 需同时查询消息历史表以补全被降级的消息。
+         */
+        public static final String OFFLINE_EVICTED_WATERMARK = "offlineEvicted";
+
+        /**
          * 序列号 Key 前缀
          */
         public static final String SEQ_PREFIX = "seq";
