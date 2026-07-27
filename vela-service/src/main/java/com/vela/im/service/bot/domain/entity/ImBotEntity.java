@@ -1,0 +1,20 @@
+package com.vela.im.service.bot.domain.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
+@Data
+@TableName("vela_bot")
+public class ImBotEntity {
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    private Integer appId;
+    private String botId;
+    private String botName;
+    private String botAvatar;
+    private String webhookUrl;
+    private Integer status;
+    private Long createTime;
+}
