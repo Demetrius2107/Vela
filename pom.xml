@@ -39,6 +39,7 @@
         <rabbit.client.version>5.6.0</rabbit.client.version>
         <apache.commons.version>3.12.0</apache.commons.version>
         <fastjson.version>1.2.83</fastjson.version>
+        <lombok.version>1.18.34</lombok.version>
         <springboot.version>2.3.12.RELEASE</springboot.version>
         <netty.version>4.1.100.Final</netty.version>
         <feign.version>8.18.0</feign.version>

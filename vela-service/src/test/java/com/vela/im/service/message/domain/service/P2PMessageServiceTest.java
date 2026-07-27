@@ -5,6 +5,7 @@ import com.vela.im.service.message.application.dto.resp.SendMessageResp;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.CallbackService;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.application.utils.PendingAckTracker;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.ClientInfo;
@@ -55,6 +56,8 @@ class P2PMessageServiceTest {
     private ImServerProperties appConfig;
     @Mock
     private CallbackService callbackService;
+    @Mock
+    private PendingAckTracker pendingAckTracker;
 
     private ValidateNode validateNode;
     private RateLimitNode rateLimitNode;
@@ -68,11 +71,16 @@ class P2PMessageServiceTest {
 
     @BeforeEach
     void setUp() {
+        // 模拟 CallbackConfig 避免 NPE
+        ImServerProperties.CallbackConfig callbackConfig = new ImServerProperties.CallbackConfig();
+        callbackConfig.setSendMessageAfterCallback(false);
+        lenient().when(appConfig.getCallback()).thenReturn(callbackConfig);
+
         // 使用真实管道节点实例（依赖已通过 @Mock 注入）
         validateNode = new ValidateNode(messageProducer, appConfig);
         rateLimitNode = new RateLimitNode(messageProducer, appConfig);
         dedupNode = new DedupNode(messageStoreService, messageProducer);
-        persistAndPushNode = new PersistAndPushNode(messageStoreService, messageProducer, redisSeq, callbackService, appConfig);
+        persistAndPushNode = new PersistAndPushNode(messageStoreService, messageProducer, redisSeq, callbackService, appConfig, pendingAckTracker);
 
         service = new P2PMessageService(checkSendMessageService, messageProducer,
                 messageStoreService, redisSeq, appConfig, callbackService,
