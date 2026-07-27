@@ -62,4 +62,12 @@ public class MessageContent extends ClientInfo {
     /** 被转发消息的正文 */
     private String forwardFromMsgBody;
 
+    // ====== @提及 ======
+
+    /** @提及的用户 ID 列表（JSON 数组字符串，如 "['user1','user2']"） */
+    private String mentionUserIds;
+
+    /** 是否 @所有人 */
+    private boolean mentionAll;
+
 }
