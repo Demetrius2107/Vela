@@ -7,6 +7,7 @@ import com.vela.im.service.admin.domain.AdminLoginLogEntity;
 import com.vela.im.service.admin.domain.AdminOperationLogEntity;
 import com.vela.im.service.admin.infrastructure.persistence.mapper.AdminLoginLogMapper;
 import com.vela.im.service.admin.infrastructure.persistence.mapper.AdminOperationLogMapper;
+import com.vela.im.service.message.infrastructure.elasticsearch.MessageSearchService;
 import com.vela.im.service.group.domain.entity.ImGroupEntity;
 import com.vela.im.service.group.infrastructure.persistence.mapper.ImGroupMapper;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
@@ -36,16 +37,19 @@ public class AdminService {
     private final ImMessageHistoryMapper messageHistoryMapper;
     private final AdminLoginLogMapper loginLogMapper;
     private final AdminOperationLogMapper operationLogMapper;
+    private final MessageSearchService messageSearchService;
 
     public AdminService(ImUserDataMapper userDataMapper, ImGroupMapper groupMapper,
                         ImMessageBodyMapper messageBodyMapper, ImMessageHistoryMapper messageHistoryMapper,
-                        AdminLoginLogMapper loginLogMapper, AdminOperationLogMapper operationLogMapper) {
+                        AdminLoginLogMapper loginLogMapper, AdminOperationLogMapper operationLogMapper,
+                        MessageSearchService messageSearchService) {
         this.userDataMapper = userDataMapper;
         this.groupMapper = groupMapper;
         this.messageBodyMapper = messageBodyMapper;
         this.messageHistoryMapper = messageHistoryMapper;
         this.loginLogMapper = loginLogMapper;
         this.operationLogMapper = operationLogMapper;
+        this.messageSearchService = messageSearchService;
     }
 
     // ==================== 看板 ====================
@@ -131,8 +135,11 @@ public class AdminService {
 
     public Result<Map<String, Object>> searchMessages(String keyword, String userId, String groupId,
                                                        Long startTime, Long endTime, int page, int size) {
+        if (keyword != null && !keyword.isEmpty()) {
+            return messageSearchService.search(keyword, userId, page, size);
+        }
+        // 无关键词时降级为 SQL 查询
         QueryWrapper<ImMessageBodyEntity> query = new QueryWrapper<>();
-        if (keyword != null && !keyword.isEmpty()) query.like("message_body", keyword);
         if (userId != null && !userId.isEmpty()) query.eq("from_id", userId);
         IPage<ImMessageBodyEntity> p = messageBodyMapper.selectPage(new Page<>(page + 1, size), query);
         Map<String, Object> result = new HashMap<>();

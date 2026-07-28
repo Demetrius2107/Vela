@@ -8,6 +8,7 @@ import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
 import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
+import com.vela.im.service.message.infrastructure.elasticsearch.MessageIndexService;
 import com.vela.im.service.application.utils.ServiceDegradationManager;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.config.ImServerProperties;
@@ -63,6 +64,7 @@ public class MessageStoreService {
     private final ImServerProperties appConfig;
     private final MessageCompensationStore compensationStore;
     private final ServiceDegradationManager degradationManager;
+    private final MessageIndexService messageIndexService;
 
     /**
      * 构建 TraceId 透传的 MessagePostProcessor
@@ -88,7 +90,8 @@ public class MessageStoreService {
                                ConversationService conversationService,
                                ImServerProperties appConfig,
                                MessageCompensationStore compensationStore,
-                               ServiceDegradationManager degradationManager) {
+                               ServiceDegradationManager degradationManager,
+                               MessageIndexService messageIndexService) {
         this.imMessageHistoryMapper = imMessageHistoryMapper;
         this.imMessageBodyMapper = imMessageBodyMapper;
         this.snowflakeIdWorker = snowflakeIdWorker;
@@ -99,6 +102,7 @@ public class MessageStoreService {
         this.appConfig = appConfig;
         this.compensationStore = compensationStore;
         this.degradationManager = degradationManager;
+        this.messageIndexService = messageIndexService;
     }
 
     /**
@@ -132,9 +136,10 @@ public class MessageStoreService {
             logger.error("MQ send failed for P2P message, fallback to direct DB write, msgKey={}, error={}",
                     imMessageBodyEntity.getMessageKey(), e.getMessage());
             degradationManager.reportMqFailure("storeP2PMessage");
-            // Fallback: write directly to DB when MQ is unavailable
             storeP2PMessageDirectly(imMessageBodyEntity, messageContent);
         }
+        // Index to Elasticsearch
+        messageIndexService.indexMessage(messageContent);
     }
 
     /**
@@ -383,6 +388,8 @@ public class MessageStoreService {
             persistToMessageHistory(offlineMessage, offlineMessage.getFromId());
             persistToMessageHistory(offlineMessage, offlineMessage.getToId());
         }
+        // Index to Elasticsearch
+        messageIndexService.indexOfflineMessage(offlineMessage);
     }
 
     /**

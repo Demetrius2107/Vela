@@ -93,6 +93,12 @@ appConfig:
   deleteConversationSyncMode: 1 #1多段同步
 
 
+spring:
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    read-timeout: 10s
+
 mqQueueName: 123
 
 mybatis-plus:
