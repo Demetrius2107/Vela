@@ -1,6 +1,8 @@
 package com.vela.im.service.admin.rest;
 
+import com.vela.im.service.admin.domain.service.AdminAuthService;
 import com.vela.im.service.admin.domain.service.AdminService;
+import com.vela.im.service.admin.domain.service.SystemConfigService;
 import com.vela.im.service.group.domain.entity.ImGroupEntity;
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.shared.base.Result;
@@ -14,9 +16,37 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
+    private final AdminAuthService adminAuthService;
+    private final SystemConfigService systemConfigService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, AdminAuthService adminAuthService,
+                           SystemConfigService systemConfigService) {
         this.adminService = adminService;
+        this.adminAuthService = adminAuthService;
+        this.systemConfigService = systemConfigService;
+    }
+
+    // ==================== 认证 ====================
+
+    @PostMapping("/login")
+    public Result<String> login(@RequestParam String userId, @RequestParam String password) {
+        return adminAuthService.login(userId, password);
+    }
+
+    @PostMapping("/admins/create")
+    public Result<Void> createAdmin(@RequestParam String userId, @RequestParam String password,
+                                     @RequestParam(defaultValue = "operator") String role) {
+        return adminAuthService.createAdmin(userId, password, role);
+    }
+
+    @GetMapping("/admins/list")
+    public Result<java.util.List<com.vela.im.service.admin.domain.AdminUserEntity>> listAdmins() {
+        return adminAuthService.listAdmins();
+    }
+
+    @PostMapping("/admins/toggle")
+    public Result<Void> toggleAdmin(@RequestParam Long adminId) {
+        return adminAuthService.toggleAdminStatus(adminId);
     }
 
     // ==================== 看板 ====================
@@ -110,5 +140,39 @@ public class AdminController {
                                                        @RequestParam(defaultValue = "0") int page,
                                                        @RequestParam(defaultValue = "20") int size) {
         return adminService.searchMessages(keyword, userId, groupId, startTime, endTime, page, size);
+    }
+
+    // ==================== 操作日志 ====================
+
+    @GetMapping("/operations")
+    public Result<Map<String, Object>> operationLogs(@RequestParam(required = false) String operatorId,
+                                                      @RequestParam(required = false) String action,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size) {
+        return adminService.operationLogs(operatorId, action, page, size);
+    }
+
+    // ==================== 系统配置 ====================
+
+    @GetMapping("/configs")
+    public Result<List<com.vela.im.service.admin.domain.SystemConfigEntity>> listConfigs() {
+        return systemConfigService.listConfigs();
+    }
+
+    @PostMapping("/configs/update")
+    public Result<Void> updateConfig(@RequestParam Long id, @RequestParam String value) {
+        return systemConfigService.updateConfig(id, value);
+    }
+
+    // ==================== 趋势与导出 ====================
+
+    @GetMapping("/users/trend")
+    public Result<Map<String, Object>> userTrend(@RequestParam(defaultValue = "7") int days) {
+        return adminService.userTrend(days);
+    }
+
+    @GetMapping("/groups/export")
+    public Result<List<com.vela.im.service.group.domain.entity.ImGroupEntity>> exportGroups() {
+        return adminService.exportGroups();
     }
 }

@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.vela.im.service.admin.domain.AdminLoginLogEntity;
+import com.vela.im.service.admin.domain.AdminOperationLogEntity;
 import com.vela.im.service.admin.infrastructure.persistence.mapper.AdminLoginLogMapper;
+import com.vela.im.service.admin.infrastructure.persistence.mapper.AdminOperationLogMapper;
 import com.vela.im.service.group.domain.entity.ImGroupEntity;
 import com.vela.im.service.group.infrastructure.persistence.mapper.ImGroupMapper;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
@@ -14,6 +16,8 @@ import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHi
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.service.user.infrastructure.persistence.mapper.ImUserDataMapper;
 import com.vela.im.shared.base.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,20 +28,24 @@ import java.util.Map;
 @Service
 public class AdminService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AdminService.class);
+
     private final ImUserDataMapper userDataMapper;
     private final ImGroupMapper groupMapper;
     private final ImMessageBodyMapper messageBodyMapper;
     private final ImMessageHistoryMapper messageHistoryMapper;
     private final AdminLoginLogMapper loginLogMapper;
+    private final AdminOperationLogMapper operationLogMapper;
 
     public AdminService(ImUserDataMapper userDataMapper, ImGroupMapper groupMapper,
                         ImMessageBodyMapper messageBodyMapper, ImMessageHistoryMapper messageHistoryMapper,
-                        AdminLoginLogMapper loginLogMapper) {
+                        AdminLoginLogMapper loginLogMapper, AdminOperationLogMapper operationLogMapper) {
         this.userDataMapper = userDataMapper;
         this.groupMapper = groupMapper;
         this.messageBodyMapper = messageBodyMapper;
         this.messageHistoryMapper = messageHistoryMapper;
         this.loginLogMapper = loginLogMapper;
+        this.operationLogMapper = operationLogMapper;
     }
 
     // ==================== 看板 ====================
@@ -56,61 +64,54 @@ public class AdminService {
 
     public Result<Map<String, Object>> listUsers(String keyword, int page, int size) {
         QueryWrapper<ImUserDataEntity> query = new QueryWrapper<>();
-        if (keyword != null && !keyword.isEmpty()) {
-            query.like("user_id", keyword).or().like("nick_name", keyword);
-        }
+        if (keyword != null && !keyword.isEmpty()) query.like("user_id", keyword).or().like("nick_name", keyword);
         IPage<ImUserDataEntity> p = userDataMapper.selectPage(new Page<>(page + 1, size), query);
         Map<String, Object> result = new HashMap<>();
-        result.put("list", p.getRecords());
-        result.put("total", p.getTotal());
-        result.put("pages", p.getPages());
+        result.put("list", p.getRecords()); result.put("total", p.getTotal()); result.put("pages", p.getPages());
         return Result.ok(result);
     }
 
     public Result<ImUserDataEntity> getUserDetail(String userId) {
-        QueryWrapper<ImUserDataEntity> query = new QueryWrapper<>();
-        query.eq("user_id", userId);
-        ImUserDataEntity user = userDataMapper.selectOne(query);
+        ImUserDataEntity user = userDataMapper.selectOne(new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
         if (user == null) return Result.fail(500, "用户不存在");
         return Result.ok(user);
     }
 
-    public Result<Void> updateUser(String userId, String nickName, Integer userSex,
-                                    String selfSignature, String location) {
-        QueryWrapper<ImUserDataEntity> query = new QueryWrapper<>();
-        query.eq("user_id", userId);
-        ImUserDataEntity user = userDataMapper.selectOne(query);
+    @Transactional
+    public Result<Void> updateUser(String userId, String nickName, Integer userSex, String selfSignature, String location) {
+        ImUserDataEntity user = userDataMapper.selectOne(new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
         if (user == null) return Result.fail(500, "用户不存在");
         if (nickName != null) user.setNickName(nickName);
         if (userSex != null) user.setUserSex(userSex);
         if (selfSignature != null) user.setSelfSignature(selfSignature);
         if (location != null) user.setLocation(location);
-        userDataMapper.update(user, query);
+        userDataMapper.update(user, new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
+        logOp("system", "user_update", "user", userId, "更新用户资料");
         return Result.ok();
     }
 
     @Transactional
     public Result<Void> toggleForbidden(String userId) {
-        QueryWrapper<ImUserDataEntity> query = new QueryWrapper<>();
-        query.eq("user_id", userId);
-        ImUserDataEntity user = userDataMapper.selectOne(query);
+        ImUserDataEntity user = userDataMapper.selectOne(new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
         if (user == null) return Result.fail(500, "用户不存在");
-        user.setForbiddenFlag(user.getForbiddenFlag() == 1 ? 0 : 1);
-        userDataMapper.update(user, query);
+        boolean wasForbidden = user.getForbiddenFlag() == 1;
+        user.setForbiddenFlag(wasForbidden ? 0 : 1);
+        userDataMapper.update(user, new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
+        logOp("system", wasForbidden ? "user_unforbidden" : "user_forbidden", "user", userId, "切换禁用状态");
         return Result.ok();
     }
 
     @Transactional
     public Result<Void> batchForbidden(List<String> userIds, boolean forbidden) {
         for (String uid : userIds) {
-            QueryWrapper<ImUserDataEntity> query = new QueryWrapper<>();
-            query.eq("user_id", uid);
-            ImUserDataEntity user = userDataMapper.selectOne(query);
+            ImUserDataEntity user = userDataMapper.selectOne(new QueryWrapper<ImUserDataEntity>().eq("user_id", uid));
             if (user != null) {
                 user.setForbiddenFlag(forbidden ? 1 : 0);
-                userDataMapper.update(user, query);
+                userDataMapper.update(user, new QueryWrapper<ImUserDataEntity>().eq("user_id", uid));
             }
         }
+        logOp("system", forbidden ? "batch_forbidden" : "batch_unforbidden", "user", String.join(",", userIds),
+                "批量操作 " + userIds.size() + " 人");
         return Result.ok();
     }
 
@@ -118,33 +119,24 @@ public class AdminService {
 
     public Result<Map<String, Object>> loginLogs(String userId, int page, int size) {
         QueryWrapper<AdminLoginLogEntity> query = new QueryWrapper<>();
-        if (userId != null && !userId.isEmpty()) {
-            query.eq("user_id", userId);
-        }
+        if (userId != null && !userId.isEmpty()) query.eq("user_id", userId);
         query.orderByDesc("login_time");
         IPage<AdminLoginLogEntity> p = loginLogMapper.selectPage(new Page<>(page + 1, size), query);
         Map<String, Object> result = new HashMap<>();
-        result.put("list", p.getRecords());
-        result.put("total", p.getTotal());
+        result.put("list", p.getRecords()); result.put("total", p.getTotal());
         return Result.ok(result);
     }
 
     // ==================== 消息审计 ====================
 
-    public Result<Map<String, Object>> searchMessages(String keyword, String userId,
-                                                       String groupId, Long startTime, Long endTime,
-                                                       int page, int size) {
+    public Result<Map<String, Object>> searchMessages(String keyword, String userId, String groupId,
+                                                       Long startTime, Long endTime, int page, int size) {
         QueryWrapper<ImMessageBodyEntity> query = new QueryWrapper<>();
-        if (keyword != null && !keyword.isEmpty()) {
-            query.like("message_body", keyword);
-        }
-        if (userId != null && !userId.isEmpty()) {
-            query.eq("from_id", userId);
-        }
+        if (keyword != null && !keyword.isEmpty()) query.like("message_body", keyword);
+        if (userId != null && !userId.isEmpty()) query.eq("from_id", userId);
         IPage<ImMessageBodyEntity> p = messageBodyMapper.selectPage(new Page<>(page + 1, size), query);
         Map<String, Object> result = new HashMap<>();
-        result.put("list", p.getRecords());
-        result.put("total", p.getTotal());
+        result.put("list", p.getRecords()); result.put("total", p.getTotal());
         return Result.ok(result);
     }
 
@@ -152,14 +144,11 @@ public class AdminService {
 
     public Result<Map<String, Object>> listGroups(String keyword, int page, int size, Integer status) {
         QueryWrapper<ImGroupEntity> query = new QueryWrapper<>();
-        if (keyword != null && !keyword.isEmpty()) {
-            query.like("group_id", keyword).or().like("group_name", keyword);
-        }
+        if (keyword != null && !keyword.isEmpty()) query.like("group_id", keyword).or().like("group_name", keyword);
         if (status != null) query.eq("status", status);
         IPage<ImGroupEntity> p = groupMapper.selectPage(new Page<>(page + 1, size), query);
         Map<String, Object> result = new HashMap<>();
-        result.put("list", p.getRecords());
-        result.put("total", p.getTotal());
+        result.put("list", p.getRecords()); result.put("total", p.getTotal());
         return Result.ok(result);
     }
 
@@ -175,6 +164,7 @@ public class AdminService {
         if (group == null) return Result.fail(500, "群组不存在");
         group.setStatus(1);
         groupMapper.updateById(group);
+        logOp("system", "group_dissolve", "group", groupId, "解散群组");
         return Result.ok();
     }
 
@@ -183,24 +173,63 @@ public class AdminService {
     public Result<Map<String, Object>> messageTrend(int days) {
         long now = System.currentTimeMillis();
         long start = now - (long) days * 86400000L;
-        QueryWrapper<ImMessageBodyEntity> query = new QueryWrapper<>();
-        query.between("create_time", start, now);
-        long totalInPeriod = messageBodyMapper.selectCount(query);
+        long totalInPeriod = messageBodyMapper.selectCount(new QueryWrapper<ImMessageBodyEntity>().between("create_time", start, now));
         Map<String, Object> result = new HashMap<>();
-        result.put("periodDays", days);
-        result.put("totalMessages", totalInPeriod);
+        result.put("periodDays", days); result.put("totalMessages", totalInPeriod);
         result.put("avgPerDay", days > 0 ? totalInPeriod / days : totalInPeriod);
         return Result.ok(result);
     }
 
     public Result<List<Map<String, Object>>> topActiveGroups(int limit) {
-        // Get top groups by message count
         List<Map<String, Object>> top = messageHistoryMapper.selectMaps(
                 new QueryWrapper<ImMessageHistoryEntity>()
                         .select("to_id as groupId, count(*) as msgCount")
-                        .groupBy("to_id")
-                        .orderByDesc("count(*)")
-                        .last("LIMIT " + limit));
+                        .groupBy("to_id").orderByDesc("count(*)").last("LIMIT " + limit));
         return Result.ok(top);
+    }
+
+    // ==================== 操作日志 ====================
+
+    public Result<Map<String, Object>> operationLogs(String operatorId, String action, int page, int size) {
+        QueryWrapper<AdminOperationLogEntity> query = new QueryWrapper<>();
+        if (operatorId != null && !operatorId.isEmpty()) query.eq("operator_id", operatorId);
+        if (action != null && !action.isEmpty()) query.eq("action", action);
+        query.orderByDesc("operate_time");
+        IPage<AdminOperationLogEntity> p = operationLogMapper.selectPage(new Page<>(page + 1, size), query);
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", p.getRecords()); result.put("total", p.getTotal());
+        return Result.ok(result);
+    }
+
+    private void logOp(String operator, String action, String targetType, String targetId, String detail) {
+        try {
+            AdminOperationLogEntity log = new AdminOperationLogEntity();
+            log.setOperatorId(operator != null ? operator : "system");
+            log.setAction(action); log.setTargetType(targetType); log.setTargetId(targetId);
+            log.setDetail(detail != null ? detail.substring(0, Math.min(detail.length(), 500)) : "");
+            log.setOperateTime(System.currentTimeMillis());
+            operationLogMapper.insert(log);
+        } catch (Exception e) {
+            logger.warn("Failed to log admin operation", e);
+        }
+    }
+
+    // ==================== 趋势与导出 ====================
+
+    public Result<Map<String, Object>> userTrend(int days) {
+        long now = System.currentTimeMillis();
+        long start = now - (long) days * 86400000L;
+        List<Map<String, Object>> dailyData = userDataMapper.selectMaps(
+                new QueryWrapper<ImUserDataEntity>()
+                        .select("DATE_FORMAT(FROM_UNIXTIME(create_time/1000), '%Y-%m-%d') as date, count(*) as count")
+                        .between("create_time", start, now)
+                        .groupBy("date").orderByAsc("date"));
+        Map<String, Object> result = new HashMap<>();
+        result.put("days", days); result.put("data", dailyData);
+        return Result.ok(result);
+    }
+
+    public Result<List<ImGroupEntity>> exportGroups() {
+        return Result.ok(groupMapper.selectList(new QueryWrapper<ImGroupEntity>().orderByDesc("create_time")));
     }
 }

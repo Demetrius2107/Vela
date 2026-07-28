@@ -30,6 +30,12 @@
         <AdminGroups v-if="activeTab === 'groups'" />
         <!-- 消息审计 -->
         <AdminMessages v-if="activeTab === 'messages'" />
+        <!-- 操作日志 -->
+        <AdminOperations v-if="activeTab === 'operations'" />
+        <!-- 管理员管理 -->
+        <AdminAdmins v-if="activeTab === 'admins'" />
+        <!-- 系统配置 -->
+        <AdminConfig v-if="activeTab === 'config'" />
       </div>
     </div>
   </div>
@@ -41,6 +47,9 @@ import AdminDashboard from './AdminDashboard.vue'
 import AdminUsers from './AdminUsers.vue'
 import AdminGroups from './AdminGroups.vue'
 import AdminMessages from './AdminMessages.vue'
+import AdminOperations from './AdminOperations.vue'
+import AdminAdmins from './AdminAdmins.vue'
+import AdminConfig from './AdminConfig.vue'
 
 const activeTab = ref('dashboard')
 const menuItems = [
@@ -48,5 +57,8 @@ const menuItems = [
   { key: 'users', label: '用户管理', icon: '👤' },
   { key: 'groups', label: '群组管理', icon: '👥' },
   { key: 'messages', label: '消息审计', icon: '💬' },
+  { key: 'operations', label: '操作日志', icon: '📋' },
+  { key: 'admins', label: '管理员', icon: '🔐' },
+  { key: 'config', label: '系统配置', icon: '⚙️' },
 ]
 </script>
