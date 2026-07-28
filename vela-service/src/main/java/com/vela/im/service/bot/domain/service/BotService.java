@@ -26,7 +26,7 @@ public class BotService {
         bot.setWebhookUrl(webhookUrl);
         bot.setDescription(description);
         bot.setApiKey(UUID.randomUUID().toString().replace("-", ""));
-        bot.setStatus(1);
+        bot.setStatus(com.vela.im.shared.types.enums.StatusConstants.BOT_ENABLED);
         bot.setCreateTime(System.currentTimeMillis());
         botMapper.insert(bot);
         return Result.ok(bot);
@@ -40,15 +40,15 @@ public class BotService {
 
     public Result<Void> toggleStatus(Long botId) {
         ImBotEntity bot = botMapper.selectById(botId);
-        if (bot == null) return Result.fail(500, "Bot不存在");
-        bot.setStatus(bot.getStatus() == 1 ? 0 : 1);
+        if (bot == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.BOT_NOT_FOUND);
+        bot.setStatus(bot.getStatus() == com.vela.im.shared.types.enums.StatusConstants.BOT_ENABLED ? com.vela.im.shared.types.enums.StatusConstants.BOT_DISABLED : com.vela.im.shared.types.enums.StatusConstants.BOT_ENABLED);
         botMapper.updateById(bot);
         return Result.ok();
     }
 
     public Result<String> regenerateApiKey(Long botId) {
         ImBotEntity bot = botMapper.selectById(botId);
-        if (bot == null) return Result.fail(500, "Bot不存在");
+        if (bot == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.BOT_NOT_FOUND);
         String newKey = UUID.randomUUID().toString().replace("-", "");
         bot.setApiKey(newKey);
         botMapper.updateById(bot);
@@ -57,7 +57,7 @@ public class BotService {
 
     public Result<Void> updateWebhook(Long botId, String webhookUrl) {
         ImBotEntity bot = botMapper.selectById(botId);
-        if (bot == null) return Result.fail(500, "Bot不存在");
+        if (bot == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.BOT_NOT_FOUND);
         bot.setWebhookUrl(webhookUrl);
         botMapper.updateById(bot);
         return Result.ok();
@@ -75,7 +75,7 @@ public class BotService {
 
     public Result<ImBotEntity> get(Long botId) {
         ImBotEntity bot = botMapper.selectById(botId);
-        if (bot == null) return Result.fail(500, "Bot不存在");
+        if (bot == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.BOT_NOT_FOUND);
         return Result.ok(bot);
     }
 }

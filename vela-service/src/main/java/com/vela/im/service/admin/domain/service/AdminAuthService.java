@@ -40,13 +40,13 @@ public class AdminAuthService {
     public Result<Void> createAdmin(String userId, String password, String role) {
         AdminUserEntity existing = adminUserMapper.selectOne(
                 new QueryWrapper<AdminUserEntity>().eq("user_id", userId));
-        if (existing != null) return Result.fail(500, "管理员已存在");
+        if (existing != null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.ADMIN_ALREADY_EXISTS);
 
         AdminUserEntity admin = new AdminUserEntity();
         admin.setUserId(userId);
         admin.setPassword(password);
         admin.setRole(role != null ? role : roleConfig.getDefaultRole());
-        admin.setStatus(1);
+        admin.setStatus(com.vela.im.shared.types.enums.StatusConstants.ON);
         admin.setCreateTime(System.currentTimeMillis());
         adminUserMapper.insert(admin);
         return Result.ok();
@@ -60,8 +60,8 @@ public class AdminAuthService {
     /** 切换管理员状态 */
     public Result<Void> toggleAdminStatus(Long adminId) {
         AdminUserEntity admin = adminUserMapper.selectById(adminId);
-        if (admin == null) return Result.fail(500, "管理员不存在");
-        admin.setStatus(admin.getStatus() == 1 ? 0 : 1);
+        if (admin == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.ADMIN_NOT_FOUND);
+        admin.setStatus(admin.getStatus() == com.vela.im.shared.types.enums.StatusConstants.ON ? com.vela.im.shared.types.enums.StatusConstants.OFF : com.vela.im.shared.types.enums.StatusConstants.ON);
         adminUserMapper.updateById(admin);
         return Result.ok();
     }

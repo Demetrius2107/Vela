@@ -39,7 +39,7 @@ public class InlineQueryService {
     public Result<List<Map<String, String>>> query(Integer appId, String botId, String query, String userId) {
         ImBotEntity bot = botService.getByBotId(botId, appId);
         if (bot == null || bot.getStatus() != 1) {
-            return Result.fail(500, "Bot 不可用");
+            return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.BOT_UNAVAILABLE);
         }
 
         try {

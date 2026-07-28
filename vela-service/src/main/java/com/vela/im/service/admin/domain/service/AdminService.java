@@ -77,14 +77,14 @@ public class AdminService {
 
     public Result<ImUserDataEntity> getUserDetail(String userId) {
         ImUserDataEntity user = userDataMapper.selectOne(new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
-        if (user == null) return Result.fail(500, "用户不存在");
+        if (user == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.USER_NOT_FOUND);
         return Result.ok(user);
     }
 
     @Transactional
     public Result<Void> updateUser(String userId, String nickName, Integer userSex, String selfSignature, String location) {
         ImUserDataEntity user = userDataMapper.selectOne(new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
-        if (user == null) return Result.fail(500, "用户不存在");
+        if (user == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.USER_NOT_FOUND);
         if (nickName != null) user.setNickName(nickName);
         if (userSex != null) user.setUserSex(userSex);
         if (selfSignature != null) user.setSelfSignature(selfSignature);
@@ -97,7 +97,7 @@ public class AdminService {
     @Transactional
     public Result<Void> toggleForbidden(String userId) {
         ImUserDataEntity user = userDataMapper.selectOne(new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
-        if (user == null) return Result.fail(500, "用户不存在");
+        if (user == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.USER_NOT_FOUND);
         boolean wasForbidden = user.getForbiddenFlag() == 1;
         user.setForbiddenFlag(wasForbidden ? 0 : 1);
         userDataMapper.update(user, new QueryWrapper<ImUserDataEntity>().eq("user_id", userId));
@@ -161,15 +161,15 @@ public class AdminService {
 
     public Result<ImGroupEntity> getGroupDetail(String groupId) {
         ImGroupEntity group = groupMapper.selectById(groupId);
-        if (group == null) return Result.fail(500, "群组不存在");
+        if (group == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.GROUP_NOT_FOUND);
         return Result.ok(group);
     }
 
     @Transactional
     public Result<Void> dissolveGroup(String groupId, Integer appId) {
         ImGroupEntity group = groupMapper.selectById(groupId);
-        if (group == null) return Result.fail(500, "群组不存在");
-        group.setStatus(1);
+        if (group == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.GROUP_NOT_FOUND);
+        group.setStatus(com.vela.im.shared.types.enums.StatusConstants.GROUP_DISSOLVED);
         groupMapper.updateById(group);
         logOp("system", "group_dissolve", "group", groupId, "解散群组");
         return Result.ok();

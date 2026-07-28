@@ -39,13 +39,13 @@ public class DocumentService {
 
     public Result<DocumentEntity> get(Long id) {
         DocumentEntity e = mapper.selectById(id);
-        if (e == null) return Result.fail(500, "文档不存在");
+        if (e == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.DOCUMENT_NOT_FOUND);
         return Result.ok(e);
     }
 
     public Result<Void> update(DocumentEntity entity) {
         DocumentEntity e = mapper.selectById(entity.getId());
-        if (e == null) return Result.fail(500, "文档不存在");
+        if (e == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.DOCUMENT_NOT_FOUND);
         if (entity.getTitle() != null) e.setTitle(entity.getTitle());
         if (entity.getContent() != null) e.setContent(entity.getContent());
         if (entity.getSummary() != null) e.setSummary(entity.getSummary());

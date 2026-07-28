@@ -36,7 +36,7 @@ public class ScheduleService {
 
     public Result<Void> updateStatus(Long id, Integer status) {
         ScheduleEntity e = mapper.selectById(id);
-        if (e == null) return Result.fail(500, "日程不存在");
+        if (e == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.SCHEDULE_NOT_FOUND);
         e.setStatus(status); e.setUpdateTime(System.currentTimeMillis());
         mapper.updateById(e);
         return Result.ok();

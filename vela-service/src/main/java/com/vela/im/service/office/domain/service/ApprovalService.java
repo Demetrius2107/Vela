@@ -19,7 +19,7 @@ public class ApprovalService {
     public ApprovalService(ApprovalMapper mapper) { this.mapper = mapper; }
 
     public Result<ApprovalEntity> submit(ApprovalEntity entity) {
-        entity.setStatus(0);
+        entity.setStatus(com.vela.im.shared.types.enums.StatusConstants.PENDING);
         entity.setCreateTime(System.currentTimeMillis());
         entity.setUpdateTime(entity.getCreateTime());
         mapper.insert(entity);
@@ -40,9 +40,9 @@ public class ApprovalService {
 
     public Result<Void> approve(Long id, String approverId, String comment, boolean passed) {
         ApprovalEntity e = mapper.selectById(id);
-        if (e == null) return Result.fail(500, "审批不存在");
-        if (e.getStatus() != 0) return Result.fail(500, "审批已处理");
-        e.setStatus(passed ? 1 : 2);
+        if (e == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.APPROVAL_NOT_FOUND);
+        if (e.getStatus() != 0) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.APPROVAL_ALREADY_PROCESSED);
+        e.setStatus(passed ? com.vela.im.shared.types.enums.StatusConstants.DONE : com.vela.im.shared.types.enums.StatusConstants.REJECTED);
         e.setApproverId(approverId);
         e.setComment(comment);
         e.setUpdateTime(System.currentTimeMillis());

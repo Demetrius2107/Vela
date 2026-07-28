@@ -38,7 +38,7 @@ public class TodoService {
 
     public Result<Void> updateStatus(Long id, Integer status) {
         TodoEntity e = mapper.selectById(id);
-        if (e == null) return Result.fail(500, "待办不存在");
+        if (e == null) return Result.fail(com.vela.im.shared.types.enums.BusinessErrorCode.TODO_NOT_FOUND);
         e.setStatus(status); e.setUpdateTime(System.currentTimeMillis());
         mapper.updateById(e);
         return Result.ok();

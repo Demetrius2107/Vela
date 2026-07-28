@@ -321,4 +321,28 @@ public class ImConstants {
          */
         public static final String CONVERSATION = "conversationSequence";
     }
+
+    // ==================== Bot 常量 ====================
+
+    public static class Bot {
+        /** Bot 消息速率限制间隔（纳秒） */
+        public static final long RATE_LIMIT_INTERVAL = 500_000_000L;
+
+        /** Webhook 响应超时（秒） */
+        public static final int WEBHOOK_TIMEOUT_SECONDS = 10;
+
+        /** Bot 回复最大重试次数 */
+        public static final int MAX_REPLY_RETRIES = 3;
+    }
+
+    // ==================== 通知常量 ====================
+
+    public static class Notify {
+        /** 通知前缀 */
+        public static final String PREFIX = "notify";
+
+        /** 消息通知类别 */
+        public static final String TYPE_NEW_MESSAGE = "new_message";
+        public static final String TYPE_CALL_INCOMING = "call_incoming";
+    }
 }
