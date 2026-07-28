@@ -15,10 +15,21 @@ interface VelaApi {
 
     @POST("/v1/message/syncOfflineMessage")
     suspend fun syncOffline(@Body req: SyncReq): ApiResult<SyncResp>
+
+    @GET("/v1/friend/getAllFriend")
+    suspend fun getFriends(@Query("appId") appId: Int, @Query("fromId") fromId: String): ApiResult<List<FriendData>>
 }
 
 data class SyncResp(
     val maxSequence: Long,
     val dataList: List<OfflineMessage>?,
     val completed: Boolean = true
+)
+
+data class FriendData(
+    val toId: String?,
+    val nickName: String?,
+    val photo: String?,
+    val selfSignature: String?,
+    val status: Int?
 )

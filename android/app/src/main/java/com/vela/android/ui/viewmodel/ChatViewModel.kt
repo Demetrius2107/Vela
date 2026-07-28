@@ -3,6 +3,10 @@ package com.vela.android.ui.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.vela.android.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 data class Conversation(
     val id: String,
@@ -23,20 +27,36 @@ data class ChatMessage(
 
 class ChatViewModel {
 
-    var conversations by mutableStateOf(listOf(
-        Conversation("user1", "张三", "明天见", "10:30", 3, true),
-        Conversation("group1", "项目团队", "收到", "09:15", 0, false, true),
-        Conversation("user2", "李四", "文件已发", "昨天", 1, true)
-    ))
+    private val api = RetrofitClient.api
+    private val scope = CoroutineScope(Dispatchers.IO)
 
-    var messages by mutableStateOf(listOf(
-        ChatMessage("1", "你好", false, "10:00"),
-        ChatMessage("2", "你好，有事吗", true, "10:01"),
-        ChatMessage("3", "明天开会别忘了", false, "10:05"),
-        ChatMessage("4", "好的收到", true, "10:06")
-    ))
-
+    var conversations by mutableStateOf<List<Conversation>>(emptyList())
+    var messages by mutableStateOf<List<ChatMessage>>(emptyList())
     var currentConversation by mutableStateOf<Conversation?>(null)
+    var loading by mutableStateOf(false)
+
+    fun loadConversations(appId: Int, userId: String) {
+        scope.launch {
+            loading = true
+            try {
+                val resp = api.getFriends(appId, userId)
+                if (resp.isOk && resp.data != null) {
+                    conversations = resp.data.map { friend ->
+                        Conversation(
+                            id = friend.toId ?: "",
+                            name = friend.nickName ?: friend.toId ?: "未知",
+                            online = friend.status == 1,
+                            lastMessage = friend.selfSignature ?: ""
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // fallback to empty
+            } finally {
+                loading = false
+            }
+        }
+    }
 
     fun selectConversation(conv: Conversation) {
         currentConversation = conv

@@ -53,6 +53,13 @@ fun AppNavigation() {
             )
         }
         composable("home") {
+            val authViewModel = com.vela.android.ui.viewmodel.AuthViewModel(com.vela.android.VelaApp())
+            val userId = authViewModel.getUserId()
+
+            LaunchedEffect(userId) {
+                if (userId.isNotEmpty()) chatViewModel.loadConversations(10000, userId)
+            }
+
             HomeScreen(
                 conversations = chatViewModel.conversations,
                 onSelectConversation = { conv ->

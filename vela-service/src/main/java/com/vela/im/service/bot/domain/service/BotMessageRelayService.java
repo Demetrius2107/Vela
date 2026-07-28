@@ -1,8 +1,9 @@
 package com.vela.im.service.bot.domain.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.vela.im.service.application.utils.MessageProducer;
 import com.vela.im.service.bot.domain.entity.ImBotEntity;
-import com.vela.im.service.message.domain.service.MessageStoreService;
+import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.types.enums.command.MessageCommand;
 import com.vela.im.shared.types.message.MessageContent;
 import org.slf4j.Logger;
@@ -14,10 +15,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Bot 消息转发服务：检测消息目标是否为 Bot，将消息内容 JSON POST 到 Webhook，
- * 并将 Webhook 的响应文本作为 Bot 的回复发回给用户。
+ * Bot 消息转发服务。支持：
+ * - 文本/富文本/图片回复
+ * - 群聊 @bot 触发
+ * - 速率限制
+ * - 斜杠指令
  */
 @Service
 public class BotMessageRelayService {
@@ -29,6 +34,10 @@ public class BotMessageRelayService {
     private final BotCommandRegistry commandRegistry;
     private final HttpClient httpClient;
 
+    /** 速率限制：botId → 上一次消息时间戳（纳秒） */
+    private final ConcurrentHashMap<String, Long> rateLimiter = new ConcurrentHashMap<>();
+    private static final long RATE_LIMIT_INTERVAL = 500_000_000L; // 0.5s between messages
+
     public BotMessageRelayService(BotService botService, MessageProducer messageProducer,
                                   BotCommandRegistry commandRegistry) {
         this.botService = botService;
@@ -39,15 +48,13 @@ public class BotMessageRelayService {
                 .build();
     }
 
-    /**
-     * 检查消息目标是否为 Bot，如果是则转发到 Webhook 并回发响应。
-     *
-     * @param message 用户发给 Bot 的消息
-     * @return true=已处理（Bot 消息），false=不是 Bot 消息
-     */
+    /** 处理用户消息——检测是否为 Bot 消息 */
     public boolean relayToBotIfNeeded(MessageContent message) {
         ImBotEntity bot = botService.getByBotId(message.getToId(), message.getAppId());
         if (bot == null || bot.getStatus() != 1) return false;
+
+        // 速率限制
+        if (isRateLimited(bot.getBotId())) return true;
 
         String body = message.getMessageBody();
         if (body != null && body.startsWith("/")) {
@@ -55,7 +62,7 @@ public class BotMessageRelayService {
             return true;
         }
 
-        // 非指令消息，异步转发到 Webhook
+        // 异步转发到 Webhook
         new Thread(() -> {
             try {
                 String requestBody = buildRequestBody(message);
@@ -67,50 +74,101 @@ public class BotMessageRelayService {
                         .build();
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                log.info("Bot webhook response: botId={}, status={}, body={}",
-                        bot.getBotId(), response.statusCode(), truncate(response.body(), 200));
+                log.info("Bot webhook response: botId={}, status={}", bot.getBotId(), response.statusCode());
 
                 if (response.statusCode() == 200 && response.body() != null && !response.body().isEmpty()) {
-                    sendReply(bot, message, response.body());
+                    processWebhookResponse(bot, message, response.body());
                 }
             } catch (Exception e) {
                 log.error("Bot webhook relay failed: botId={}, error={}", bot.getBotId(), e.getMessage());
-                sendReply(bot, message, "Bot 暂时无法回复，请稍后再试");
+                sendReply(bot, message.getFromId(), message.getMessageKey(), "Bot 暂时无法回复，请稍后再试", null, null);
             }
         }).start();
 
         return true;
     }
 
-    private String buildRequestBody(MessageContent msg) {
-        return "{\"appId\":" + msg.getAppId()
-                + ",\"fromId\":\"" + escapeJson(msg.getFromId())
-                + "\",\"toId\":\"" + escapeJson(msg.getToId())
-                + "\",\"messageId\":\"" + escapeJson(msg.getMessageId())
-                + "\",\"messageBody\":\"" + escapeJson(msg.getMessageBody())
-                + "\",\"messageTime\":" + msg.getMessageTime()
-                + ",\"replyToMsgKey\":" + (msg.getReplyToMsgKey() != null ? msg.getReplyToMsgKey() : "null")
-                + "}";
+    /** 处理群聊消息中的 Bot @提及 */
+    public boolean handleGroupMention(MessageContent message, String groupId) {
+        ImBotEntity bot = botService.getByBotId(message.getToId(), message.getAppId());
+        if (bot == null || bot.getStatus() != 1) return false;
+        if (isRateLimited(bot.getBotId())) return true;
+
+        String body = message.getMessageBody();
+        if (body != null && body.startsWith("/")) {
+            handleCommand(message, bot, body);
+            return true;
+        }
+
+        new Thread(() -> {
+            try {
+                String requestBody = "{\"appId\":" + message.getAppId()
+                        + ",\"groupId\":\"" + escapeJson(groupId)
+                        + "\",\"fromId\":\"" + escapeJson(message.getFromId())
+                        + "\",\"messageBody\":\"" + escapeJson(message.getMessageBody())
+                        + "\",\"messageTime\":" + message.getMessageTime()
+                        + ",\"isGroup\":true}";
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(bot.getWebhookUrl()))
+                        .header("Content-Type", "application/json")
+                        .timeout(Duration.ofSeconds(10))
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                        .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() == 200 && response.body() != null && !response.body().isEmpty()) {
+                    processWebhookResponse(bot, message, response.body());
+                }
+            } catch (Exception e) {
+                log.error("Bot group mention failed: botId={}", bot.getBotId(), e);
+            }
+        }).start();
+        return true;
     }
 
-    private void sendReply(ImBotEntity bot, MessageContent original, String replyText) {
-        MessageContent reply = new MessageContent();
-        reply.setAppId(original.getAppId());
-        reply.setFromId(bot.getBotId());
-        reply.setToId(original.getFromId());
-        reply.setMessageBody(replyText);
-        reply.setMessageTime(System.currentTimeMillis());
-        reply.setReplyToMsgKey(original.getMessageKey());
+    /** 解析 Webhook 响应，支持纯文本和 JSON 格式 */
+    private void processWebhookResponse(ImBotEntity bot, MessageContent original, String responseBody) {
+        String trimmed = responseBody.trim();
+        if (trimmed.startsWith("{")) {
+            try {
+                JSONObject json = JSONObject.parseObject(trimmed);
+                String type = json.getString("type");
+                String content = json.getString("content");
+                String fileUrl = json.getString("fileUrl");
 
-        messageProducer.sendToUser(original.getFromId(), MessageCommand.MSG_P2P, reply, original.getAppId());
-        log.info("Bot reply sent: botId={}, to={}, replyLen={}", bot.getBotId(), original.getFromId(), replyText.length());
+                if ("image".equals(type) || "file".equals(type)) {
+                    sendReply(bot, original.getFromId(), original.getMessageKey(),
+                            content != null ? content : "[图片]", fileUrl, type);
+                } else {
+                    sendReply(bot, original.getFromId(), original.getMessageKey(),
+                            content != null ? content : trimmed, null, null);
+                }
+                return;
+            } catch (Exception ignored) {}
+        }
+        // Fallback: plain text
+        sendReply(bot, original.getFromId(), original.getMessageKey(), trimmed, null, null);
+    }
+
+    /** 发送回复消息 */
+    private void sendReply(ImBotEntity bot, String toId, Long replyToMsgKey,
+                           String text, String fileUrl, String fileType) {
+        MessageContent reply = new MessageContent();
+        reply.setAppId(bot.getAppId());
+        reply.setFromId(bot.getBotId());
+        reply.setToId(toId);
+        reply.setMessageBody(text);
+        reply.setMessageTime(System.currentTimeMillis());
+        reply.setReplyToMsgKey(replyToMsgKey);
+        reply.setFileUrl(fileUrl);
+        reply.setFileType(fileType);
+        messageProducer.sendToUser(toId, MessageCommand.MSG_P2P, reply, bot.getAppId());
+        log.info("Bot reply: botId={}, to={}, type={}", bot.getBotId(), toId, fileType != null ? fileType : "text");
     }
 
     private void handleCommand(MessageContent message, ImBotEntity bot, String body) {
         String[] parts = body.substring(1).split("\\s+", 2);
         String cmd = parts[0].toLowerCase();
         String[] args = parts.length > 1 ? parts[1].split("\\s+") : new String[0];
-
         BotCommandHandler handler = commandRegistry.get(cmd);
         String replyText;
         if (handler == null) {
@@ -118,16 +176,31 @@ public class BotMessageRelayService {
         } else {
             replyText = handler.handle(message, args);
         }
-        sendReply(bot, message, replyText);
+        sendReply(bot, message.getFromId(), message.getMessageKey(), replyText, null, null);
+    }
+
+    private boolean isRateLimited(String botId) {
+        Long last = rateLimiter.get(botId);
+        long now = System.nanoTime();
+        if (last != null && (now - last) < RATE_LIMIT_INTERVAL) {
+            log.warn("Bot rate limited: botId={}", botId);
+            return true;
+        }
+        rateLimiter.put(botId, now);
+        return false;
+    }
+
+    private String buildRequestBody(MessageContent msg) {
+        return "{\"appId\":" + msg.getAppId()
+                + ",\"fromId\":\"" + escapeJson(msg.getFromId())
+                + "\",\"messageBody\":\"" + escapeJson(msg.getMessageBody())
+                + "\",\"messageTime\":" + msg.getMessageTime()
+                + ",\"replyToMsgKey\":" + (msg.getReplyToMsgKey() != null ? msg.getReplyToMsgKey() : "null")
+                + "}";
     }
 
     private String escapeJson(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
-    }
-
-    private String truncate(String s, int max) {
-        if (s == null) return "";
-        return s.length() <= max ? s : s.substring(0, max) + "...";
     }
 }

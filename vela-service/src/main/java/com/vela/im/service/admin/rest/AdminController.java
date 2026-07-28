@@ -3,6 +3,7 @@ package com.vela.im.service.admin.rest;
 import com.vela.im.service.admin.domain.service.AdminAuthService;
 import com.vela.im.service.admin.domain.service.AdminService;
 import com.vela.im.service.admin.domain.service.SystemConfigService;
+import com.vela.im.service.admin.domain.AdminRoleConfig;
 import com.vela.im.service.group.domain.entity.ImGroupEntity;
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.shared.base.Result;
@@ -18,12 +19,18 @@ public class AdminController {
     private final AdminService adminService;
     private final AdminAuthService adminAuthService;
     private final SystemConfigService systemConfigService;
+    private final AdminRoleConfig adminRoleConfig;
 
     public AdminController(AdminService adminService, AdminAuthService adminAuthService,
-                           SystemConfigService systemConfigService) {
+                           SystemConfigService systemConfigService, AdminRoleConfig adminRoleConfig) {
         this.adminService = adminService;
         this.adminAuthService = adminAuthService;
         this.systemConfigService = systemConfigService;
+        this.adminRoleConfig = adminRoleConfig;
+    }
+
+    private boolean checkPerm(String role, String action) {
+        return adminRoleConfig.hasPermission(role != null ? role : "auditor", action);
     }
 
     // ==================== 认证 ====================
@@ -40,12 +47,16 @@ public class AdminController {
     }
 
     @GetMapping("/admins/list")
-    public Result<java.util.List<com.vela.im.service.admin.domain.AdminUserEntity>> listAdmins() {
+    public Result<java.util.List<com.vela.im.service.admin.domain.AdminUserEntity>> listAdmins(
+            @RequestHeader(value = "X-Admin-Role", defaultValue = "auditor") String role) {
+        if (!checkPerm(role, "admins")) return Result.fail(403, "无权限");
         return adminAuthService.listAdmins();
     }
 
     @PostMapping("/admins/toggle")
-    public Result<Void> toggleAdmin(@RequestParam Long adminId) {
+    public Result<Void> toggleAdmin(@RequestHeader(value = "X-Admin-Role", defaultValue = "auditor") String role,
+                                     @RequestParam Long adminId) {
+        if (!checkPerm(role, "admins")) return Result.fail(403, "无权限");
         return adminAuthService.toggleAdminStatus(adminId);
     }
 
@@ -81,22 +92,28 @@ public class AdminController {
     }
 
     @PostMapping("/users/update")
-    public Result<Void> updateUser(@RequestParam String userId,
+    public Result<Void> updateUser(@RequestHeader("X-Admin-Role") String role,
+                                    @RequestParam String userId,
                                     @RequestParam(required = false) String nickName,
                                     @RequestParam(required = false) Integer userSex,
                                     @RequestParam(required = false) String selfSignature,
                                     @RequestParam(required = false) String location) {
+        if (!checkPerm(role, "users")) return Result.fail(403, "无权限");
         return adminService.updateUser(userId, nickName, userSex, selfSignature, location);
     }
 
     @PostMapping("/users/toggleForbidden")
-    public Result<Void> toggleForbidden(@RequestParam String userId) {
+    public Result<Void> toggleForbidden(@RequestHeader("X-Admin-Role") String role,
+                                         @RequestParam String userId) {
+        if (!checkPerm(role, "users")) return Result.fail(403, "无权限");
         return adminService.toggleForbidden(userId);
     }
 
     @PostMapping("/users/batchForbidden")
-    public Result<Void> batchForbidden(@RequestBody List<String> userIds,
+    public Result<Void> batchForbidden(@RequestHeader("X-Admin-Role") String role,
+                                        @RequestBody List<String> userIds,
                                         @RequestParam boolean forbidden) {
+        if (!checkPerm(role, "users")) return Result.fail(403, "无权限");
         return adminService.batchForbidden(userIds, forbidden);
     }
 
@@ -125,7 +142,9 @@ public class AdminController {
     }
 
     @PostMapping("/groups/dissolve")
-    public Result<Void> dissolveGroup(@RequestParam String groupId, @RequestParam Integer appId) {
+    public Result<Void> dissolveGroup(@RequestHeader("X-Admin-Role") String role,
+                                       @RequestParam String groupId, @RequestParam Integer appId) {
+        if (!checkPerm(role, "groups")) return Result.fail(403, "无权限");
         return adminService.dissolveGroup(groupId, appId);
     }
 
@@ -160,7 +179,9 @@ public class AdminController {
     }
 
     @PostMapping("/configs/update")
-    public Result<Void> updateConfig(@RequestParam Long id, @RequestParam String value) {
+    public Result<Void> updateConfig(@RequestHeader("X-Admin-Role") String role,
+                                      @RequestParam Long id, @RequestParam String value) {
+        if (!checkPerm(role, "settings")) return Result.fail(403, "无权限");
         return systemConfigService.updateConfig(id, value);
     }
 
