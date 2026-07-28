@@ -139,6 +139,7 @@ import { useMessage } from 'naive-ui'
 import NavHeader from '../../components/layout/NavHeader.vue'
 import CallPanel from '../../components/call/CallPanel.vue'
 import { useWebRTC } from '../../utils/webrtc'
+import { requestNotificationPermission, showMessageNotification } from '../../utils/notification'
 
 const msg = useMessage()
 
@@ -150,7 +151,10 @@ function startVideoCall() { if (currentConv.value) startCall(currentConv.value.i
 function handleAccept() { acceptCall(window.__pendingCall) }
 function handleReject() { if (window.__pendingCall) rejectCall(window.__pendingCall) }
 
-onMounted(() => registerHandlers())
+onMounted(() => {
+  registerHandlers()
+  requestNotificationPermission()
+})
 
 const currentConv = ref(null)
 const inputText = ref('')

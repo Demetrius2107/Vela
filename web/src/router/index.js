@@ -74,6 +74,12 @@ const routes = [
     name: 'Admin',
     component: () => import('../views/admin/Index.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/office',
+    name: 'Office',
+    component: () => import('../views/office/Index.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
