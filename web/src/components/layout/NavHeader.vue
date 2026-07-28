@@ -22,6 +22,20 @@
       >
         通讯录
       </n-button>
+      <n-button
+        :type="$router.currentRoute.value.path.startsWith('/office') ? 'primary' : 'quaternary'"
+        size="small"
+        @click="$router.push('/office')"
+      >
+        办公
+      </n-button>
+      <n-button
+        :type="$router.currentRoute.value.path.startsWith('/knowledge') ? 'primary' : 'quaternary'"
+        size="small"
+        @click="$router.push('/knowledge')"
+      >
+        知识库
+      </n-button>
       <n-dropdown trigger="click" :options="menuOptions" @select="handleMenu">
         <n-avatar round :size="32" color="#2080f0" style="cursor: pointer">{{ userId[0] }}</n-avatar>
       </n-dropdown>
@@ -42,12 +56,15 @@ const userId = computed(() => userStore.userId || '用户')
 
 const menuOptions = [
   { label: '个人资料', key: 'profile' },
+  { label: '管理后台', key: 'admin' },
   { label: '退出登录', key: 'logout' }
 ]
 
 function handleMenu(key) {
   if (key === 'profile') {
     router.push('/profile')
+  } else if (key === 'admin') {
+    router.push('/admin')
   } else if (key === 'logout') {
     userStore.logout()
     router.push('/login')
