@@ -80,6 +80,18 @@ const routes = [
     name: 'Office',
     component: () => import('../views/office/Index.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/knowledge',
+    name: 'Knowledge',
+    component: () => import('../views/knowledge/Index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/knowledge/edit',
+    name: 'KnowledgeEdit',
+    component: () => import('../views/knowledge/Editor.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
