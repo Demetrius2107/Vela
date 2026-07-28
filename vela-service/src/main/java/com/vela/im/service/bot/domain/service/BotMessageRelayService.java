@@ -81,7 +81,7 @@ public class BotMessageRelayService {
                 }
             } catch (Exception e) {
                 log.error("Bot webhook relay failed: botId={}, error={}", bot.getBotId(), e.getMessage());
-                sendReply(bot, message.getFromId(), message.getMessageKey(), "Bot 暂时无法回复，请稍后再试", null, null);
+                sendReply(bot, message.getFromId(), message.getMessageKey(), "Bot 暂时无法回复，请稍后再试", null, null, null);
             }
         }).start();
 
@@ -125,7 +125,7 @@ public class BotMessageRelayService {
         return true;
     }
 
-    /** 解析 Webhook 响应，支持纯文本和 JSON 格式 */
+    /** 解析 Webhook 响应，支持纯文本、JSON 和按钮格式 */
     private void processWebhookResponse(ImBotEntity bot, MessageContent original, String responseBody) {
         String trimmed = responseBody.trim();
         if (trimmed.startsWith("{")) {
@@ -137,21 +137,25 @@ public class BotMessageRelayService {
 
                 if ("image".equals(type) || "file".equals(type)) {
                     sendReply(bot, original.getFromId(), original.getMessageKey(),
-                            content != null ? content : "[图片]", fileUrl, type);
+                            content != null ? content : "[图片]", fileUrl, type, null);
                 } else {
+                    // 解析按钮
+                    String buttons = null;
+                    if (json.containsKey("buttons") && json.getJSONArray("buttons") != null) {
+                        buttons = json.getJSONArray("buttons").toJSONString();
+                    }
                     sendReply(bot, original.getFromId(), original.getMessageKey(),
-                            content != null ? content : trimmed, null, null);
+                            content != null ? content : trimmed, null, null, buttons);
                 }
                 return;
             } catch (Exception ignored) {}
         }
-        // Fallback: plain text
-        sendReply(bot, original.getFromId(), original.getMessageKey(), trimmed, null, null);
+        sendReply(bot, original.getFromId(), original.getMessageKey(), trimmed, null, null, null);
     }
 
-    /** 发送回复消息 */
+    /** 发送回复消息（支持按钮） */
     private void sendReply(ImBotEntity bot, String toId, Long replyToMsgKey,
-                           String text, String fileUrl, String fileType) {
+                           String text, String fileUrl, String fileType, String buttons) {
         MessageContent reply = new MessageContent();
         reply.setAppId(bot.getAppId());
         reply.setFromId(bot.getBotId());
@@ -161,8 +165,45 @@ public class BotMessageRelayService {
         reply.setReplyToMsgKey(replyToMsgKey);
         reply.setFileUrl(fileUrl);
         reply.setFileType(fileType);
+        if (buttons != null) reply.setExtra(buttons);
         messageProducer.sendToUser(toId, MessageCommand.MSG_P2P, reply, bot.getAppId());
-        log.info("Bot reply: botId={}, to={}, type={}", bot.getBotId(), toId, fileType != null ? fileType : "text");
+        log.info("Bot reply: botId={}, to={}, type={}, buttons={}",
+                bot.getBotId(), toId, fileType != null ? fileType : "text", buttons != null ? "yes" : "no");
+    }
+
+    /** 处理按钮回调查询 */
+    public void handleCallbackQuery(String callId, Integer appId, String userId, String botId, String callbackData) {
+        ImBotEntity bot = botService.getByBotId(botId, appId);
+        if (bot == null || bot.getStatus() != 1) return;
+
+        new Thread(() -> {
+            try {
+                String requestBody = "{\"appId\":" + appId
+                        + ",\"fromId\":\"" + escapeJson(userId)
+                        + "\",\"botId\":\"" + escapeJson(botId)
+                        + "\",\"callbackData\":\"" + escapeJson(callbackData)
+                        + "\",\"type\":\"callback_query\"}";
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(bot.getWebhookUrl()))
+                        .header("Content-Type", "application/json")
+                        .timeout(Duration.ofSeconds(10))
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                        .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() == 200 && response.body() != null && !response.body().isEmpty()) {
+                    // 用回调结果回复用户
+                    MessageContent reply = new MessageContent();
+                    reply.setAppId(appId);
+                    reply.setFromId(botId);
+                    reply.setToId(userId);
+                    reply.setMessageBody(response.body());
+                    reply.setMessageTime(System.currentTimeMillis());
+                    messageProducer.sendToUser(userId, MessageCommand.MSG_P2P, reply, appId);
+                }
+            } catch (Exception e) {
+                log.error("Bot callback query failed: botId={}, data={}", botId, callbackData, e);
+            }
+        }).start();
     }
 
     private void handleCommand(MessageContent message, ImBotEntity bot, String body) {
@@ -176,7 +217,7 @@ public class BotMessageRelayService {
         } else {
             replyText = handler.handle(message, args);
         }
-        sendReply(bot, message.getFromId(), message.getMessageKey(), replyText, null, null);
+        sendReply(bot, message.getFromId(), message.getMessageKey(), replyText, null, null, null);
     }
 
     private boolean isRateLimited(String botId) {

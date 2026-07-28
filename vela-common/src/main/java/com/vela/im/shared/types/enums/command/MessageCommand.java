@@ -49,6 +49,14 @@ public enum MessageCommand implements Command {
     //通话忙线
     CALL_BUSY(0x905),
 
+    // ====== Bot 内联键盘 ======
+
+    //按钮回调查询
+    CALLBACK_QUERY(0x910),
+
+    //行内查询（@bot 触发）
+    INLINE_QUERY(0x911),
+
     ;
 
     private int command;
