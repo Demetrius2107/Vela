@@ -1,0 +1,45 @@
+server:
+  port: 8019
+
+spring:
+  application:
+    name: vela-knowledge
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/vela?serverTimezone=UTC&useSSL=false&characterEncoding=UTF8
+    username: root
+    password:
+  redis:
+    host: 127.0.0.1
+    port: 6379
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        concurrency: 5
+        max-concurrency: 10
+        acknowledge-mode: MANUAL
+        prefetch: 1
+
+appConfig:
+  appId: 10000
+  privateKey: 123456
+  imRouteWay: 1
+  loginModel: 1
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath*:mapper/*.xml
+  global-config:
+    db-config:
+      update-strategy: NOT_EMPTY
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
