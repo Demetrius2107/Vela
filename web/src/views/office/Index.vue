@@ -1,17 +1,25 @@
 <template>
-  <div style="min-height:100vh;background:#f5f5f5">
-    <div style="background:#fff;padding:0 24px;height:56px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-      <div style="font-weight:700;font-size:18px;color:#1a1a2e">🏢 办公生态</div>
-      <div style="flex:1" />
-      <n-button quaternary size="tiny" @click="$router.push('/chat')">返回IM</n-button>
-    </div>
-    <div style="display:flex;height:calc(100vh-56px)">
-      <div style="width:180px;background:#fff;border-right:1px solid #e8e8e8;padding:8px 0">
+  <div style="min-height:100vh;background:linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%)">
+    <NavHeader />
+    <div style="display:flex;height:calc(100vh - 52px)">
+      <!-- 左侧导航 -->
+      <div style="width:180px;background:#fff;border-right:1px solid rgba(0,0,0,0.04);padding:16px 8px;flex-shrink:0">
+        <div style="font-weight:700;font-size:16px;color:#1a1a2e;padding:0 12px 16px">🏢 办公生态</div>
         <div v-for="t in tabs" :key="t.key" @click="activeTab=t.key"
-          :style="{padding:'14px 20px',cursor:'pointer',fontSize:'14px',color:activeTab===t.key?'#1890ff':'#333',background:activeTab===t.key?'#e6f7ff':'transparent',borderRight:activeTab===t.key?'3px solid #1890ff':'3px solid transparent'}">
+          :style="{
+            padding:'12px 14px',cursor:'pointer',fontSize:'14px',borderRadius:'10px',marginBottom:'2px',
+            color:activeTab===t.key?'#4F6EF7':'#333',
+            background:activeTab===t.key?'linear-gradient(135deg, #EEF1FF, #F5F3FF)':'transparent',
+            fontWeight:activeTab===t.key?600:400,
+            transition:'all 0.15s'
+          }"
+          @mouseenter="$event.currentTarget.style.background=activeTab===t.key?'linear-gradient(135deg, #EEF1FF, #F5F3FF)':'#f8f9ff'"
+          @mouseleave="$event.currentTarget.style.background=activeTab===t.key?'linear-gradient(135deg, #EEF1FF, #F5F3FF)':'transparent'"
+        >
           {{ t.icon }} {{ t.label }}
         </div>
       </div>
+      <!-- 内容区域 -->
       <div style="flex:1;padding:24px;overflow-y:auto">
         <SchedulePanel v-if="activeTab==='schedule'" />
         <TodoPanel v-if="activeTab==='todo'" />
@@ -23,6 +31,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import NavHeader from '../../components/layout/NavHeader.vue'
 import SchedulePanel from './SchedulePanel.vue'
 import TodoPanel from './TodoPanel.vue'
 import ApprovalPanel from './ApprovalPanel.vue'

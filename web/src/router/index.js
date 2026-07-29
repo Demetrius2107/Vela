@@ -92,6 +92,30 @@ const routes = [
     name: 'KnowledgeEdit',
     component: () => import('../views/knowledge/Editor.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/bot/market',
+    name: 'BotMarket',
+    component: () => import('../views/bot/Market.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/bot/my',
+    name: 'MyBots',
+    component: () => import('../views/bot/MyBots.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/bot/detail/:id',
+    name: 'BotDetail',
+    component: () => import('../views/bot/Detail.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/favorites',
+    name: 'Favorites',
+    component: () => import('../views/favorites/Index.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
