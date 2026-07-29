@@ -16,6 +16,8 @@ import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBo
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.service.user.infrastructure.persistence.mapper.ImUserDataMapper;
+import com.vela.im.service.bot.domain.entity.ImBotEntity;
+import com.vela.im.service.bot.infrastructure.persistence.mapper.ImBotMapper;
 import com.vela.im.shared.base.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +40,12 @@ public class AdminService {
     private final AdminLoginLogMapper loginLogMapper;
     private final AdminOperationLogMapper operationLogMapper;
     private final MessageSearchService messageSearchService;
+    private final ImBotMapper botMapper;
 
     public AdminService(ImUserDataMapper userDataMapper, ImGroupMapper groupMapper,
                         ImMessageBodyMapper messageBodyMapper, ImMessageHistoryMapper messageHistoryMapper,
                         AdminLoginLogMapper loginLogMapper, AdminOperationLogMapper operationLogMapper,
-                        MessageSearchService messageSearchService) {
+                        MessageSearchService messageSearchService, ImBotMapper botMapper) {
         this.userDataMapper = userDataMapper;
         this.groupMapper = groupMapper;
         this.messageBodyMapper = messageBodyMapper;
@@ -50,6 +53,7 @@ public class AdminService {
         this.loginLogMapper = loginLogMapper;
         this.operationLogMapper = operationLogMapper;
         this.messageSearchService = messageSearchService;
+        this.botMapper = botMapper;
     }
 
     // ==================== 看板 ====================
@@ -238,5 +242,21 @@ public class AdminService {
 
     public Result<List<ImGroupEntity>> exportGroups() {
         return Result.ok(groupMapper.selectList(new QueryWrapper<ImGroupEntity>().orderByDesc("create_time")));
+    }
+
+    // ==================== Bot 管理 ====================
+
+    public Result<Map<String, Object>> listBots(int page, int size, String keyword) {
+        Page<ImBotEntity> p = new Page<>(page, size);
+        QueryWrapper<ImBotEntity> qw = new QueryWrapper<>();
+        if (keyword != null && !keyword.isEmpty()) {
+            qw.like("bot_name", keyword).or().like("bot_id", keyword);
+        }
+        qw.orderByDesc("id");
+        IPage<ImBotEntity> result = botMapper.selectPage(p, qw);
+        Map<String, Object> map = new HashMap<>();
+        map.put("list", result.getRecords());
+        map.put("total", result.getTotal());
+        return Result.ok(map);
     }
 }

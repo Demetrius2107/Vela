@@ -5,6 +5,10 @@ import com.vela.im.service.admin.domain.service.AdminService;
 import com.vela.im.service.admin.domain.service.SystemConfigService;
 import com.vela.im.service.admin.domain.AdminRoleConfig;
 import com.vela.im.service.group.domain.entity.ImGroupEntity;
+import com.vela.im.service.bot.domain.entity.ImBotEntity;
+import com.vela.im.service.bot.domain.service.BotService;
+import com.vela.im.service.config.domain.service.FeatureFlagService;
+import com.vela.im.service.config.domain.entity.FeatureFlagEntity;
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.shared.base.Result;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +24,18 @@ public class AdminController {
     private final AdminAuthService adminAuthService;
     private final SystemConfigService systemConfigService;
     private final AdminRoleConfig adminRoleConfig;
+    private final BotService botService;
+    private final FeatureFlagService featureFlagService;
 
     public AdminController(AdminService adminService, AdminAuthService adminAuthService,
-                           SystemConfigService systemConfigService, AdminRoleConfig adminRoleConfig) {
+                           SystemConfigService systemConfigService, AdminRoleConfig adminRoleConfig,
+                           BotService botService, FeatureFlagService featureFlagService) {
         this.adminService = adminService;
         this.adminAuthService = adminAuthService;
         this.systemConfigService = systemConfigService;
         this.adminRoleConfig = adminRoleConfig;
+        this.botService = botService;
+        this.featureFlagService = featureFlagService;
     }
 
     private boolean checkPerm(String role, String action) {
@@ -195,5 +204,56 @@ public class AdminController {
     @GetMapping("/groups/export")
     public Result<List<com.vela.im.service.group.domain.entity.ImGroupEntity>> exportGroups() {
         return adminService.exportGroups();
+    }
+
+    // ==================== Bot 管理 ====================
+
+    @GetMapping("/bots")
+    public Result<Map<String, Object>> listBots(@RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "20") int size,
+                                                 @RequestParam(required = false) String keyword) {
+        return adminService.listBots(page, size, keyword);
+    }
+
+    @PostMapping("/bots/create")
+    public Result<ImBotEntity> createBot(@RequestHeader("X-Admin-Role") String role,
+                                          @RequestParam Integer appId,
+                                          @RequestParam String botId,
+                                          @RequestParam String botName,
+                                          @RequestParam(required = false) String webhookUrl,
+                                          @RequestParam(required = false) String description,
+                                          @RequestParam(required = false) String category) {
+        if (!checkPerm(role, "bots")) return Result.fail(403, "无权限");
+        return botService.register(appId, botId, botName, webhookUrl, description, category);
+    }
+
+    @PostMapping("/bots/toggle")
+    public Result<Void> toggleBot(@RequestHeader("X-Admin-Role") String role,
+                                   @RequestParam Long botId) {
+        if (!checkPerm(role, "bots")) return Result.fail(403, "无权限");
+        return botService.toggleStatus(botId);
+    }
+
+    @PostMapping("/bots/delete")
+    public Result<Void> deleteBot(@RequestHeader("X-Admin-Role") String role,
+                                   @RequestParam Long botId) {
+        if (!checkPerm(role, "bots")) return Result.fail(403, "无权限");
+        return botService.delete(botId);
+    }
+
+    // ==================== 功能开关管理 ====================
+
+    @GetMapping("/feature-flags")
+    public Result<java.util.List<FeatureFlagEntity>> listFeatureFlags() {
+        return featureFlagService.listAll();
+    }
+
+    @PostMapping("/feature-flags/update")
+    public Result<Void> updateFeatureFlag(@RequestHeader("X-Admin-Role") String role,
+                                           @RequestParam Long id,
+                                           @RequestParam(required = false) Integer enabled,
+                                           @RequestParam(required = false) String userWhitelist) {
+        if (!checkPerm(role, "settings")) return Result.fail(403, "无权限");
+        return featureFlagService.update(id, enabled, userWhitelist);
     }
 }

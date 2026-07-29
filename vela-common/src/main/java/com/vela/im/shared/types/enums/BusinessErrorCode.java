@@ -20,6 +20,8 @@ public enum BusinessErrorCode implements ApplicationExceptionEnum {
     BOT_DISABLED(91002, "Bot已禁用"),
     BOT_UNAVAILABLE(91003, "Bot不可用"),
     BOT_ALREADY_EXISTS(91004, "Bot已存在"),
+    BOT_ALREADY_INSTALLED(91005, "用户已安装该Bot"),
+    BOT_INSTALL_NOT_FOUND(91006, "未安装该Bot"),
 
     // ====== Admin (92xxx) ======
     ADMIN_NOT_FOUND(92001, "管理员不存在"),
@@ -44,6 +46,10 @@ public enum BusinessErrorCode implements ApplicationExceptionEnum {
 
     // ====== Document (97xxx) ======
     DOCUMENT_NOT_FOUND(97001, "文档不存在"),
+
+    // ====== Favorite (98xxx) ======
+    FAVORITE_ALREADY_EXISTS(98001, "消息已收藏"),
+    FAVORITE_NOT_FOUND(98002, "收藏不存在"),
 
     ;
 

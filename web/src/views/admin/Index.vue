@@ -36,6 +36,10 @@
         <AdminAdmins v-if="activeTab === 'admins'" />
         <!-- 系统配置 -->
         <AdminConfig v-if="activeTab === 'config'" />
+        <!-- Bot 管理 -->
+        <AdminBots v-if="activeTab === 'bots'" />
+        <!-- 功能开关 -->
+        <AdminFeatureFlags v-if="activeTab === 'featureFlags'" />
       </div>
     </div>
   </div>
@@ -50,6 +54,8 @@ import AdminMessages from './AdminMessages.vue'
 import AdminOperations from './AdminOperations.vue'
 import AdminAdmins from './AdminAdmins.vue'
 import AdminConfig from './AdminConfig.vue'
+import AdminBots from './AdminBots.vue'
+import AdminFeatureFlags from './AdminFeatureFlags.vue'
 
 const activeTab = ref('dashboard')
 const menuItems = [
@@ -60,5 +66,7 @@ const menuItems = [
   { key: 'operations', label: '操作日志', icon: '📋' },
   { key: 'admins', label: '管理员', icon: '🔐' },
   { key: 'config', label: '系统配置', icon: '⚙️' },
+  { key: 'bots', label: 'Bot管理', icon: '🤖' },
+  { key: 'featureFlags', label: '功能开关', icon: '🔌' },
 ]
 </script>
