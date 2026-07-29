@@ -217,6 +217,13 @@
                 <version>1.5.5</version>
             </dependency>
 
+            <!-- logstash logback -->
+            <dependency>
+                <groupId>net.logstash.logback</groupId>
+                <artifactId>logstash-logback-encoder</artifactId>
+                <version>7.4</version>
+            </dependency>
+
             <!-- sentinel -->
             <dependency>
                 <groupId>com.alibaba.csp</groupId>

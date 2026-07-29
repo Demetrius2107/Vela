@@ -51,6 +51,19 @@ logging:
 server:
   port: 8000
 
+# ===== Actuator / Prometheus / 监控 =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoint:
+    health:
+      show-details: always
+
 appConfig:
   appId: 10000
   privateKey: 123456
