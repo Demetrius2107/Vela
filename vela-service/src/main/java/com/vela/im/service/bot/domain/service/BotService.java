@@ -19,12 +19,18 @@ public class BotService {
 
     public Result<ImBotEntity> register(Integer appId, String botId, String botName,
                                          String webhookUrl, String description) {
+        return register(appId, botId, botName, webhookUrl, description, null);
+    }
+
+    public Result<ImBotEntity> register(Integer appId, String botId, String botName,
+                                         String webhookUrl, String description, String category) {
         ImBotEntity bot = new ImBotEntity();
         bot.setAppId(appId);
         bot.setBotId(botId);
         bot.setBotName(botName);
         bot.setWebhookUrl(webhookUrl);
         bot.setDescription(description);
+        bot.setCategory(category);
         bot.setApiKey(UUID.randomUUID().toString().replace("-", ""));
         bot.setStatus(com.vela.im.shared.types.enums.StatusConstants.BOT_ENABLED);
         bot.setCreateTime(System.currentTimeMillis());

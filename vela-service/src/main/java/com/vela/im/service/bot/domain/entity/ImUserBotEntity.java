@@ -5,23 +5,24 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+/**
+ * <p>Title: ImUserBotEntity</p>
+ * <p>Description: 用户-机器人订阅关系表，记录用户安装/启用的机器人。</p>
+ * <p>项目名称: Vela</p>
+ *
+ * @author wanqiu
+ * @since 1.0
+ * @createTime 2026-07-29
+ */
 @Data
-@TableName("vela_bot")
-public class ImBotEntity {
+@TableName("vela_user_bot")
+public class ImUserBotEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Integer appId;
+    private String userId;
     private String botId;
-    private String botName;
-    private String botAvatar;
-    private String description;
-    private String webhookUrl;
-    private String apiKey;
     /** 0-禁用, 1-启用 */
     private Integer status;
-    /** Bot 分类，如：工具/娱乐/办公/AI */
-    private String category;
-    /** 标签，逗号分隔 */
-    private String tags;
     private Long createTime;
 }
