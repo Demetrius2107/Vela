@@ -177,6 +177,107 @@ services:
     volumes:
       - ./vela-tcp/src/main/resources/config-docker.yml:/app/config.yml
 
+# ==================== 监控服务 ====================
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: vela-web
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - vela-service
+
+  skywalking-oap:
+    image: apache/skywalking-oap-server:8.9.1
+    container_name: vela-skywalking-oap
+    restart: always
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    environment:
+      SW_STORAGE: h2
+      SW_RECEIVER_GRPC: default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12800"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  skywalking-ui:
+    image: apache/skywalking-ui:8.9.1
+    container_name: vela-skywalking-ui
+    restart: always
+    ports:
+      - "8088:8080"
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    depends_on:
+      - skywalking-oap
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: vela-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: vela-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  elasticsearch:
+    image: elasticsearch:7.17.22
+    container_name: vela-es
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: kibana:7.17.22
+    container_name: vela-kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    image: logstash:7.17.22
+    container_name: vela-logstash
+    restart: always
+    ports:
+      - "5044:5044"
+      - "5000:5000"
+    volumes:
+      - ./deploy/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    depends_on:
+      - elasticsearch
+
 # ==================== 持久化卷 ====================
 
 volumes:
@@ -185,3 +286,6 @@ volumes:
   rabbitmq-data:
   zk-data:
   zk-datalog:
+  prometheus-data:
+  grafana-data:
+  es-data:

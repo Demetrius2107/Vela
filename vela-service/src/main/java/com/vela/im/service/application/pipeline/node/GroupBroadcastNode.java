@@ -5,6 +5,7 @@ import com.vela.im.service.application.pipeline.MessageContext;
 import com.vela.im.service.application.pipeline.PipeChain;
 import com.vela.im.service.application.pipeline.PipeNode;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.application.utils.RetryUtil;
 import com.vela.im.service.group.domain.service.ImGroupMemberService;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.message.domain.service.MessageStoreService;
@@ -97,22 +98,12 @@ public class GroupBroadcastNode implements PipeNode<MessageContext> {
             if (memberId.equals(msg.getFromId())) {
                 continue; // 跳过发送方自己（已在 syncToSender 中处理）
             }
-            boolean success = false;
-            for (int retry = 0; retry < 2; retry++) {
-                try {
-                    messageProducer.sendToUser(memberId, GroupEventCommand.MSG_GROUP, msg, msg.getAppId());
-                    success = true;
-                    break;
-                } catch (Exception e) {
-                    logger.warn("Group dispatch failed, memberId={}, msgId={}, retry={}",
-                            memberId, msg.getMessageId(), retry + 1);
-                    if (retry == 0) {
-                        try { Thread.sleep(100L); } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt(); break;
-                        }
-                    }
-                }
-            }
+            String taskName = "Group-dispatch-" + msg.getMessageId() + "-to-" + memberId;
+            boolean success = RetryUtil.retryWithExponentialBackoff(() -> {
+                messageProducer.sendToUser(memberId, GroupEventCommand.MSG_GROUP, msg, msg.getAppId());
+                return true;
+            }, 2, 100L, 1000L, taskName); // 群聊成员多，减少重试次数和延迟上限
+
             if (!success) {
                 failedMembers.add(memberId);
                 logger.error("Group dispatch exhausted, memberId={}, msgId={}", memberId, msg.getMessageId());

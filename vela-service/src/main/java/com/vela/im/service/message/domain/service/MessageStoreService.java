@@ -8,6 +8,8 @@ import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
 import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
+import com.vela.im.service.message.infrastructure.elasticsearch.MessageIndexService;
+import com.vela.im.service.application.utils.ServiceDegradationManager;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.ImConstants;
@@ -60,6 +62,9 @@ public class MessageStoreService {
     private final StringRedisTemplate stringRedisTemplate;
     private final ConversationService conversationService;
     private final ImServerProperties appConfig;
+    private final MessageCompensationStore compensationStore;
+    private final ServiceDegradationManager degradationManager;
+    private final MessageIndexService messageIndexService;
 
     /**
      * 构建 TraceId 透传的 MessagePostProcessor
@@ -83,7 +88,10 @@ public class MessageStoreService {
                                RabbitTemplate rabbitTemplate,
                                StringRedisTemplate stringRedisTemplate,
                                ConversationService conversationService,
-                               ImServerProperties appConfig) {
+                               ImServerProperties appConfig,
+                               MessageCompensationStore compensationStore,
+                               ServiceDegradationManager degradationManager,
+                               MessageIndexService messageIndexService) {
         this.imMessageHistoryMapper = imMessageHistoryMapper;
         this.imMessageBodyMapper = imMessageBodyMapper;
         this.snowflakeIdWorker = snowflakeIdWorker;
@@ -92,6 +100,9 @@ public class MessageStoreService {
         this.stringRedisTemplate = stringRedisTemplate;
         this.conversationService = conversationService;
         this.appConfig = appConfig;
+        this.compensationStore = compensationStore;
+        this.degradationManager = degradationManager;
+        this.messageIndexService = messageIndexService;
     }
 
     /**
@@ -107,16 +118,28 @@ public class MessageStoreService {
         dto.setMessageContent(messageContent);
         dto.setMessageBody(imMessageBodyEntity);
         messageContent.setMessageKey(imMessageBodyEntity.getMessageKey());
+
+        // MQ 降级检测：已知不可用时跳过 MQ，直接走 DB
+        if (!degradationManager.isMqAvailable()) {
+            logger.warn("MQ is degraded, skipping MQ send for P2P message, msgKey={}",
+                    imMessageBodyEntity.getMessageKey());
+            storeP2PMessageDirectly(imMessageBodyEntity, messageContent);
+            return;
+        }
+
         try {
             // Send to MQ for async persistence
             rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_P2P_MESSAGE, "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
+            degradationManager.reportMqSuccess();
         } catch (Exception e) {
             logger.error("MQ send failed for P2P message, fallback to direct DB write, msgKey={}, error={}",
                     imMessageBodyEntity.getMessageKey(), e.getMessage());
-            // Fallback: write directly to DB when MQ is unavailable
+            degradationManager.reportMqFailure("storeP2PMessage");
             storeP2PMessageDirectly(imMessageBodyEntity, messageContent);
         }
+        // Index to Elasticsearch
+        messageIndexService.indexMessage(messageContent);
     }
 
     /**
@@ -135,8 +158,9 @@ public class MessageStoreService {
             imMessageHistoryMapper.insertBatchSomeColumn(histories);
             logger.warn("P2P message persisted to DB (fallback), msgKey={}", messageBody.getMessageKey());
         } catch (Exception dbEx) {
-            logger.error("P2P 消息降级写入 DB 也失败，msgKey={}, error={}",
+            logger.error("P2P 消息降级写入 DB 也失败，加入补偿队列，msgKey={}, error={}",
                     messageBody.getMessageKey(), dbEx.getMessage());
+            compensationStore.compensate(messageBody, messageContent);
         }
     }
 
@@ -200,13 +224,24 @@ public class MessageStoreService {
         dto.setMessageBody(imMessageBody);
         dto.setGroupChatMessageContent(messageContent);
         messageContent.setMessageKey(imMessageBody.getMessageKey());
+
+        // MQ 降级检测
+        if (!degradationManager.isMqAvailable()) {
+            logger.warn("MQ is degraded, skipping MQ send for group message, msgKey={}",
+                    imMessageBody.getMessageKey());
+            storeGroupMessageDirectly(imMessageBody, messageContent);
+            return;
+        }
+
         try {
             rabbitTemplate.convertAndSend(ImConstants.RabbitMQ.STORE_GROUP_MESSAGE,
                     "",
                     JSONObject.toJSONString(dto), buildTracePostProcessor());
+            degradationManager.reportMqSuccess();
         } catch (Exception e) {
             logger.error("MQ 发送群聊消息存储任务失败，降级直接写入 DB，msgKey={}, error={}",
                     imMessageBody.getMessageKey(), e.getMessage());
+            degradationManager.reportMqFailure("storeGroupMessage");
             // Fallback: write directly to DB when MQ is unavailable
             storeGroupMessageDirectly(imMessageBody, messageContent);
         }
@@ -228,8 +263,9 @@ public class MessageStoreService {
             imGroupMessageHistoryMapper.insert(groupHistory);
             logger.warn("Group message persisted to DB (fallback), msgKey={}", messageBody.getMessageKey());
         } catch (Exception dbEx) {
-            logger.error("Group message fallback DB write also failed, msgKey={}, error={}",
+            logger.error("Group message fallback DB write also failed, adding to compensation queue, msgKey={}, error={}",
                     messageBody.getMessageKey(), dbEx.getMessage());
+            compensationStore.compensate(messageBody, messageContent);
         }
     }
 
@@ -240,7 +276,7 @@ public class MessageStoreService {
      * @param messageBodyEntity   消息体实体
      * @return 群聊消息历史记录
      */
-    private ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent
+    public ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent
                                                                      messageContent, ImMessageBodyEntity messageBodyEntity){
         ImGroupMessageHistoryEntity result = new ImGroupMessageHistoryEntity();
         BeanUtils.copyProperties(messageContent,result);
@@ -313,6 +349,15 @@ public class MessageStoreService {
         String fromKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getFromId();
         String toKey = offlineMessage.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + offlineMessage.getToId();
 
+        // Redis 降级检测：已知不可用时直接写 DB
+        if (!degradationManager.isRedisAvailable()) {
+            logger.warn("Redis is degraded, writing offline message directly to DB, msgKey={}",
+                    offlineMessage.getMessageKey());
+            persistToMessageHistory(offlineMessage, offlineMessage.getFromId());
+            persistToMessageHistory(offlineMessage, offlineMessage.getToId());
+            return;
+        }
+
         ZSetOperations<String, String> operations = stringRedisTemplate.opsForZSet();
         try {
             // Evict oldest if sender queue exceeds limit, persist to DB as fallback
@@ -333,14 +378,18 @@ public class MessageStoreService {
             // Insert into receiver queue
             operations.add(toKey,JSONObject.toJSONString(offlineMessage),
                     offlineMessage.getMessageKey());
+            degradationManager.reportRedisSuccess();
         } catch (Exception e) {
             logger.error("Redis offline message store failed, falling back to DB, fromId={}, toId={}, msgKey={}, error={}",
                     offlineMessage.getFromId(), offlineMessage.getToId(),
                     offlineMessage.getMessageKey(), e.getMessage());
+            degradationManager.reportRedisFailure("storeOfflineMessage");
             // Fallback: persist directly to DB when Redis is unavailable
             persistToMessageHistory(offlineMessage, offlineMessage.getFromId());
             persistToMessageHistory(offlineMessage, offlineMessage.getToId());
         }
+        // Index to Elasticsearch
+        messageIndexService.indexOfflineMessage(offlineMessage);
     }
 
     /**
@@ -348,26 +397,74 @@ public class MessageStoreService {
      */
     private void evictIfExceeded(ZSetOperations<String, String> operations, String key) {
         Long size = operations.zCard(key);
-        if (size != null && size > appConfig.getOfflineMessageCount()) {
-            // Fetch the oldest entry (lowest score)
-            Set<ZSetOperations.TypedTuple<String>> oldestSet = operations.rangeWithScores(key, 0, 0);
-            if (oldestSet != null && !oldestSet.isEmpty()) {
-                ZSetOperations.TypedTuple<String> oldest = oldestSet.iterator().next();
-                String oldestValue = oldest.getValue();
-                if (oldestValue != null) {
-                    try {
-                        OfflineMessageContent evictedMsg = JSONObject.parseObject(oldestValue, OfflineMessageContent.class);
-                        // Persist to DB before removal
-                        persistToMessageHistory(evictedMsg, extractOwnerIdFromKey(key));
-                        logger.warn("Offline message ZSet full, evicted to DB, key={}, evictedMsgKey={}",
-                                key, evictedMsg.getMessageKey());
-                    } catch (Exception e) {
-                        logger.warn("Failed to parse evicted offline message, key={}, error={}", key, e.getMessage());
+        if (size == null || size <= appConfig.getOfflineMessageCount()) {
+            return;
+        }
+
+        long excessCount = size - appConfig.getOfflineMessageCount();
+        logger.warn("Offline message ZSet full, key={}, size={}, limit={}, evicting {} entries",
+                key, size, appConfig.getOfflineMessageCount(), excessCount);
+
+        // Batch fetch the oldest entries beyond the limit
+        Set<ZSetOperations.TypedTuple<String>> evictSet = operations.rangeWithScores(key, 0, excessCount - 1);
+        if (evictSet == null || evictSet.isEmpty()) {
+            return;
+        }
+
+        long maxEvictedSeq = 0L;
+        List<ImMessageHistoryEntity> batch = new ArrayList<>();
+        for (ZSetOperations.TypedTuple<String> tuple : evictSet) {
+            String value = tuple.getValue();
+            Double score = tuple.getScore();
+            if (value == null || score == null) continue;
+
+            try {
+                OfflineMessageContent msg = JSONObject.parseObject(value, OfflineMessageContent.class);
+                ImMessageHistoryEntity history = new ImMessageHistoryEntity();
+                history.setAppId(msg.getAppId());
+                history.setFromId(msg.getFromId());
+                history.setToId(msg.getToId());
+                history.setOwnerId(extractOwnerIdFromKey(key));
+                history.setMessageKey(msg.getMessageKey());
+                history.setSequence(msg.getMessageSequence());
+                history.setMessageRandom(msg.getMessageRandom());
+                history.setMessageTime(msg.getMessageTime());
+                history.setCreateTime(System.currentTimeMillis());
+                batch.add(history);
+
+                if (score.longValue() > maxEvictedSeq) {
+                    maxEvictedSeq = score.longValue();
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to parse evicted offline message, key={}, error={}", key, e.getMessage());
+            }
+        }
+
+        // Batch persist to DB
+        if (!batch.isEmpty()) {
+            try {
+                imMessageHistoryMapper.insertBatchSomeColumn(batch);
+                logger.info("Batch evicted {} offline messages to DB, key={}", batch.size(), key);
+            } catch (Exception e) {
+                logger.error("Batch evict to DB failed, key={}, error={}", key, e.getMessage());
+                // Fallback: insert one by one
+                for (ImMessageHistoryEntity entity : batch) {
+                    try { imMessageHistoryMapper.insert(entity); } catch (Exception e2) {
+                        logger.error("Fallback insert failed, msgKey={}, error={}", entity.getMessageKey(), e2.getMessage());
                     }
                 }
             }
-            // Remove the oldest entry
-            operations.removeRange(key, 0, 0);
+        }
+
+        // Remove the evicted entries from ZSet in one call
+        operations.removeRange(key, 0, excessCount - 1);
+
+        // Store eviction watermark: max sequence of evicted messages
+        if (maxEvictedSeq > 0) {
+            String watermarkKey = key.replace(ImConstants.Redis.OFFLINE_MESSAGE,
+                    ImConstants.Redis.OFFLINE_EVICTED_WATERMARK);
+            stringRedisTemplate.opsForValue().set(watermarkKey, String.valueOf(maxEvictedSeq),
+                    7, TimeUnit.DAYS); // 7 day TTL
         }
     }
 

@@ -108,6 +108,13 @@ public class ImConstants {
         public static final String OFFLINE_MESSAGE = "offlineMessage";
 
         /**
+         * 离线消息降级水位线 Key 前缀，格式：appId + :offlineEvicted: + userId
+         * 存储值为已降级到 DB 的最大 sequence，客户端同步时若 lastSequence 低于此值，
+         * 需同时查询消息历史表以补全被降级的消息。
+         */
+        public static final String OFFLINE_EVICTED_WATERMARK = "offlineEvicted";
+
+        /**
          * 序列号 Key 前缀
          */
         public static final String SEQ_PREFIX = "seq";
@@ -313,5 +320,29 @@ public class ImConstants {
          * 会话序列号 Key
          */
         public static final String CONVERSATION = "conversationSequence";
+    }
+
+    // ==================== Bot 常量 ====================
+
+    public static class Bot {
+        /** Bot 消息速率限制间隔（纳秒） */
+        public static final long RATE_LIMIT_INTERVAL = 500_000_000L;
+
+        /** Webhook 响应超时（秒） */
+        public static final int WEBHOOK_TIMEOUT_SECONDS = 10;
+
+        /** Bot 回复最大重试次数 */
+        public static final int MAX_REPLY_RETRIES = 3;
+    }
+
+    // ==================== 通知常量 ====================
+
+    public static class Notify {
+        /** 通知前缀 */
+        public static final String PREFIX = "notify";
+
+        /** 消息通知类别 */
+        public static final String TYPE_NEW_MESSAGE = "new_message";
+        public static final String TYPE_CALL_INCOMING = "call_incoming";
     }
 }

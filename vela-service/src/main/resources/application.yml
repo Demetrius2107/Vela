@@ -51,6 +51,19 @@ logging:
 server:
   port: 8000
 
+# ===== Actuator / Prometheus / 监控 =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoint:
+    health:
+      show-details: always
+
 appConfig:
   appId: 10000
   privateKey: 123456
@@ -92,6 +105,12 @@ appConfig:
   offlineMessageCount: 1000 #离线消息存储条数
   deleteConversationSyncMode: 1 #1多段同步
 
+
+spring:
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 5s
+    read-timeout: 10s
 
 mqQueueName: 123
 

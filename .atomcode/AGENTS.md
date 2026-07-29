@@ -10,6 +10,7 @@
 - `commit-message`: Git 提交信息规范
 - `im-architecture-deep-dive`: **IM 架构深度设计自检清单** — 对任意核心模块进行五层深度设计（主流程 → 异常边界 → 高并发 → 容灾降级 → 决策论证）。调用方式：`use_skill("im-architecture-deep-dive", "module=消息可靠投递")`
 - `global-codex`: **全局编码规范与工作流指令** — 第一性原理、根因解决、挑战用户思路、先理解代码再改、信任 AI 自主探索等。调用方式：`use_skill("global-codex")`
+- `session-doc`: **会话工作记录** — 每次会话结束时自动生成 Markdown 文档到 `docs/会议记录/`，按模板输出改动/提交/待办。调用方式：`use_skill("session-doc")`
 
 ## 包命名规范
 - 基础包: `com.lip.im.{module}`

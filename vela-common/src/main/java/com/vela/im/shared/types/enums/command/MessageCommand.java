@@ -29,6 +29,34 @@ public enum MessageCommand implements Command {
     //消息撤回回报 1051
     MSG_RECALL_ACK(0x41B),
 
+    // ====== WebRTC 音视频通话信令 ======
+
+    //发起通话请求（含SDP Offer）
+    CALL_OFFER(0x900),
+
+    //接受通话（含SDP Answer）
+    CALL_ANSWER(0x901),
+
+    //ICE候选者交换
+    CALL_ICE_CANDIDATE(0x902),
+
+    //挂断通话
+    CALL_HANGUP(0x903),
+
+    //拒绝通话
+    CALL_REJECT(0x904),
+
+    //通话忙线
+    CALL_BUSY(0x905),
+
+    // ====== Bot 内联键盘 ======
+
+    //按钮回调查询
+    CALLBACK_QUERY(0x910),
+
+    //行内查询（@bot 触发）
+    INLINE_QUERY(0x911),
+
     ;
 
     private int command;

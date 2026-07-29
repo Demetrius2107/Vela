@@ -60,7 +60,7 @@ class GroupMessageServiceTest {
     @BeforeEach
     void setUp() {
         // 使用真实管道节点实例（依赖已通过 @Mock 注入）
-        groupValidateNode = new GroupValidateNode(messageProducer, appConfig);
+        groupValidateNode = new GroupValidateNode(messageProducer, appConfig, imGroupMemberService);
         rateLimitNode = new RateLimitNode(messageProducer, appConfig);
         dedupNode = new DedupNode(messageStoreService, messageProducer);
         groupBroadcastNode = new GroupBroadcastNode(messageStoreService, messageProducer, redisSeq, imGroupMemberService);

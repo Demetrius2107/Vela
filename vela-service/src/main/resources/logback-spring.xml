@@ -44,6 +44,13 @@
     <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="WARN"/>
 
 
+    <!-- Logstash Appender：日志 → Logstash → ES → Kibana -->
+    <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>localhost:5000</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <keepAliveDuration>5 minutes</keepAliveDuration>
+    </appender>
+
     <springProfile name="test,dev">
         <!--文件-->
         <appender name="fileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -62,6 +69,7 @@
         <root level="INFO">
             <appender-ref ref="console"/>
             <appender-ref ref="fileAppender"/>
+            <appender-ref ref="logstash"/>
         </root>
     </springProfile>
     <springProfile name="prod">
@@ -82,6 +90,7 @@
         <root level="WARN">
             <appender-ref ref="console"/>
             <appender-ref ref="fileAppender"/>
+            <appender-ref ref="logstash"/>
         </root>
     </springProfile>
 

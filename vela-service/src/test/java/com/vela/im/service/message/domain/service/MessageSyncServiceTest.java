@@ -10,6 +10,8 @@ import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBo
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.application.utils.PendingAckTracker;
+import com.vela.im.codec.pack.message.RecallMessageNotifyPack;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.ClientInfo;
@@ -63,6 +65,14 @@ class MessageSyncServiceTest {
     private P2PRecallStrategy p2PRecallStrategy;
     @Mock
     private GroupRecallStrategy groupRecallStrategy;
+    @Mock
+    private PendingAckTracker pendingAckTracker;
+    @Mock
+    private com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper imMessageHistoryMapper;
+    @Mock
+    private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
+    @Mock
+    private com.vela.im.service.application.utils.MessageLockManager messageLockManager;
 
     private MessageSyncService service;
 
@@ -70,7 +80,9 @@ class MessageSyncServiceTest {
     void setUp() {
         service = new MessageSyncService(messageProducer, conversationService,
                 redisTemplate, imMessageBodyMapper, redisSeq, imGroupMemberService,
-                groupMessageProducer, appConfig, p2PRecallStrategy, groupRecallStrategy);
+                groupMessageProducer, appConfig, p2PRecallStrategy, groupRecallStrategy,
+                pendingAckTracker, imMessageHistoryMapper, stringRedisTemplate,
+                messageLockManager);
     }
 
     @Nested
@@ -162,6 +174,46 @@ class MessageSyncServiceTest {
         }
 
         @Test
+        @DisplayName("客户端时钟反向偏差过大应拒绝（clientTime << now）")
+        void backwardClockSkewExceededRejected() {
+            RecallMessageContent content = createRecallContent();
+            // messageTime is far behind server time (more than recallTimeout + clockSkewTolerance)
+            content.setMessageTime(System.currentTimeMillis() - 180000); // 3min ago
+            when(appConfig.getMessageRecallTimeOut()).thenReturn(30000L); // 30s timeout
+            when(appConfig.getMessageRecallClockSkewTolerance()).thenReturn(5000L);
+
+            service.recallMessage(content);
+
+            // Should still be rejected: backward time means the message qualifies as recall timeout
+            verify(messageProducer, timeout(1000)).sendToUser(
+                    eq(FROM_ID), eq(MessageCommand.MSG_RECALL_ACK), any(), any(ClientInfo.class));
+        }
+
+        @Test
+        @DisplayName("可配置的时钟偏差容忍度生效（增大容忍度后不应拒绝）")
+        void configurableClockSkewTolerance() {
+            // Increase clock skew tolerance so 10s ahead is accepted
+            when(appConfig.getMessageRecallClockSkewTolerance()).thenReturn(15000L); // 15s tolerance
+            when(appConfig.getMessageRecallTimeOut()).thenReturn(120000L);
+            lenient().when(redisSeq.doGetSeq(anyString())).thenReturn(200L);
+
+            RecallMessageContent content = createRecallContent();
+            content.setMessageTime(System.currentTimeMillis() + 10000); // 10s ahead
+            content.setConversationType(ConversationTypeEnum.P2P.getCode());
+
+            // Even with clock skew, if it passes the boundary check, it proceeds to DB query
+            // The DB query will return null (not mocked), so it'll be rejected as NOT_EXIST
+            when(imMessageBodyMapper.selectOne(any(QueryWrapper.class))).thenReturn(null);
+
+            service.recallMessage(content);
+
+            // Should pass clock skew check and reach DB query (message body not found)
+            verify(imMessageBodyMapper, timeout(1000)).selectOne(any(QueryWrapper.class));
+            verify(messageProducer, timeout(1000)).sendToUser(
+                    eq(FROM_ID), eq(MessageCommand.MSG_RECALL_ACK), any(), any(ClientInfo.class));
+        }
+
+        @Test
         @DisplayName("消息体不存在应拒绝")
         void messageBodyNotFoundRejected() {
             RecallMessageContent content = createRecallContent();
@@ -197,7 +249,7 @@ class MessageSyncServiceTest {
             RecallMessageContent content = createRecallContent();
             content.setConversationType(ConversationTypeEnum.P2P.getCode());
             when(appConfig.getMessageRecallTimeOut()).thenReturn(120000L);
-            when(redisSeq.doGetSeq(anyString())).thenReturn(200L);
+            lenient().when(redisSeq.doGetSeq(anyString())).thenReturn(200L);
 
             ImMessageBodyEntity body = new ImMessageBodyEntity();
             body.setMessageKey(MESSAGE_KEY);
@@ -206,12 +258,28 @@ class MessageSyncServiceTest {
             when(imMessageBodyMapper.selectOne(any(QueryWrapper.class))).thenReturn(body);
 
             ZSetOperations<String, String> zset = mock(ZSetOperations.class);
-            when(redisTemplate.opsForZSet()).thenReturn(zset);
+            lenient().when(redisTemplate.opsForZSet()).thenReturn(zset);
+
+            // Mock the strategy to simulate real behavior (send ACK + notify)
+            doAnswer(invocation -> {
+                // Simulate recall strategy sending ACK to sender
+                RecallMessageContent recallContent = invocation.getArgument(0);
+                RecallMessageNotifyPack recallPack = invocation.getArgument(1);
+                messageProducer.sendToUser(recallContent.getFromId(),
+                        MessageCommand.MSG_RECALL_ACK, recallPack, recallContent);
+                // Simulate notifying receiver
+                messageProducer.sendToUser(recallContent.getToId(),
+                        MessageCommand.MSG_RECALL_NOTIFY, recallPack, recallContent.getAppId());
+                // Simulate notifying sender's other devices
+                messageProducer.sendToUserExceptClient(recallContent.getFromId(),
+                        MessageCommand.MSG_RECALL_NOTIFY, recallPack, recallContent);
+                return null;
+            }).when(p2PRecallStrategy).recall(any(), any(), any());
 
             service.recallMessage(content);
 
             // Should send ACK to recall initiator
-            verify(messageProducer, atLeastOnce()).sendToUser(
+            verify(messageProducer, timeout(1000)).sendToUser(
                     eq(FROM_ID), eq(MessageCommand.MSG_RECALL_ACK), any(), any(ClientInfo.class));
             // Should send recall notify to receiver
             verify(messageProducer, timeout(1000)).sendToUser(
@@ -223,6 +291,37 @@ class MessageSyncServiceTest {
             verify(imMessageBodyMapper, times(1)).update(
                     argThat(bodyEntity -> bodyEntity.getDelFlag() == DelFlagEnum.DELETE.getCode()),
                     any(QueryWrapper.class));
+        }
+
+        @Test
+        @DisplayName("群聊消息撤回成功应发送 ACK 并通知群成员")
+        void successfulGroupRecallSendsAckAndNotify() {
+            RecallMessageContent content = createRecallContent();
+            content.setConversationType(ConversationTypeEnum.GROUP.getCode());
+            content.setToId("group001");
+            when(appConfig.getMessageRecallTimeOut()).thenReturn(120000L);
+            lenient().when(redisSeq.doGetSeq(anyString())).thenReturn(200L);
+
+            ImMessageBodyEntity body = new ImMessageBodyEntity();
+            body.setMessageKey(MESSAGE_KEY);
+            body.setDelFlag(DelFlagEnum.NORMAL.getCode());
+            body.setMessageBody("original message body");
+            when(imMessageBodyMapper.selectOne(any(QueryWrapper.class))).thenReturn(body);
+
+            ZSetOperations<String, String> zset = mock(ZSetOperations.class);
+            lenient().when(redisTemplate.opsForZSet()).thenReturn(zset);
+
+            doAnswer(invocation -> {
+                RecallMessageContent recallContent = invocation.getArgument(0);
+                messageProducer.sendToUser(recallContent.getFromId(),
+                        MessageCommand.MSG_RECALL_ACK, null, recallContent);
+                return null;
+            }).when(groupRecallStrategy).recall(any(), any(), any());
+
+            service.recallMessage(content);
+
+            verify(messageProducer, timeout(1000)).sendToUser(
+                    eq(FROM_ID), eq(MessageCommand.MSG_RECALL_ACK), any(), any(ClientInfo.class));
         }
 
         private RecallMessageContent createRecallContent() {
