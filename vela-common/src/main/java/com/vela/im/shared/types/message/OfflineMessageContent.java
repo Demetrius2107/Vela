@@ -44,4 +44,60 @@ public class OfflineMessageContent {
 
     private String conversationId;
 
+    // ====== 引用回复 ======
+
+    /** 被回复消息的 messageKey */
+    private Long replyToMsgKey;
+
+    /** 被回复消息的发送方 ID */
+    private String replyToFromId;
+
+    /** 被回复消息的正文预览 */
+    private String replyToMsgBody;
+
+    // ====== 消息转发 ======
+
+    /** 被转发消息的 messageKey */
+    private Long forwardFromMsgKey;
+
+    /** 被转发消息的发送方 ID */
+    private String forwardFromId;
+
+    /** 被转发消息的正文 */
+    private String forwardFromMsgBody;
+
+    // ====== @提及 ======
+
+    /** @提及的用户 ID 列表 */
+    private String mentionUserIds;
+
+    /** 是否 @所有人 */
+    private boolean mentionAll;
+
+    // ====== 贴纸消息 ======
+
+    /** 贴纸 ID */
+    private String stickerId;
+
+    // ====== 文件/图片消息 ======
+
+    private String fileUrl;
+    private String fileName;
+    private Long fileSize;
+    private String fileType;
+    private Integer imageWidth;
+    private Integer imageHeight;
+
+    // ====== 位置消息 ======
+
+    private Double latitude;
+    private Double longitude;
+    private String locationName;
+
+    // ====== 名片消息 ======
+
+    private String cardUserId;
+    private String cardNickName;
+    private String cardAvatar;
+
 }

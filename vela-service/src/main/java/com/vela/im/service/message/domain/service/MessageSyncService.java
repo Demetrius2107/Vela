@@ -7,14 +7,18 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.vela.im.service.conversation.domain.service.ConversationService;
 import com.vela.im.service.group.domain.service.ImGroupMemberService;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
+import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.domain.strategy.GroupRecallStrategy;
 import com.vela.im.service.message.domain.strategy.P2PRecallStrategy;
 import com.vela.im.service.message.domain.strategy.RecallStrategy;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
+import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
 import com.vela.im.service.infrastructure.seq.RedisSeq;
 import com.vela.im.service.application.utils.ConversationIdGenerate;
 import com.vela.im.service.application.utils.GroupMessageProducer;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.application.utils.PendingAckTracker;
+import com.vela.im.service.application.utils.MessageLockManager;
 import com.vela.im.service.application.utils.SnowflakeIdWorker;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
@@ -39,10 +43,12 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,14 +77,15 @@ public class MessageSyncService {
     private final ImGroupMemberService imGroupMemberService;
     private final GroupMessageProducer groupMessageProducer;
     private final ImServerProperties appConfig;
+    private final PendingAckTracker pendingAckTracker;
+    private final ImMessageHistoryMapper imMessageHistoryMapper;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final MessageLockManager messageLockManager;
 
     private final RecallStrategy p2pRecallStrategy;
     private final RecallStrategy groupRecallStrategy;
 
     private static final Logger logger = LoggerFactory.getLogger(MessageSyncService.class);
-
-    /** Concurrent lock per messageKey to prevent concurrent recall operations */
-    private final ConcurrentHashMap<Long, Object> recallLocks = new ConcurrentHashMap<>();
 
     /**
      * Simple retry with fixed delay for recall operations.
@@ -110,7 +117,11 @@ public class MessageSyncService {
                               GroupMessageProducer groupMessageProducer,
                               ImServerProperties appConfig,
                               P2PRecallStrategy p2pRecallStrategy,
-                              GroupRecallStrategy groupRecallStrategy) {
+                              GroupRecallStrategy groupRecallStrategy,
+                              PendingAckTracker pendingAckTracker,
+                              ImMessageHistoryMapper imMessageHistoryMapper,
+                              StringRedisTemplate stringRedisTemplate,
+                              MessageLockManager messageLockManager) {
         this.messageProducer = messageProducer;
         this.conversationService = conversationService;
         this.redisTemplate = redisTemplate;
@@ -121,10 +132,14 @@ public class MessageSyncService {
         this.appConfig = appConfig;
         this.p2pRecallStrategy = p2pRecallStrategy;
         this.groupRecallStrategy = groupRecallStrategy;
+        this.pendingAckTracker = pendingAckTracker;
+        this.imMessageHistoryMapper = imMessageHistoryMapper;
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.messageLockManager = messageLockManager;
     }
 
     /**
-     * Forward receive ACK from receiver to sender.
+     * Forward receive ACK from receiver to sender, and clear pending ACK tracker.
      *
      * @param messageReceiveAckContent receive ACK content
      */
@@ -133,6 +148,9 @@ public class MessageSyncService {
             logger.warn("receiveMark skipped: invalid content");
             return;
         }
+        // Clear from pending ACK tracker (receiver confirmed delivery)
+        pendingAckTracker.acknowledge(messageReceiveAckContent.getFromId(), messageReceiveAckContent.getMessageKey());
+        // Forward the ACK to the original sender
         messageProducer.sendToUser(messageReceiveAckContent.getToId(),
                 MessageCommand.MSG_RECIVE_ACK,messageReceiveAckContent,messageReceiveAckContent.getAppId());
     }
@@ -187,7 +205,9 @@ public class MessageSyncService {
 
     /**
      * Sync offline messages (incremental pull).
-     * <p>Fetches offline messages from Redis ZSet by sequence range. Falls back to empty list if Redis is unavailable.</p>
+     * <p>Fetches offline messages from Redis ZSet by sequence range.
+     * When messages have been evicted from ZSet due to capacity limits,
+     * also queries the DB message history table to fill the gap.</p>
      *
      * @param req sync request (with lastSequence / maxLimit)
      * @return sync response (with offline message list and max sequence)
@@ -217,13 +237,14 @@ public class MessageSyncService {
             req.setLastSequence(0L);
         }
 
-        String key = req.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + req.getOperater();
+        String offlineKey = req.getAppId() + ":" + ImConstants.Redis.OFFLINE_MESSAGE + ":" + req.getOperater();
+        String watermarkKey = req.getAppId() + ":" + ImConstants.Redis.OFFLINE_EVICTED_WATERMARK + ":" + req.getOperater();
 
         try {
             // Fetch the max sequence from the ZSet
             long maxSeq = 0L;
             ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
-            Set<ZSetOperations.TypedTuple<String>> set = zSetOperations.reverseRangeWithScores(key, 0, 0);
+            Set<ZSetOperations.TypedTuple<String>> set = zSetOperations.reverseRangeWithScores(offlineKey, 0, 0);
             if (!CollectionUtils.isEmpty(set)) {
                 ZSetOperations.TypedTuple<String> typedTuple = set.iterator().next();
                 Double score = typedTuple.getScore();
@@ -232,19 +253,76 @@ public class MessageSyncService {
                 }
             }
 
+            // Use a Set to deduplicate by messageKey
+            Set<Long> seenKeys = new HashSet<>();
             List<OfflineMessageContent> respList = new ArrayList<>();
             resp.setMaxSequence(maxSeq);
 
-            // Query messages by score range (lastSequence, maxSeq]
-            Set<ZSetOperations.TypedTuple<String>> querySet = zSetOperations.rangeByScoreWithScores(key,
+            // Step 1: Query messages from ZSet (current offline queue)
+            Set<ZSetOperations.TypedTuple<String>> querySet = zSetOperations.rangeByScoreWithScores(offlineKey,
                     req.getLastSequence(), maxSeq, 0, req.getMaxLimit());
             if (querySet != null) {
                 for (ZSetOperations.TypedTuple<String> typedTuple : querySet) {
                     String value = typedTuple.getValue();
-                    OfflineMessageContent offlineMessageContent = JSONObject.parseObject(value, OfflineMessageContent.class);
-                    respList.add(offlineMessageContent);
+                    if (value == null) continue;
+                    try {
+                        OfflineMessageContent offlineMsg = JSONObject.parseObject(value, OfflineMessageContent.class);
+                        if (offlineMsg.getMessageKey() != null) {
+                            seenKeys.add(offlineMsg.getMessageKey());
+                        }
+                        respList.add(offlineMsg);
+                    } catch (Exception e) {
+                        logger.warn("Failed to parse offline message from ZSet, error={}", e.getMessage());
+                    }
                 }
             }
+
+            // Step 2: Check eviction watermark — if the client is catching up from before eviction,
+            // also query DB history for messages that may have been evicted
+            String watermarkStr = stringRedisTemplate.opsForValue().get(watermarkKey);
+            if (watermarkStr != null) {
+                try {
+                    long evictedMaxSeq = Long.parseLong(watermarkStr);
+                    // If client's lastSequence is below the watermark, some messages were evicted
+                    if (req.getLastSequence() < evictedMaxSeq && respList.size() < req.getMaxLimit()) {
+                        long historyLimit = req.getMaxLimit() - respList.size();
+                        logger.info("Filling offline sync from DB history: operater={}, lastSeq={}, watermark={}, limit={}",
+                                req.getOperater(), req.getLastSequence(), evictedMaxSeq, historyLimit);
+
+                        QueryWrapper<ImMessageHistoryEntity> historyQuery = new QueryWrapper<>();
+                        historyQuery.eq("owner_id", req.getOperater())
+                                .eq("app_id", req.getAppId())
+                                .gt("sequence", req.getLastSequence())
+                                .le("sequence", evictedMaxSeq)
+                                .orderByAsc("sequence")
+                                .last("LIMIT " + historyLimit);
+                        List<ImMessageHistoryEntity> historyList = imMessageHistoryMapper.selectList(historyQuery);
+
+                        for (ImMessageHistoryEntity history : historyList) {
+                            // Deduplicate against already-fetched messages
+                            if (history.getMessageKey() != null && seenKeys.contains(history.getMessageKey())) {
+                                continue;
+                            }
+                            OfflineMessageContent offlineMsg = new OfflineMessageContent();
+                            offlineMsg.setAppId(history.getAppId());
+                            offlineMsg.setFromId(history.getFromId());
+                            offlineMsg.setToId(history.getToId());
+                            offlineMsg.setMessageKey(history.getMessageKey());
+                            offlineMsg.setMessageSequence(history.getSequence());
+                            offlineMsg.setMessageRandom(history.getMessageRandom());
+                            offlineMsg.setMessageTime(history.getMessageTime());
+                            offlineMsg.setConversationType(ConversationTypeEnum.P2P.getCode());
+                            respList.add(offlineMsg);
+                            if (history.getMessageKey() != null) {
+                                seenKeys.add(history.getMessageKey());
+                            }
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    logger.warn("Invalid eviction watermark value: {}, key={}", watermarkStr, watermarkKey);
+                }
+            }
+
             resp.setDataList(respList);
 
             if (!CollectionUtils.isEmpty(respList)) {
@@ -295,15 +373,24 @@ public class MessageSyncService {
         RecallMessageNotifyPack pack = new RecallMessageNotifyPack();
         BeanUtils.copyProperties(content,pack);
 
-        // 1. Time boundary check: use configurable recall timeout + allow ±5s clock skew
+        // 1. Time boundary check: use configurable recall timeout + configurable clock skew tolerance
         long recallTimeout = appConfig.getMessageRecallTimeOut() != null
                 ? appConfig.getMessageRecallTimeOut() : 120000L;
-        long clockSkewTolerance = 5000L; // 5s clock skew tolerance
+        long clockSkewTolerance = appConfig.getMessageRecallClockSkewTolerance() != null
+                ? appConfig.getMessageRecallClockSkewTolerance() : 5000L;
 
         // Reject if client time is far ahead of server (possible clock desync)
         if (messageTime > now + clockSkewTolerance) {
-            logger.warn("Client clock skew detected, messageTime={}, serverTime={}",
-                    messageTime, now);
+            logger.warn("Client clock skew detected (ahead), messageTime={}, serverTime={}, skew={}ms",
+                    messageTime, now, messageTime - now);
+            recallAck(pack, Result.fail(MessageErrorCode.MESSAGE_CLOCK_SKEW_EXCEEDED), content);
+            return;
+        }
+
+        // Reject if client time is far behind server (backward clock skew)
+        if (messageTime < now - recallTimeout - clockSkewTolerance) {
+            logger.warn("Client clock skew detected (behind), messageTime={}, serverTime={}, skew={}ms",
+                    messageTime, now, now - messageTime);
             recallAck(pack, Result.fail(MessageErrorCode.MESSAGE_CLOCK_SKEW_EXCEEDED), content);
             return;
         }
@@ -316,40 +403,42 @@ public class MessageSyncService {
             return;
         }
 
-        // 2. Concurrent conflict protection: lock per messageKey to prevent double-recall
+        // 2. Concurrent conflict protection: acquire write lock to prevent
+        //    concurrent push/read while recalling this message
         Long messageKey = content.getMessageKey();
-        Object lock = recallLocks.computeIfAbsent(messageKey, k -> new Object());
-        synchronized (lock) {
-            try {
-                QueryWrapper<ImMessageBodyEntity> query = new QueryWrapper<>();
-                query.eq("app_id",content.getAppId());
-                query.eq("message_key", content.getMessageKey());
-                ImMessageBodyEntity body = imMessageBodyMapper.selectOne(query);
+        if (!messageLockManager.tryWriteLock(messageKey)) {
+            logger.warn("Recall write lock timeout, msgKey={}, possible concurrent push/read", messageKey);
+            recallAck(pack, Result.fail(MessageErrorCode.MESSAGE_CONCURRENT_OPERATION), content);
+            return;
+        }
+        try {
+            QueryWrapper<ImMessageBodyEntity> query = new QueryWrapper<>();
+            query.eq("app_id",content.getAppId());
+            query.eq("message_key", content.getMessageKey());
+            ImMessageBodyEntity body = imMessageBodyMapper.selectOne(query);
 
-                if(body == null){
-                    logger.warn("Recall target not found, msgKey={}", content.getMessageKey());
-                    recallAck(pack,Result.fail(MessageErrorCode.MESSAGEBODY_IS_NOT_EXIST),content);
-                    return;
-                }
-
-                if(body.getDelFlag() == DelFlagEnum.DELETE.getCode()){
-                    logger.warn("Message already recalled, msgKey={}", content.getMessageKey());
-                    recallAck(pack,Result.fail(MessageErrorCode.MESSAGE_IS_RECALLED),content);
-                    return;
-                }
-
-                body.setDelFlag(DelFlagEnum.DELETE.getCode());
-                imMessageBodyMapper.update(body,query);
-
-                if(content.getConversationType() == ConversationTypeEnum.P2P.getCode()){
-                    p2pRecallStrategy.recall(content, pack, body);
-                }else{
-                    groupRecallStrategy.recall(content, pack, body);
-                }
-            } finally {
-                // Clean up lock to prevent memory leak
-                recallLocks.remove(messageKey);
+            if(body == null){
+                logger.warn("Recall target not found, msgKey={}", content.getMessageKey());
+                recallAck(pack,Result.fail(MessageErrorCode.MESSAGEBODY_IS_NOT_EXIST),content);
+                return;
             }
+
+            if(body.getDelFlag() == DelFlagEnum.DELETE.getCode()){
+                logger.warn("Message already recalled, msgKey={}", content.getMessageKey());
+                recallAck(pack,Result.fail(MessageErrorCode.MESSAGE_IS_RECALLED),content);
+                return;
+            }
+
+            body.setDelFlag(DelFlagEnum.DELETE.getCode());
+            imMessageBodyMapper.update(body,query);
+
+            if(content.getConversationType() == ConversationTypeEnum.P2P.getCode()){
+                p2pRecallStrategy.recall(content, pack, body);
+            }else{
+                groupRecallStrategy.recall(content, pack, body);
+            }
+        } finally {
+            messageLockManager.unlockWrite(messageKey);
         }
     }
     /**

@@ -3,6 +3,7 @@ package com.vela.im.service;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author wanqiu
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @date: 2025/3/6 17:13
  */
 @SpringBootApplication(scanBasePackages = {"com.vela.im.service", "com.vela.im.shared"})
+@EnableScheduling
 @MapperScan({"com.vela.im.service.*.infrastructure.persistence.mapper",
         "com.vela.im.service.user.infrastructure.persistence.mapper",
         "com.vela.im.service.friendship.infrastructure.persistence.mapper",

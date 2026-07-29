@@ -179,6 +179,17 @@ services:
 
 # ==================== 监控服务 ====================
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: vela-web
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - vela-service
+
   skywalking-oap:
     image: apache/skywalking-oap-server:8.9.1
     container_name: vela-skywalking-oap
@@ -228,6 +239,45 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
 
+  elasticsearch:
+    image: elasticsearch:7.17.22
+    container_name: vela-es
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: kibana:7.17.22
+    container_name: vela-kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    image: logstash:7.17.22
+    container_name: vela-logstash
+    restart: always
+    ports:
+      - "5044:5044"
+      - "5000:5000"
+    volumes:
+      - ./deploy/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    depends_on:
+      - elasticsearch
+
 # ==================== 持久化卷 ====================
 
 volumes:
@@ -238,3 +288,4 @@ volumes:
   zk-datalog:
   prometheus-data:
   grafana-data:
+  es-data:

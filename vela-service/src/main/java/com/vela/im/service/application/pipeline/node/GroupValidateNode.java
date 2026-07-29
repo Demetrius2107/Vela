@@ -5,6 +5,7 @@ import com.vela.im.service.application.pipeline.MessageContext;
 import com.vela.im.service.application.pipeline.PipeChain;
 import com.vela.im.service.application.pipeline.PipeNode;
 import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.group.domain.service.ImGroupMemberService;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.MessageErrorCode;
@@ -32,10 +33,13 @@ public class GroupValidateNode implements PipeNode<MessageContext> {
 
     private final MessageProducer messageProducer;
     private final ImServerProperties appConfig;
+    private final ImGroupMemberService imGroupMemberService;
 
-    public GroupValidateNode(MessageProducer messageProducer, ImServerProperties appConfig) {
+    public GroupValidateNode(MessageProducer messageProducer, ImServerProperties appConfig,
+                             ImGroupMemberService imGroupMemberService) {
         this.messageProducer = messageProducer;
         this.appConfig = appConfig;
+        this.imGroupMemberService = imGroupMemberService;
     }
 
     @Override
@@ -72,6 +76,23 @@ public class GroupValidateNode implements PipeNode<MessageContext> {
                     ? appConfig.getMessageTimeMaxDeviation() : 300000L;
             if (Math.abs(now - msg.getMessageTime()) > maxDeviation) {
                 reject(ctx, msg, MessageErrorCode.MESSAGE_TIME_INVALID);
+                return;
+            }
+        }
+
+        // @所有人权限校验：仅管理员或群主可触发
+        if (msg.isMentionAll()) {
+            com.vela.im.shared.base.Result<com.vela.im.service.group.application.dto.resp.GetRoleInGroupResp> roleResult =
+                    imGroupMemberService.getRoleInGroupOne(msg.getGroupId(), msg.getFromId(), msg.getAppId());
+            if (!roleResult.isOk() || roleResult.getData() == null) {
+                reject(ctx, msg, MessageErrorCode.MESSAGE_SEND_FAILED);
+                return;
+            }
+            Integer role = roleResult.getData().getRole();
+            // role: 0=普通成员, 1=管理员, 2=群主
+            if (role < 1) {
+                logger.warn("@all rejected: user={} is not admin/owner of group={}", msg.getFromId(), msg.getGroupId());
+                reject(ctx, msg, MessageErrorCode.MESSAGE_SEND_FAILED);
                 return;
             }
         }
