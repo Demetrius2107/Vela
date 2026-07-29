@@ -7,15 +7,86 @@ spring:
   cloud:
     gateway:
       routes:
-        # 业务服务路由
-        - id: vela-service
-          uri: http://localhost:8000
+        # 用户服务
+        - id: vela-user
+          uri: http://localhost:8010
           predicates:
-            - Path=/v1/**
+            - Path=/v1/user/**,/v1/login,/v1/register
           filters:
             - StripPrefix=0
 
-      # 全局过滤器配置
+        # 好友服务
+        - id: vela-friendship
+          uri: http://localhost:8011
+          predicates:
+            - Path=/v1/friend/**,/v1/friendship/**
+          filters:
+            - StripPrefix=0
+
+        # 群组服务
+        - id: vela-group
+          uri: http://localhost:8012
+          predicates:
+            - Path=/v1/group/**
+          filters:
+            - StripPrefix=0
+
+        # 会话服务
+        - id: vela-conversation
+          uri: http://localhost:8013
+          predicates:
+            - Path=/v1/conversation/**
+          filters:
+            - StripPrefix=0
+
+        # 消息服务
+        - id: vela-message
+          uri: http://localhost:8014
+          predicates:
+            - Path=/v1/message/**,/v1/file/**,/v1/favorite/**
+          filters:
+            - StripPrefix=0
+
+        # Bot 服务
+        - id: vela-bot
+          uri: http://localhost:8015
+          predicates:
+            - Path=/v1/bot/**
+          filters:
+            - StripPrefix=0
+
+        # 管理后台
+        - id: vela-admin
+          uri: http://localhost:8016
+          predicates:
+            - Path=/v1/admin/**
+          filters:
+            - StripPrefix=0
+
+        # 配置中心
+        - id: vela-config
+          uri: http://localhost:8017
+          predicates:
+            - Path=/v1/feature/**,/v1/user/config/**
+          filters:
+            - StripPrefix=0
+
+        # 办公服务
+        - id: vela-office
+          uri: http://localhost:8018
+          predicates:
+            - Path=/v1/office/**
+          filters:
+            - StripPrefix=0
+
+        # 知识库
+        - id: vela-knowledge
+          uri: http://localhost:8019
+          predicates:
+            - Path=/v1/knowledge/**
+          filters:
+            - StripPrefix=0
+
       default-filters:
         - name: RequestRateLimiter
           args:
