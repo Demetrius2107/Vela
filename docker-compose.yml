@@ -144,6 +144,138 @@ services:
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
 
+  # ===== 微服务集群 =====
+
+  vela-user:
+    build: { context: ., dockerfile: vela-service-user/Dockerfile }
+    container_name: vela-user
+    restart: always
+    ports: ["8010:8010"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-friendship:
+    build: { context: ., dockerfile: vela-service-friendship/Dockerfile }
+    container_name: vela-friendship
+    restart: always
+    ports: ["8011:8011"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-group:
+    build: { context: ., dockerfile: vela-service-group/Dockerfile }
+    container_name: vela-group
+    restart: always
+    ports: ["8012:8012"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-conversation:
+    build: { context: ., dockerfile: vela-service-conversation/Dockerfile }
+    container_name: vela-conversation
+    restart: always
+    ports: ["8013:8013"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-message:
+    build: { context: ., dockerfile: vela-service-message/Dockerfile }
+    container_name: vela-message
+    restart: always
+    ports: ["8014:8014"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-bot:
+    build: { context: ., dockerfile: vela-service-bot/Dockerfile }
+    container_name: vela-bot
+    restart: always
+    ports: ["8015:8015"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-admin:
+    build: { context: ., dockerfile: vela-service-admin/Dockerfile }
+    container_name: vela-admin
+    restart: always
+    ports: ["8016:8016"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-config:
+    build: { context: ., dockerfile: vela-service-config/Dockerfile }
+    container_name: vela-config
+    restart: always
+    ports: ["8017:8017"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-office:
+    build: { context: ., dockerfile: vela-service-office/Dockerfile }
+    container_name: vela-office
+    restart: always
+    ports: ["8018:8018"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
+  vela-knowledge:
+    build: { context: ., dockerfile: vela-service-knowledge/Dockerfile }
+    container_name: vela-knowledge
+    restart: always
+    ports: ["8019:8019"]
+    depends_on: [mysql, redis, rabbitmq, zookeeper]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vela?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=UTF8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_RABBITMQ_HOST: rabbitmq
+
   vela-tcp:
     build:
       context: .

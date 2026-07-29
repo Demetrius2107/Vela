@@ -12,6 +12,17 @@
         <module>vela-codec</module>
         <module>vela-common</module>
         <module>vela-message-store</module>
+        <module>vela-service-common</module>
+        <module>vela-service-user</module>
+        <module>vela-service-friendship</module>
+        <module>vela-service-group</module>
+        <module>vela-service-conversation</module>
+        <module>vela-service-message</module>
+        <module>vela-service-bot</module>
+        <module>vela-service-admin</module>
+        <module>vela-service-config</module>
+        <module>vela-service-office</module>
+        <module>vela-service-knowledge</module>
         <module>vela-service</module>
         <module>vela-tcp</module>
         <module>vela-gateway</module>
