@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiClient {
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'http://localhost:8888';
   static final ApiClient _instance = ApiClient._();
   factory ApiClient() => _instance;
   ApiClient._();

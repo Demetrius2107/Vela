@@ -16,6 +16,6 @@ class AppState: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var userId: String = ""
     @Published var token: String = ""
-    @Published var serverUrl: String = "http://localhost:8000"
+    @Published var serverUrl: String = "http://localhost:8888"
     @Published var wsUrl: String = "ws://localhost:19000"
 }
