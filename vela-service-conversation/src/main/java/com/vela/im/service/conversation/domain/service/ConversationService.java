@@ -101,7 +101,7 @@ public class ConversationService {
     /**
      * @description: 删除会话
      * @param
-     * @return com.lld.im.common.Result
+     * @return com.vela.im.shared.Result
      * @author wanqiu
      */
     public Result deleteConversation(DeleteConversationReq req){
@@ -131,7 +131,7 @@ public class ConversationService {
     /**
      * @description: 更新会话 置顶or免打扰
      * @param
-     * @return com.lld.im.common.Result
+     * @return com.vela.im.shared.Result
      * @author wanqiu
      */
     public Result updateConversation(UpdateConversationReq req){
