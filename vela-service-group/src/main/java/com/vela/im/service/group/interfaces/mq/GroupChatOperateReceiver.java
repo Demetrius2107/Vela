@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 
 import com.alibaba.fastjson.TypeReference;
 import com.vela.im.service.group.domain.service.GroupMessageService;
-import com.vela.im.service.message.domain.service.MessageSyncService;
+import com.vela.im.service.group.interfaces.feign.MessageServiceFeignClient;
 import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.trace.TraceIdContext;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
@@ -49,7 +49,7 @@ public class GroupChatOperateReceiver {
     GroupMessageService groupMessageService;
 
     @Autowired
-    MessageSyncService messageSyncService;
+    MessageServiceFeignClient messageServiceFeignClient;
 
     @RabbitListener(
             bindings = @QueueBinding(
@@ -77,7 +77,7 @@ public class GroupChatOperateReceiver {
             }else if (command.equals(GroupEventCommand.MSG_GROUP_READED.getCommand())) {
                 MessageReadedContent messageReaded = JSON.parseObject(msg, new TypeReference<MessageReadedContent>() {
                 }.getType());
-                messageSyncService.groupReadMark(messageReaded);
+                messageServiceFeignClient.groupReadMark(messageReaded);
             }
             channel.basicAck(deliveryTag, false);
         }catch (Exception e){

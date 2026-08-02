@@ -1,17 +1,17 @@
 package com.vela.im.service.group.domain.service;
 
 import com.vela.im.codec.pack.message.ChatMessageAck;
-import com.vela.im.service.application.pipeline.MessageContext;
-import com.vela.im.service.application.pipeline.PipeChain;
-import com.vela.im.service.application.pipeline.node.DedupNode;
-import com.vela.im.service.application.pipeline.node.GroupBroadcastNode;
-import com.vela.im.service.application.pipeline.node.GroupValidateNode;
-import com.vela.im.service.application.pipeline.node.RateLimitNode;
+import com.vela.im.service.common.pipeline.MessageContext;
+import com.vela.im.service.common.pipeline.PipeChain;
+import com.vela.im.service.message.domain.pipeline.node.DedupNode;
+import com.vela.im.service.group.domain.pipeline.node.GroupBroadcastNode;
+import com.vela.im.service.group.domain.pipeline.node.GroupValidateNode;
+import com.vela.im.service.message.domain.pipeline.node.RateLimitNode;
 import com.vela.im.service.group.application.dto.req.SendGroupMessageRequest;
 import com.vela.im.service.message.application.dto.resp.SendMessageResp;
 import com.vela.im.service.message.domain.service.MessageStoreService;
-import com.vela.im.service.infrastructure.seq.RedisSeq;
-import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.common.infrastructure.seq.RedisSeq;
+import com.vela.im.service.common.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
