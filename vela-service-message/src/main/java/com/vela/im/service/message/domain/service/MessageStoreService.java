@@ -2,15 +2,15 @@ package com.vela.im.service.message.domain.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.vela.im.service.conversation.domain.service.ConversationService;
-import com.vela.im.service.group.domain.entity.ImGroupMessageHistoryEntity;
-import com.vela.im.service.group.infrastructure.persistence.mapper.ImGroupMessageHistoryMapper;
+import com.vela.im.service.common.entity.ImGroupMessageHistoryEntity;
+import com.vela.im.service.common.entity.ImGroupMessageHistoryMapper;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
 import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
 import com.vela.im.service.message.infrastructure.elasticsearch.MessageIndexService;
-import com.vela.im.service.application.utils.ServiceDegradationManager;
-import com.vela.im.service.application.utils.SnowflakeIdWorker;
+import com.vela.im.service.common.utils.ServiceDegradationManager;
+import com.vela.im.service.common.utils.SnowflakeIdWorker;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.trace.TraceIdContext;
@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-/**
+/**5
  * <p>Title: MessageStoreService</p>
  * <p>Description: 消息存储领域服务，负责消息的持久化存储、MQ 降级写入、离线消息 ZSet 管理及缓存操作。</p>
  * <p>项目名称: Vela</p>

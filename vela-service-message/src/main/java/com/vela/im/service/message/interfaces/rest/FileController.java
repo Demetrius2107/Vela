@@ -1,6 +1,6 @@
 package com.vela.im.service.message.interfaces.rest;
 
-import com.vela.im.service.application.utils.FileStorageService;
+import com.vela.im.service.message.domain.utils.FileStorageService;
 import com.vela.im.service.message.domain.entity.ImFileEntity;
 import com.vela.im.shared.base.Result;
 import org.springframework.web.bind.annotation.*;

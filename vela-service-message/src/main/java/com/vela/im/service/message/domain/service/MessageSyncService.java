@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 
 import com.vela.im.service.conversation.domain.service.ConversationService;
-import com.vela.im.service.group.domain.service.ImGroupMemberService;
+import com.vela.im.service.message.interfaces.feign.GroupServiceFeignClient;
 import com.vela.im.service.message.domain.entity.ImMessageBodyEntity;
 import com.vela.im.service.message.domain.entity.ImMessageHistoryEntity;
 import com.vela.im.service.message.domain.strategy.GroupRecallStrategy;
@@ -13,13 +13,13 @@ import com.vela.im.service.message.domain.strategy.P2PRecallStrategy;
 import com.vela.im.service.message.domain.strategy.RecallStrategy;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageBodyMapper;
 import com.vela.im.service.message.infrastructure.persistence.mapper.ImMessageHistoryMapper;
-import com.vela.im.service.infrastructure.seq.RedisSeq;
-import com.vela.im.service.application.utils.ConversationIdGenerate;
-import com.vela.im.service.application.utils.GroupMessageProducer;
-import com.vela.im.service.application.utils.MessageProducer;
-import com.vela.im.service.application.utils.PendingAckTracker;
-import com.vela.im.service.application.utils.MessageLockManager;
-import com.vela.im.service.application.utils.SnowflakeIdWorker;
+import com.vela.im.service.common.infrastructure.seq.RedisSeq;
+import com.vela.im.service.common.utils.ConversationIdGenerate;
+import com.vela.im.service.message.domain.utils.GroupMessageProducer;
+import com.vela.im.service.common.utils.MessageProducer;
+import com.vela.im.service.common.utils.PendingAckTracker;
+import com.vela.im.service.common.utils.MessageLockManager;
+import com.vela.im.service.common.utils.SnowflakeIdWorker;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.ImConstants;
@@ -74,7 +74,7 @@ public class MessageSyncService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ImMessageBodyMapper imMessageBodyMapper;
     private final RedisSeq redisSeq;
-    private final ImGroupMemberService imGroupMemberService;
+    private final GroupServiceFeignClient groupServiceFeignClient;
     private final GroupMessageProducer groupMessageProducer;
     private final ImServerProperties appConfig;
     private final PendingAckTracker pendingAckTracker;
@@ -113,7 +113,7 @@ public class MessageSyncService {
                               RedisTemplate<String, String> redisTemplate,
                               ImMessageBodyMapper imMessageBodyMapper,
                               RedisSeq redisSeq,
-                              ImGroupMemberService imGroupMemberService,
+                              GroupServiceFeignClient groupServiceFeignClient,
                               GroupMessageProducer groupMessageProducer,
                               ImServerProperties appConfig,
                               P2PRecallStrategy p2pRecallStrategy,
@@ -124,10 +124,10 @@ public class MessageSyncService {
                               MessageLockManager messageLockManager) {
         this.messageProducer = messageProducer;
         this.conversationService = conversationService;
+        this.groupServiceFeignClient = groupServiceFeignClient;
         this.redisTemplate = redisTemplate;
         this.imMessageBodyMapper = imMessageBodyMapper;
         this.redisSeq = redisSeq;
-        this.imGroupMemberService = imGroupMemberService;
         this.groupMessageProducer = groupMessageProducer;
         this.appConfig = appConfig;
         this.p2pRecallStrategy = p2pRecallStrategy;

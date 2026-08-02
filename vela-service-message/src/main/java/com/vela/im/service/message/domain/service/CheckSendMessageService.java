@@ -1,13 +1,13 @@
 package com.vela.im.service.message.domain.service;
 
 
-import com.vela.im.service.friendship.domain.entity.ImFriendShipEntity;
+import com.vela.im.service.common.entity.ImFriendShipEntity;
 import com.vela.im.service.friendship.application.dto.req.GetRelationReq;
 import com.vela.im.service.friendship.domain.service.ImFriendService;
-import com.vela.im.service.group.domain.entity.ImGroupEntity;
-import com.vela.im.service.group.application.dto.resp.GetRoleInGroupResp;
-import com.vela.im.service.group.domain.service.ImGroupMemberService;
-import com.vela.im.service.group.domain.service.ImGroupService;
+import com.vela.im.service.common.entity.ImGroupEntity;
+import com.vela.im.service.common.entity.GetRoleInGroupResp;
+import com.vela.im.service.message.interfaces.feign.GroupServiceFeignClient;
+
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.shared.base.Result;
@@ -33,19 +33,18 @@ public class CheckSendMessageService {
 
     private final ImUserService imUserService;
     private final ImFriendService imFriendService;
-    private final ImGroupService imGroupService;
-    private final ImGroupMemberService imGroupMemberService;
+    
+    private final GroupServiceFeignClient groupServiceFeignClient;
     private final ImServerProperties appConfig;
 
     public CheckSendMessageService(ImUserService imUserService,
                                    ImFriendService imFriendService,
-                                   ImGroupService imGroupService,
-                                   ImGroupMemberService imGroupMemberService,
+                                   GroupServiceFeignClient groupServiceFeignClient,
                                    ImServerProperties appConfig) {
         this.imUserService = imUserService;
         this.imFriendService = imFriendService;
-        this.imGroupService = imGroupService;
-        this.imGroupMemberService = imGroupMemberService;
+        
+        this.groupServiceFeignClient = groupServiceFeignClient;
         this.appConfig = appConfig;
     }
 
@@ -163,13 +162,13 @@ public class CheckSendMessageService {
         }
 
         // Check if group exists
-        Result<ImGroupEntity> group = imGroupService.getGroup(groupId, appId);
+        Result<ImGroupEntity> group = groupServiceFeignClient.getGroup(groupId, appId);
         if(!group.isOk()){
             return group;
         }
 
         // Check if sender is a group member
-        Result<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(groupId, fromId, appId);
+        Result<GetRoleInGroupResp> roleInGroupOne = groupServiceFeignClient.getRoleInGroupOne(groupId, fromId, appId);
         if(!roleInGroupOne.isOk()){
             return roleInGroupOne;
         }

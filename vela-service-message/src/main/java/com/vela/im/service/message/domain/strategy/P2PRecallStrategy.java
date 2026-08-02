@@ -2,11 +2,11 @@ package com.vela.im.service.message.domain.strategy;
 
 import com.alibaba.fastjson.JSONObject;
 import com.vela.im.codec.pack.message.RecallMessageNotifyPack;
-import com.vela.im.service.application.utils.ConversationIdGenerate;
-import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.common.utils.ConversationIdGenerate;
+import com.vela.im.service.common.utils.MessageProducer;
 import com.vela.im.service.conversation.domain.service.ConversationService;
-import com.vela.im.service.infrastructure.seq.RedisSeq;
-import com.vela.im.service.application.utils.SnowflakeIdWorker;
+import com.vela.im.service.common.infrastructure.seq.RedisSeq;
+import com.vela.im.service.common.utils.SnowflakeIdWorker;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;

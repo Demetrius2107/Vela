@@ -2,12 +2,12 @@ package com.vela.im.service.message.domain.strategy;
 
 import com.alibaba.fastjson.JSONObject;
 import com.vela.im.codec.pack.message.RecallMessageNotifyPack;
-import com.vela.im.service.application.utils.ConversationIdGenerate;
-import com.vela.im.service.application.utils.GroupMessageProducer;
-import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.common.utils.ConversationIdGenerate;
+import com.vela.im.service.message.domain.utils.GroupMessageProducer;
+import com.vela.im.service.common.utils.MessageProducer;
 import com.vela.im.service.conversation.domain.service.ConversationService;
-import com.vela.im.service.group.domain.service.ImGroupMemberService;
-import com.vela.im.service.infrastructure.seq.RedisSeq;
+import com.vela.im.service.message.interfaces.feign.GroupServiceFeignClient;
+import com.vela.im.service.common.infrastructure.seq.RedisSeq;
 import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.ConversationTypeEnum;
 import com.vela.im.shared.types.enums.DelFlagEnum;
@@ -41,28 +41,28 @@ public class GroupRecallStrategy implements RecallStrategy {
     private final ConversationService conversationService;
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisSeq redisSeq;
-    private final ImGroupMemberService imGroupMemberService;
+    private final GroupServiceFeignClient groupServiceFeignClient;
     private final GroupMessageProducer groupMessageProducer;
 
     public GroupRecallStrategy(MessageProducer messageProducer,
                                ConversationService conversationService,
                                RedisTemplate<String, String> redisTemplate,
                                RedisSeq redisSeq,
-                               ImGroupMemberService imGroupMemberService,
+                               GroupServiceFeignClient groupServiceFeignClient,
                                GroupMessageProducer groupMessageProducer) {
         this.messageProducer = messageProducer;
         this.conversationService = conversationService;
+        this.groupServiceFeignClient = groupServiceFeignClient;
         this.redisTemplate = redisTemplate;
         this.redisSeq = redisSeq;
-        this.imGroupMemberService = imGroupMemberService;
         this.groupMessageProducer = groupMessageProducer;
     }
 
     @Override
     public void recall(RecallMessageContent content, RecallMessageNotifyPack pack,
                        ImMessageBodyEntity body) {
-        List<String> memberIds = imGroupMemberService.getGroupMemberId(
-                content.getToId(), content.getAppId());
+        List<String> memberIds = groupServiceFeignClient.getGroupMemberId(
+                content.getToId(), content.getAppId()).getData();
 
         long seq = redisSeq.doGetSeq(content.getAppId() + ":" + ImConstants.Sequence.MESSAGE
                 + ":" + ConversationIdGenerate.generateP2PId(content.getFromId(), content.getToId()));

@@ -1,16 +1,16 @@
 package com.vela.im.service.message.domain.service;
 
-import com.vela.im.service.application.pipeline.MessageContext;
-import com.vela.im.service.application.pipeline.PipeChain;
-import com.vela.im.service.application.pipeline.PipeNode;
-import com.vela.im.service.application.pipeline.node.DedupNode;
-import com.vela.im.service.application.pipeline.node.PersistAndPushNode;
-import com.vela.im.service.application.pipeline.node.RateLimitNode;
-import com.vela.im.service.application.pipeline.node.ValidateNode;
-import com.vela.im.service.application.utils.CallbackService;
-import com.vela.im.service.application.utils.ConversationIdGenerate;
-import com.vela.im.service.application.utils.MessageProducer;
-import com.vela.im.service.infrastructure.seq.RedisSeq;
+import com.vela.im.service.common.pipeline.MessageContext;
+import com.vela.im.service.common.pipeline.PipeChain;
+import com.vela.im.service.common.pipeline.PipeNode;
+import com.vela.im.service.message.domain.pipeline.node.DedupNode;
+import com.vela.im.service.message.domain.pipeline.node.PersistAndPushNode;
+import com.vela.im.service.message.domain.pipeline.node.RateLimitNode;
+import com.vela.im.service.message.domain.pipeline.node.ValidateNode;
+import com.vela.im.service.common.utils.CallbackService;
+import com.vela.im.service.common.utils.ConversationIdGenerate;
+import com.vela.im.service.common.utils.MessageProducer;
+import com.vela.im.service.common.infrastructure.seq.RedisSeq;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.ImConstants;
