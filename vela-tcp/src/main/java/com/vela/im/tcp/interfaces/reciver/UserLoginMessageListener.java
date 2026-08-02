@@ -79,12 +79,12 @@ public class UserLoginMessageListener {
                     }
                     // 双端登录：Web 端不做处理，PC/Mobile 同端互踢
                     else if(loginModel == DeviceMultiLoginEnum.TWO.getLoginMode()){
-                        if(dto.getClientType() == com.lld.im.common.ClientType.WEB.getCode()){
+                        if(dto.getClientType() == com.vela.im.shared.types.ClientType.WEB.getCode()){
                             continue;
                         }
                         Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.CLIENT_TYPE)).get();
 
-                        if (clientType == com.lld.im.common.ClientType.WEB.getCode()){
+                        if (clientType == com.vela.im.shared.types.ClientType.WEB.getCode()){
                             continue;
                         }
 
@@ -101,23 +101,23 @@ public class UserLoginMessageListener {
                     else if(loginModel == DeviceMultiLoginEnum.THREE.getLoginMode()){
                         Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.CLIENT_TYPE)).get();
                         String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(ImConstants.IMEI)).get();
-                        if(dto.getClientType() == com.lld.im.common.ClientType.WEB.getCode()){
+                        if(dto.getClientType() == com.vela.im.shared.types.ClientType.WEB.getCode()){
                             continue;
                         }
 
                         // iOS 和 Android 属于同端
                         Boolean isSameClient = false;
-                        if((clientType == com.lld.im.common.ClientType.IOS.getCode() ||
-                                clientType == com.lld.im.common.ClientType.ANDROID.getCode()) &&
-                                (dto.getClientType() == com.lld.im.common.ClientType.IOS.getCode() ||
-                                        dto.getClientType() == com.lld.im.common.ClientType.ANDROID.getCode())){
+                        if((clientType == com.vela.im.shared.types.ClientType.IOS.getCode() ||
+                                clientType == com.vela.im.shared.types.ClientType.ANDROID.getCode()) &&
+                                (dto.getClientType() == com.vela.im.shared.types.ClientType.IOS.getCode() ||
+                                        dto.getClientType() == com.vela.im.shared.types.ClientType.ANDROID.getCode())){
                             isSameClient = true;
                         }
 
-                        if((clientType == com.lld.im.common.ClientType.MAC.getCode() ||
-                                clientType == com.lld.im.common.ClientType.WINDOWS.getCode()) &&
-                                (dto.getClientType() == com.lld.im.common.ClientType.MAC.getCode() ||
-                                        dto.getClientType() == com.lld.im.common.ClientType.WINDOWS.getCode())){
+                        if((clientType == com.vela.im.shared.types.ClientType.MAC.getCode() ||
+                                clientType == com.vela.im.shared.types.ClientType.WINDOWS.getCode()) &&
+                                (dto.getClientType() == com.vela.im.shared.types.ClientType.MAC.getCode() ||
+                                        dto.getClientType() == com.vela.im.shared.types.ClientType.WINDOWS.getCode())){
                             isSameClient = true;
                         }
 

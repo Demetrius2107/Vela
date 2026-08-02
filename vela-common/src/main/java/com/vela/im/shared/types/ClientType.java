@@ -1,4 +1,4 @@
-package com.lld.im.common;
+package com.vela.im.shared.types;
 
 /**
  * <p>Title: ClientType</p>

@@ -65,7 +65,7 @@ public class ImUserController {
 
     /**
      * @param req
-     * @return com.lld.im.common.Result
+     * @return com.vela.im.shared.Result
      * @description im的登录接口，返回im地址
      * @author wanqiu
      */
@@ -76,7 +76,7 @@ public class ImUserController {
         Result login = imUserService.login(req);
         if (login.isOk()) {
             List<String> allNode = new ArrayList<>();
-            if (req.getClientType() == com.lld.im.common.ClientType.WEB.getCode()) {
+            if (req.getClientType() == com.vela.im.shared.types.ClientType.WEB.getCode()) {
                 allNode = zKit.getAllWebNode();
             } else {
                 allNode = zKit.getAllTcpNode();

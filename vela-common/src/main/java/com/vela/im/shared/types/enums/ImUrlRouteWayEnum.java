@@ -5,18 +5,18 @@ public enum ImUrlRouteWayEnum {
     /**
      * 随机
      */
-    RAMDOM(1,"com.lld.im.common.route.algorithm.random.RandomHandle"),
+    RAMDOM(1,"com.vela.im.shared.route.algorithm.random.RandomHandle"),
 
 
     /**
      * 轮询
      */
-    LOOP(2,"com.lld.im.common.route.algorithm.loop.LoopHandle"),
+    LOOP(2,"com.vela.im.shared.route.algorithm.loop.LoopHandle"),
 
     /**
      * HASH
      */
-    HASH(3,"com.lld.im.common.route.algorithm.consistenthash.ConsistentHashHandle"),
+    HASH(3,"com.vela.im.shared.route.algorithm.consistenthash.ConsistentHashHandle"),
     ;
 
 
