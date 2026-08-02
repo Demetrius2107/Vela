@@ -1,7 +1,7 @@
 package com.vela.im.service.bot.domain.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.common.utils.MessageProducer;
 import com.vela.im.service.bot.domain.entity.ImBotEntity;
 import com.vela.im.shared.types.enums.command.GroupEventCommand;
 import com.vela.im.shared.types.enums.command.MessageCommand;
