@@ -3,39 +3,22 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>com.vela</groupId>
-        <artifactId>Vela</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
-
+    <parent><groupId>com.vela</groupId><artifactId>Vela</artifactId><version>1.0-SNAPSHOT</version></parent>
     <artifactId>vela-service-friendship</artifactId>
-
     <dependencies>
         <dependency>
-            <groupId>com.vela</groupId>
-            <artifactId>vela-service-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>com.vela</groupId><artifactId>vela-service-common</artifactId><version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
+        <dependency><groupId>com.github.jeffreyning</groupId><artifactId>mybatisplus-plus</artifactId><version>1.5.1-RELEASE</version></dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>com.vela.im.service.friendship.FriendshipApplication</mainClass>
-                </configuration>
             </plugin>
         </plugins>
     </build>

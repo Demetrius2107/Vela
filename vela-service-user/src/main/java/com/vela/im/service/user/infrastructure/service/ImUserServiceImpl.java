@@ -3,15 +3,15 @@ package com.vela.im.service.user.infrastructure.service;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
-import com.vela.im.service.group.domain.service.ImGroupService;
+import com.vela.im.service.user.interfaces.feign.GroupServiceFeignClient;
 import com.vela.im.service.user.domain.entity.ImUserDataEntity;
 import com.vela.im.service.user.infrastructure.persistence.mapper.ImUserDataMapper;
 import com.vela.im.service.user.application.dto.req.*;
 import com.vela.im.service.user.application.dto.resp.GetUserInfoResp;
 import com.vela.im.service.user.application.dto.resp.ImportUserResp;
 import com.vela.im.service.user.domain.service.ImUserService;
-import com.vela.im.service.application.utils.CallbackService;
-import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.common.utils.CallbackService;
+import com.vela.im.service.common.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.ImConstants;
@@ -51,20 +51,20 @@ public class ImUserServiceImpl implements ImUserService {
     private final CallbackService callbackService;
     private final MessageProducer messageProducer;
     private final StringRedisTemplate stringRedisTemplate;
-    private final ImGroupService imGroupService;
+    private final GroupServiceFeignClient groupServiceFeignClient;
 
     public ImUserServiceImpl(ImUserDataMapper imUserDataMapper,
                              ImServerProperties appConfig,
                              CallbackService callbackService,
                              MessageProducer messageProducer,
                              StringRedisTemplate stringRedisTemplate,
-                             ImGroupService imGroupService) {
+                             GroupServiceFeignClient groupServiceFeignClient) {
         this.imUserDataMapper = imUserDataMapper;
         this.appConfig = appConfig;
         this.callbackService = callbackService;
         this.messageProducer = messageProducer;
         this.stringRedisTemplate = stringRedisTemplate;
-        this.imGroupService = imGroupService;
+        this.groupServiceFeignClient = groupServiceFeignClient;
     }
 
     @Override
@@ -219,7 +219,8 @@ public class ImUserServiceImpl implements ImUserService {
     @Override
     public Result getUserSequence(GetUserSequenceReq req) {
         Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + ImConstants.Redis.SEQ_PREFIX + ":" + req.getUserId());
-        Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(),req.getAppId());
+        Result<Long> groupSeqResult = groupServiceFeignClient.getUserGroupMaxSeq(req.getUserId(), req.getAppId());
+        Long groupSeq = groupSeqResult != null && groupSeqResult.isOk() ? groupSeqResult.getData() : 0L;
         map.put(ImConstants.Sequence.GROUP,groupSeq);
         return Result.ok(map);
     }

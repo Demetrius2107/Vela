@@ -15,12 +15,12 @@ import com.vela.im.service.friendship.application.dto.resp.CheckFriendShipResp;
 import com.vela.im.service.friendship.application.dto.resp.ImportFriendShipResp;
 import com.vela.im.service.friendship.domain.service.ImFriendService;
 import com.vela.im.service.friendship.domain.service.ImFriendShipRequestService;
-import com.vela.im.service.infrastructure.seq.RedisSeq;
-import com.vela.im.service.user.domain.entity.ImUserDataEntity;
-import com.vela.im.service.user.domain.service.ImUserService;
-import com.vela.im.service.application.utils.CallbackService;
-import com.vela.im.service.application.utils.MessageProducer;
-import com.vela.im.service.application.utils.WriteUserSeq;
+import com.vela.im.service.common.infrastructure.seq.RedisSeq;
+import com.vela.im.service.common.entity.ImUserDataEntity;
+import com.vela.im.service.friendship.interfaces.feign.UserServiceFeignClient;
+import com.vela.im.service.common.utils.CallbackService;
+import com.vela.im.service.common.utils.MessageProducer;
+import com.vela.im.service.common.utils.WriteUserSeq;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.config.ImServerProperties;
 import com.vela.im.shared.constants.ImConstants;
@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
 public class ImFriendServiceImpl implements ImFriendService {
 
     private final ImFriendShipMapper imFriendShipMapper;
-    private final ImUserService imUserService;
+    private final UserServiceFeignClient userServiceFeignClient;
     private final ImServerProperties appConfig;
     private final CallbackService callbackService;
     private final MessageProducer messageProducer;
@@ -75,7 +75,7 @@ public class ImFriendServiceImpl implements ImFriendService {
     private final WriteUserSeq writeUserSeq;
 
     public ImFriendServiceImpl(ImFriendShipMapper imFriendShipMapper,
-                               ImUserService imUserService,
+                               UserServiceFeignClient userServiceFeignClient,
                                ImServerProperties appConfig,
                                CallbackService callbackService,
                                MessageProducer messageProducer,
@@ -84,7 +84,7 @@ public class ImFriendServiceImpl implements ImFriendService {
                                RedisSeq redisSeq,
                                WriteUserSeq writeUserSeq) {
         this.imFriendShipMapper = imFriendShipMapper;
-        this.imUserService = imUserService;
+        this.userServiceFeignClient = userServiceFeignClient;
         this.appConfig = appConfig;
         this.callbackService = callbackService;
         this.messageProducer = messageProducer;
@@ -133,12 +133,12 @@ public class ImFriendServiceImpl implements ImFriendService {
     @Override
     public Result addFriend(AddFriendReq req) {
 
-        Result<ImUserDataEntity> fromInfo = imUserService.getSingleUserInfo(req.getFromId(), req.getAppId());
+        Result<ImUserDataEntity> fromInfo = userServiceFeignClient.getSingleUserInfo(req.getFromId(), req.getAppId());
         if(!fromInfo.isOk()){
             return fromInfo;
         }
 
-        Result<ImUserDataEntity> toInfo = imUserService.getSingleUserInfo(req.getToItem().getToId(), req.getAppId());
+        Result<ImUserDataEntity> toInfo = userServiceFeignClient.getSingleUserInfo(req.getToItem().getToId(), req.getAppId());
         if(!toInfo.isOk()){
             return toInfo;
         }
@@ -183,12 +183,12 @@ public class ImFriendServiceImpl implements ImFriendService {
     @Override
     public Result updateFriend(UpdateFriendReq req) {
 
-        Result<ImUserDataEntity> fromInfo = imUserService.getSingleUserInfo(req.getFromId(), req.getAppId());
+        Result<ImUserDataEntity> fromInfo = userServiceFeignClient.getSingleUserInfo(req.getFromId(), req.getAppId());
         if(!fromInfo.isOk()){
             return fromInfo;
         }
 
-        Result<ImUserDataEntity> toInfo = imUserService.getSingleUserInfo(req.getToItem().getToId(), req.getAppId());
+        Result<ImUserDataEntity> toInfo = userServiceFeignClient.getSingleUserInfo(req.getToItem().getToId(), req.getAppId());
         if(!toInfo.isOk()){
             return toInfo;
         }
@@ -526,12 +526,12 @@ public class ImFriendServiceImpl implements ImFriendService {
     @Override
     public Result addBlack(AddFriendShipBlackReq req) {
 
-        Result<ImUserDataEntity> fromInfo = imUserService.getSingleUserInfo(req.getFromId(), req.getAppId());
+        Result<ImUserDataEntity> fromInfo = userServiceFeignClient.getSingleUserInfo(req.getFromId(), req.getAppId());
         if(!fromInfo.isOk()){
             return fromInfo;
         }
 
-        Result<ImUserDataEntity> toInfo = imUserService.getSingleUserInfo(req.getToId(), req.getAppId());
+        Result<ImUserDataEntity> toInfo = userServiceFeignClient.getSingleUserInfo(req.getToId(), req.getAppId());
         if(!toInfo.isOk()){
             return toInfo;
         }

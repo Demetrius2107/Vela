@@ -10,10 +10,10 @@ import com.vela.im.service.friendship.application.dto.req.AddFriendShipGroupReq;
 import com.vela.im.service.friendship.application.dto.req.DeleteFriendShipGroupReq;
 import com.vela.im.service.friendship.domain.service.ImFriendShipGroupMemberService;
 import com.vela.im.service.friendship.domain.service.ImFriendShipGroupService;
-import com.vela.im.service.infrastructure.seq.RedisSeq;
-import com.vela.im.service.user.domain.service.ImUserService;
-import com.vela.im.service.application.utils.MessageProducer;
-import com.vela.im.service.application.utils.WriteUserSeq;
+import com.vela.im.service.common.infrastructure.seq.RedisSeq;
+import com.vela.im.service.friendship.interfaces.feign.UserServiceFeignClient;
+import com.vela.im.service.common.utils.MessageProducer;
+import com.vela.im.service.common.utils.WriteUserSeq;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.constants.ImConstants;
 import com.vela.im.shared.types.enums.DelFlagEnum;
@@ -44,20 +44,20 @@ public class ImFriendShipGroupServiceImpl implements ImFriendShipGroupService {
 
     private final ImFriendShipGroupMapper imFriendShipGroupMapper;
     private final ImFriendShipGroupMemberService imFriendShipGroupMemberService;
-    private final ImUserService imUserService;
+    private final UserServiceFeignClient userServiceFeignClient;
     private final RedisSeq redisSeq;
     private final MessageProducer messageProducer;
     private final WriteUserSeq writeUserSeq;
 
     public ImFriendShipGroupServiceImpl(ImFriendShipGroupMapper imFriendShipGroupMapper,
                                         ImFriendShipGroupMemberService imFriendShipGroupMemberService,
-                                        ImUserService imUserService,
+                                        UserServiceFeignClient userServiceFeignClient,
                                         RedisSeq redisSeq,
                                         MessageProducer messageProducer,
                                         WriteUserSeq writeUserSeq) {
         this.imFriendShipGroupMapper = imFriendShipGroupMapper;
         this.imFriendShipGroupMemberService = imFriendShipGroupMemberService;
-        this.imUserService = imUserService;
+        this.userServiceFeignClient = userServiceFeignClient;
         this.redisSeq = redisSeq;
         this.messageProducer = messageProducer;
         this.writeUserSeq = writeUserSeq;

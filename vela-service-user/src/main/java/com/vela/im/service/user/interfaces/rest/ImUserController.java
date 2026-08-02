@@ -3,7 +3,7 @@ package com.vela.im.service.user.interfaces.rest;
 import com.vela.im.service.user.application.dto.req.*;
 import com.vela.im.service.user.domain.service.ImUserService;
 import com.vela.im.service.user.domain.service.ImUserStatusService;
-import com.vela.im.service.application.utils.ZKit;
+import com.vela.im.service.common.utils.ZKit;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.route.RouteHandle;
 import com.vela.im.shared.route.RouteInfo;

@@ -9,9 +9,9 @@ import com.vela.im.service.friendship.application.dto.req.AddFriendShipGroupMemb
 import com.vela.im.service.friendship.application.dto.req.DeleteFriendShipGroupMemberReq;
 import com.vela.im.service.friendship.domain.service.ImFriendShipGroupMemberService;
 import com.vela.im.service.friendship.domain.service.ImFriendShipGroupService;
-import com.vela.im.service.user.domain.entity.ImUserDataEntity;
-import com.vela.im.service.user.domain.service.ImUserService;
-import com.vela.im.service.application.utils.MessageProducer;
+import com.vela.im.service.common.entity.ImUserDataEntity;
+import com.vela.im.service.friendship.interfaces.feign.UserServiceFeignClient;
+import com.vela.im.service.common.utils.MessageProducer;
 import com.vela.im.shared.base.Result;
 import com.vela.im.shared.types.enums.command.FriendshipEventCommand;
 import com.vela.im.shared.types.ClientInfo;
@@ -42,18 +42,18 @@ public class ImFriendShipGroupMemberServiceImpl
 
     private final ImFriendShipGroupMemberMapper imFriendShipGroupMemberMapper;
     private final ImFriendShipGroupService imFriendShipGroupService;
-    private final ImUserService imUserService;
+    private final UserServiceFeignClient userServiceFeignClient;
     private final ImFriendShipGroupMemberService thisService;
     private final MessageProducer messageProducer;
 
     public ImFriendShipGroupMemberServiceImpl(ImFriendShipGroupMemberMapper imFriendShipGroupMemberMapper,
                                               ImFriendShipGroupService imFriendShipGroupService,
-                                              ImUserService imUserService,
+                                              UserServiceFeignClient userServiceFeignClient,
                                               ImFriendShipGroupMemberService thisService,
                                               MessageProducer messageProducer) {
         this.imFriendShipGroupMemberMapper = imFriendShipGroupMemberMapper;
         this.imFriendShipGroupService = imFriendShipGroupService;
-        this.imUserService = imUserService;
+        this.userServiceFeignClient = userServiceFeignClient;
         this.thisService = thisService;
         this.messageProducer = messageProducer;
     }
@@ -70,7 +70,7 @@ public class ImFriendShipGroupMemberServiceImpl
 
         List<String> successId = new ArrayList<>();
         for (String toId : req.getToIds()) {
-            Result<ImUserDataEntity> singleUserInfo = imUserService.getSingleUserInfo(toId, req.getAppId());
+            Result<ImUserDataEntity> singleUserInfo = userServiceFeignClient.getSingleUserInfo(toId, req.getAppId());
             if(singleUserInfo.isOk()){
                 int i = thisService.doAddGroupMember(group.getData().getGroupId(), toId);
                 if(i == 1){
@@ -101,7 +101,7 @@ public class ImFriendShipGroupMemberServiceImpl
 
         List<String> successId = new ArrayList<>();
         for (String toId : req.getToIds()) {
-            Result<ImUserDataEntity> singleUserInfo = imUserService.getSingleUserInfo(toId, req.getAppId());
+            Result<ImUserDataEntity> singleUserInfo = userServiceFeignClient.getSingleUserInfo(toId, req.getAppId());
             if(singleUserInfo.isOk()){
                 int i = deleteGroupMember(group.getData().getGroupId(), toId);
                 if(i == 1){
