@@ -7,7 +7,7 @@ namespace VelaWPF.Services;
 
 public class ApiClient
 {
-    private static readonly HttpClient _client = new() { BaseAddress = new("http://localhost:8000") };
+    private static readonly HttpClient _client = new() { BaseAddress = new("http://localhost:8888") };
     private string _token = "";
 
     public void SetToken(string token) => _token = token;
