@@ -44,3 +44,4 @@ build/
 
 ### Mac OS ###
 .DS_Store.atomcode/
+phase1_result.json

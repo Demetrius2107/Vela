@@ -1,0 +1,65 @@
+<svg viewBox="0 0 680 420" role="img">
+  <title>Vela IM 后续迭代路线图</title>
+  <desc>按优先级展示Vela项目接下来的迭代方向</desc>
+  <defs>
+    <style>
+      .th{font:14px sans-serif;font-weight:500;fill:#26215C}
+      .ts{font:12px sans-serif;fill:#888780}
+      .t{font:13px sans-serif;fill:#444441}
+      .p0{font:11px sans-serif;font-weight:500;fill:#A32D2D}
+      .p1{font:11px sans-serif;font-weight:500;fill:#854F0B}
+      .p2{font:11px sans-serif;font-weight:500;fill:#185FA5}
+    </style>
+  </defs>
+
+  <text x="340" y="28" text-anchor="middle" class="th" font-size="15">后续迭代: 从功能堆叠到工程深度</text>
+
+  <g transform="translate(40,50)">
+    <rect width="600" height="70" rx="10" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+    <text x="16" y="22" class="p0">P0 · 紧急 (1-2 周)</text>
+    <text x="16" y="42" class="th">全链路联调 + 单元测试从零补齐</text>
+    <text x="16" y="60" class="ts">Web 聊天页 Mock 数据 → 真实 API · 消息管道/存储/撤回 单测 · ConversationService isTop/isMute Bug 修复</text>
+  </g>
+
+  <g transform="translate(40,135)">
+    <rect width="290" height="70" rx="10" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.5"/>
+    <text x="16" y="22" class="p1">P1 · 高优 (2-4 周)</text>
+    <text x="16" y="42" class="th">L3 性能优化</text>
+    <text x="16" y="60" class="ts">MQ削峰 · 批量推送 · 同会话保序 · 本地缓存</text>
+  </g>
+  <g transform="translate(350,135)">
+    <rect width="290" height="70" rx="10" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.5"/>
+    <text x="16" y="22" class="p1">P1 · 高优 (2-3 周)</text>
+    <text x="16" y="42" class="th">L4 容灾 + 安全加固</text>
+    <text x="16" y="60" class="ts">Sentinel熔断 · 健康检查 · 密码加密 · TLS传输</text>
+  </g>
+
+  <g transform="translate(40,220)">
+    <rect width="290" height="70" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+    <text x="16" y="22" class="p2">P2 · 中期 (1-2 月)</text>
+    <text x="16" y="42" class="th">移动端功能补齐</text>
+    <text x="16" y="60" class="ts">Android/iOS 聊天消息真实化 · WS集成 · 群组管理</text>
+  </g>
+  <g transform="translate(350,220)">
+    <rect width="290" height="70" rx="10" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+    <text x="16" y="22" class="p2">P2 · 中期 (2-3 周)</text>
+    <text x="16" y="42" class="th">数据库重构 + 代码清理</text>
+    <text x="16" y="60" class="ts">utf8mb4 · MEDIUMTEXT · 空壳模块移除 · 字段注入统一</text>
+  </g>
+
+  <g transform="translate(40,305)">
+    <rect width="290" height="70" rx="10" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="16" y="22" class="ts">远期 (3+ 月)</text>
+    <text x="16" y="42" class="th">AI 助手 + 开放生态</text>
+    <text x="16" y="60" class="ts">消息摘要/智能回复 · 开放API/SDK · E2E加密</text>
+  </g>
+  <g transform="translate(350,305)">
+    <rect width="290" height="70" rx="10" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+    <text x="16" y="22" class="ts">远期 (3+ 月)</text>
+    <text x="16" y="42" class="th">K8s + Service Mesh</text>
+    <text x="16" y="60" class="ts">容器编排 · 服务网格 · 压测报告 · 多人会议(SFU)</text>
+  </g>
+
+  <line x1="50" y1="395" x2="630" y2="395" stroke="#B4B2A9" stroke-width="0.5"/>
+  <text x="340" y="412" text-anchor="middle" class="ts">核心矛盾: 功能覆盖面已达 v2.0 级别 · 架构深度仍停留在 v1.0</text>
+</svg>

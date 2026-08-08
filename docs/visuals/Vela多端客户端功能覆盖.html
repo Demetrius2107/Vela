@@ -1,0 +1,41 @@
+<div style="position: relative; width: 100%; height: 380px;">
+  <canvas id="clientChart" role="img" aria-label="各客户端平台功能覆盖度对比雷达图">Vela IM 各客户端平台功能覆盖度对比</canvas>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; font-size: 12px; color: var(--color-text-secondary);">
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #378ADD;"></span>Web (Vue 3) — 57 文件</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #534AB7;"></span>iOS (SwiftUI) — 15 文件</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #1D9E75;"></span>Android (Compose) — 22 文件</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #EF9F27;"></span>Flutter — 12 文件</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #D4537E;"></span>Electron — 3 文件</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #888780;"></span>WPF — 10 文件</span>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+new Chart(document.getElementById('clientChart'), {
+  type: 'radar',
+  data: {
+    labels: ['登录/注册', '聊天消息', 'WebSocket', '通讯录', '群组管理', 'Bot市场', '管理后台', '办公生态', '知识库', 'WebRTC通话', '用户配置'],
+    datasets: [
+      { label: 'Web', data: [70,75,90,80,85,100,100,100,100,100,80], backgroundColor: 'rgba(55,138,221,0.15)', borderColor: '#378ADD', pointBackgroundColor: '#378ADD', borderWidth: 1.5 },
+      { label: 'iOS', data: [100,60,90,100,0,100,0,0,0,0,100], backgroundColor: 'rgba(83,74,183,0.1)', borderColor: '#534AB7', pointBackgroundColor: '#534AB7', borderWidth: 1.5 },
+      { label: 'Android', data: [100,40,50,30,0,30,0,0,0,0,0], backgroundColor: 'rgba(29,158,117,0.1)', borderColor: '#1D9E75', pointBackgroundColor: '#1D9E75', borderWidth: 1.5 },
+      { label: 'Flutter', data: [100,30,0,100,0,100,0,0,0,0,30], backgroundColor: 'rgba(239,159,39,0.08)', borderColor: '#EF9F27', pointBackgroundColor: '#EF9F27', borderWidth: 1.5 },
+      { label: 'WPF', data: [100,5,0,80,0,0,0,0,0,0,0], backgroundColor: 'rgba(136,135,128,0.08)', borderColor: '#888780', pointBackgroundColor: '#888780', borderWidth: 1.5 }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10 } } },
+    scales: {
+      r: {
+        min: 0, max: 100,
+        ticks: { stepSize: 25, font: { size: 10 }, color: '#888780' },
+        pointLabels: { font: { size: 11 }, color: '#444441' },
+        grid: { color: 'rgba(136,135,128,0.2)' },
+        angleLines: { color: 'rgba(136,135,128,0.2)' }
+      }
+    }
+  }
+});
+</script>
