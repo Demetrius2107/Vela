@@ -21,6 +21,7 @@ import com.vela.im.shared.exception.ApplicationException;
 import com.vela.im.codec.pack.friendship.ApproverFriendRequestPack;
 import com.vela.im.codec.pack.friendship.ReadAllFriendRequestPack;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +51,7 @@ public class ImFriendShipRequestServiceImpl implements ImFriendShipRequestServic
     private final WriteUserSeq writeUserSeq;
 
     public ImFriendShipRequestServiceImpl(ImFriendShipRequestMapper imFriendShipRequestMapper,
-                                          ImFriendService imFriendShipService,
+                                          @Lazy ImFriendService imFriendShipService,
                                           MessageProducer messageProducer,
                                           RedisSeq redisSeq,
                                           WriteUserSeq writeUserSeq) {

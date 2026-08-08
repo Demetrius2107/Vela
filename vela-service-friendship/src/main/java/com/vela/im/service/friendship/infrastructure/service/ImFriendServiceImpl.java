@@ -69,7 +69,6 @@ public class ImFriendServiceImpl implements ImFriendService {
     private final ImServerProperties appConfig;
     private final CallbackService callbackService;
     private final MessageProducer messageProducer;
-    private final ImFriendService imFriendService;
     private final ImFriendShipRequestService imFriendShipRequestService;
     private final RedisSeq redisSeq;
     private final WriteUserSeq writeUserSeq;
@@ -79,7 +78,6 @@ public class ImFriendServiceImpl implements ImFriendService {
                                ImServerProperties appConfig,
                                CallbackService callbackService,
                                MessageProducer messageProducer,
-                               ImFriendService imFriendService,
                                ImFriendShipRequestService imFriendShipRequestService,
                                RedisSeq redisSeq,
                                WriteUserSeq writeUserSeq) {
@@ -88,7 +86,6 @@ public class ImFriendServiceImpl implements ImFriendService {
         this.appConfig = appConfig;
         this.callbackService = callbackService;
         this.messageProducer = messageProducer;
-        this.imFriendService = imFriendService;
         this.imFriendShipRequestService = imFriendShipRequestService;
         this.redisSeq = redisSeq;
         this.writeUserSeq = writeUserSeq;
@@ -111,6 +108,16 @@ public class ImFriendServiceImpl implements ImFriendService {
             entity.setAppId(req.getAppId());
             entity.setFromId(req.getFromId());
             try {
+                // 检查好友关系是否已存在，避免 DuplicateKeyException
+                QueryWrapper<ImFriendShipEntity> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("app_id", req.getAppId());
+                queryWrapper.eq("from_id", req.getFromId());
+                queryWrapper.eq("to_id", dto.getToId());
+                ImFriendShipEntity existing = imFriendShipMapper.selectOne(queryWrapper);
+                if (existing != null) {
+                    successId.add(dto.getToId());
+                    continue;
+                }
                 int insert = imFriendShipMapper.insert(entity);
                 if(insert == 1){
                     successId.add(dto.getToId());

@@ -82,6 +82,15 @@ public class ImUserServiceImpl implements ImUserService {
                 req.getUserData()) {
             try {
                 data.setAppId(req.getAppId());
+                // 检查用户是否已存在，避免 DuplicateKeyException
+                QueryWrapper<ImUserDataEntity> queryWrapper = new QueryWrapper<>();
+                queryWrapper.eq("app_id", req.getAppId());
+                queryWrapper.eq("user_id", data.getUserId());
+                ImUserDataEntity existing = imUserDataMapper.selectOne(queryWrapper);
+                if (existing != null) {
+                    successId.add(data.getUserId());
+                    continue;
+                }
                 int insert = imUserDataMapper.insert(data);
                 if(insert == 1){
                     successId.add(data.getUserId());

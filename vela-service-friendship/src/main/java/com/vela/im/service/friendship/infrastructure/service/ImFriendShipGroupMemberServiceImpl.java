@@ -17,6 +17,7 @@ import com.vela.im.shared.types.enums.command.FriendshipEventCommand;
 import com.vela.im.shared.types.ClientInfo;
 import com.vela.im.codec.pack.friendship.AddFriendGroupMemberPack;
 import com.vela.im.codec.pack.friendship.DeleteFriendGroupMemberPack;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,9 +48,9 @@ public class ImFriendShipGroupMemberServiceImpl
     private final MessageProducer messageProducer;
 
     public ImFriendShipGroupMemberServiceImpl(ImFriendShipGroupMemberMapper imFriendShipGroupMemberMapper,
-                                              ImFriendShipGroupService imFriendShipGroupService,
+                                              @Lazy ImFriendShipGroupService imFriendShipGroupService,
                                               UserServiceFeignClient userServiceFeignClient,
-                                              ImFriendShipGroupMemberService thisService,
+                                              @Lazy ImFriendShipGroupMemberService thisService,
                                               MessageProducer messageProducer) {
         this.imFriendShipGroupMemberMapper = imFriendShipGroupMemberMapper;
         this.imFriendShipGroupService = imFriendShipGroupService;

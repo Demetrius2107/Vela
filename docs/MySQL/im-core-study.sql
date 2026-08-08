@@ -38,7 +38,7 @@ CREATE TABLE `vela_conversation_set`  (
   `conversation_id` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `conversation_type` int(10) NULL DEFAULT NULL COMMENT '0 单聊 1群聊 2机器人 3公众号',
   `from_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `to_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `to_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `is_mute` int(10) NULL DEFAULT NULL COMMENT '是否免打扰 1免打扰',
   `is_top` int(10) NULL DEFAULT NULL COMMENT '是否置顶 1置顶',
   `sequence` bigint(20) NULL DEFAULT NULL COMMENT 'sequence',
@@ -89,7 +89,7 @@ CREATE TABLE `vela_friendship_group`  (
 DROP TABLE IF EXISTS `vela_friendship_group_member`;
 CREATE TABLE `vela_friendship_group_member`  (
   `group_id` bigint(20) NOT NULL,
-  `to_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `to_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`group_id`,`to_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 

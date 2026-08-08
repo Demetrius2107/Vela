@@ -30,27 +30,27 @@ public class GlobalHttpClientConfig {
     /**
      * 最大连接数
      */
-    private Integer maxTotal;
+    private int maxTotal = 200;
 
     /**
      * 最大并发链接数
      */
-    private Integer defaultMaxPerRoute;
+    private int defaultMaxPerRoute = 20;
 
     /**
      * 创建链接的最大时间
      */
-    private Integer connectTimeout;
+    private int connectTimeout = 5000;
 
     /**
      * 链接获取超时时间
      */
-    private Integer connectionRequestTimeout;
+    private int connectionRequestTimeout = 5000;
 
     /**
      * 数据传输最长时间
      */
-    private Integer socketTimeout;
+    private int socketTimeout = 10000;
 
     /**
      * 提交时检查链接是否可用

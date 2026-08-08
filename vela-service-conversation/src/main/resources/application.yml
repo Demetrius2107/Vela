@@ -6,9 +6,9 @@ spring:
     name: vela-conversation
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/vela?serverTimezone=UTC&useSSL=false&characterEncoding=UTF8
+    url: jdbc:mysql://127.0.0.1:3307/vela?serverTimezone=UTC&useSSL=false&characterEncoding=UTF8
     username: root
-    password:
+    password: root
   redis:
     host: 127.0.0.1
     port: 6379

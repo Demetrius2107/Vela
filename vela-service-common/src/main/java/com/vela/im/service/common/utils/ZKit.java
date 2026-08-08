@@ -6,6 +6,7 @@ import org.I0Itec.zkclient.ZkClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class ZKit {
 
     private final ZkClient zkClient;
 
-    public ZKit(ZkClient zkClient) {
+    public ZKit(@Lazy ZkClient zkClient) {
         this.zkClient = zkClient;
     }
 
