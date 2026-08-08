@@ -208,7 +208,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
 
     /**
      * @param groupId, memberId, appId]
-     * @return com.vela.im.shared.Result<com.lld.im.service.group.model.resp.GetRoleInGroupResp>
+     * @return com.vela.im.shared.Result<com.vela.im.service.group.application.dto.resp.GetRoleInGroupResp>
      * @description 查询用户在群内的角色
      * @author wanqiu
      */
