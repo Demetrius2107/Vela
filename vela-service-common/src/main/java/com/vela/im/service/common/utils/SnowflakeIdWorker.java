@@ -3,6 +3,7 @@ package com.vela.im.service.common.utils;
 
 import cn.hutool.core.date.SystemClock;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * <p>Title: SnowflakeIdWorker</p>
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.1
  */
 @Slf4j
+@Component
 public class SnowflakeIdWorker {
 
     /**
