@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -100,7 +101,7 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
             if (!lockHeld) {
                 logger.warn("Push skipped due to concurrent recall, msgId={}, msgKey={}, falling back to offline",
                         msg.getMessageId(), msg.getMessageKey());
-                onlineClients = List.of();
+                onlineClients = Collections.emptyList();
             } else {
                 onlineClients = dispatchToReceiver(msg);
             }
@@ -159,6 +160,6 @@ public class PersistAndPushNode implements PipeNode<MessageContext> {
             return messageProducer.sendToUser(msg.getToId(), MessageCommand.MSG_P2P, msg, msg.getAppId());
         }
         logger.error("P2P dispatch failed after retries, msgId={}, toId={}", msg.getMessageId(), msg.getToId());
-        return List.of();
+        return Collections.emptyList();
     }
 }

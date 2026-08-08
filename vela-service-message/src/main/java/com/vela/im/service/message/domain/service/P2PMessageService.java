@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
@@ -84,7 +86,7 @@ public class P2PMessageService {
         this.persistAndPushNode = persistAndPushNode;
 
         // 装配同步管道：校验 → 限流 → 去重
-        this.syncPipeline = new PipeChain<>(List.of(validateNode, rateLimitNode, dedupNode));
+        this.syncPipeline = new PipeChain<>(Arrays.asList(validateNode, rateLimitNode, dedupNode));
 
         // 异步线程池
         final AtomicInteger num = new AtomicInteger(0);
@@ -134,7 +136,7 @@ public class P2PMessageService {
         MessageContent msg = ctx.getMessageContent();
         threadPoolExecutor.execute(() -> {
             MessageContext asyncCtx = new MessageContext(msg);
-            PipeChain<MessageContext> asyncPipe = new PipeChain<>(List.of(persistAndPushNode));
+            PipeChain<MessageContext> asyncPipe = new PipeChain<>(Collections.singletonList(persistAndPushNode));
             asyncPipe.process(asyncCtx);
         });
     }
