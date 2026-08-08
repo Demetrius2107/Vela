@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupTagService {
@@ -62,7 +63,7 @@ public class GroupTagService {
     public Result<List<String>> getGroupTags(Long tagId) {
         List<ImGroupTagMappingEntity> mappings = mappingMapper.selectList(
                 new QueryWrapper<ImGroupTagMappingEntity>().eq("tag_id", tagId));
-        List<String> groupIds = mappings.stream().map(ImGroupTagMappingEntity::getGroupId).toList();
+        List<String> groupIds = mappings.stream().map(ImGroupTagMappingEntity::getGroupId).collect(Collectors.toList());
         return Result.ok(groupIds);
     }
 

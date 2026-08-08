@@ -7,6 +7,7 @@ import com.vela.im.shared.base.Result;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 消息已读跟踪服务，记录每条消息的已读成员列表。
@@ -47,7 +48,7 @@ public class MessageReadService {
         QueryWrapper<ImMessageReadEntity> query = new QueryWrapper<>();
         query.eq("message_key", messageKey).orderByAsc("read_time");
         List<ImMessageReadEntity> list = readMapper.selectList(query);
-        List<String> members = list.stream().map(ImMessageReadEntity::getMemberId).toList();
+        List<String> members = list.stream().map(ImMessageReadEntity::getMemberId).collect(Collectors.toList());
         return Result.ok(members);
     }
 
@@ -56,7 +57,7 @@ public class MessageReadService {
         List<String> readMembers = getReadMembers(messageKey).getData();
         List<String> unread = allMembers.stream()
                 .filter(m -> !readMembers.contains(m))
-                .toList();
+                .collect(Collectors.toList());
         return Result.ok(unread);
     }
 }
