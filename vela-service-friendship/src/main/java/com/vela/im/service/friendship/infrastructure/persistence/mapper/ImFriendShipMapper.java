@@ -16,7 +16,7 @@ public interface ImFriendShipMapper extends BaseMapper<ImFriendShipEntity> {
 
 
     @Select("<script>"+
-            "select from_id as fromId , to_id as toId ,if(status = 1,1,0) as status from im_friendship where from_id = #{fromId} and to_id in " +
+            "select from_id as fromId , to_id as toId ,if(status = 1,1,0) as status from vela_friendship where from_id = #{fromId} and to_id in " +
             "<foreach collection='toIds' index='index' item='id' separator=',' close = ')' open='(' > " +
             "#{id}" +
             "</foreach>" +
@@ -35,12 +35,12 @@ public interface ImFriendShipMapper extends BaseMapper<ImFriendShipEntity> {
             " end \n" +
             " ) \n " +
             " as status from "+
-            " (select from_id AS fromId , to_id AS toId , if(status = 1,1,0) as status from im_friendship where app_id = #{appId} and from_id = #{fromId} AND to_id in " +
+            " (select from_id AS fromId , to_id AS toId , if(status = 1,1,0) as status from vela_friendship where app_id = #{appId} and from_id = #{fromId} AND to_id in " +
             "<foreach collection='toIds' index='index' item='id' separator=',' close=')' open='('>" +
             " #{id} " +
             "</foreach>" +
             " ) as a INNER join" +
-            " (select from_id AS fromId, to_id AS toId , if(status = 1,1,0) as status from im_friendship where app_id = #{appId} and to_id = #{fromId} AND from_id in " +
+            " (select from_id AS fromId, to_id AS toId , if(status = 1,1,0) as status from vela_friendship where app_id = #{appId} and to_id = #{fromId} AND from_id in " +
             "<foreach collection='toIds' index='index' item='id' separator=',' close=')' open='('>" +
             " #{id} " +
             "</foreach>" +
@@ -56,7 +56,7 @@ public interface ImFriendShipMapper extends BaseMapper<ImFriendShipEntity> {
 
 
     @Select("<script>" +
-            " select from_id AS fromId, to_id AS toId , if(black = 1,1,0) as status from im_friendship where app_id = #{appId} and from_id = #{fromId}  and  to_id in " +
+            " select from_id AS fromId, to_id AS toId , if(black = 1,1,0) as status from vela_friendship where app_id = #{appId} and from_id = #{fromId}  and  to_id in " +
             "<foreach collection='toIds' index='index' item='id' separator=',' close=')' open='('>" +
             " #{id} " +
             "</foreach>" +
@@ -74,12 +74,12 @@ public interface ImFriendShipMapper extends BaseMapper<ImFriendShipEntity> {
             " end \n" +
             " ) \n " +
             " as status from "+
-            " (select from_id AS fromId , to_id AS toId , if(black = 1,1,0) as black from im_friendship where app_id = #{appId} and from_id = #{fromId} AND to_id in " +
+            " (select from_id AS fromId , to_id AS toId , if(black = 1,1,0) as black from vela_friendship where app_id = #{appId} and from_id = #{fromId} AND to_id in " +
             "<foreach collection='toIds' index='index' item='id' separator=',' close=')' open='('>" +
             " #{id} " +
             "</foreach>" +
             " ) as a INNER join" +
-            " (select from_id AS fromId, to_id AS toId , if(black = 1,1,0) as black from im_friendship where app_id = #{appId} and to_id = #{fromId} AND from_id in " +
+            " (select from_id AS fromId, to_id AS toId , if(black = 1,1,0) as black from vela_friendship where app_id = #{appId} and to_id = #{fromId} AND from_id in " +
             "<foreach collection='toIds' index='index' item='id' separator=',' close=')' open='('>" +
             " #{id} " +
             "</foreach>" +
@@ -89,11 +89,11 @@ public interface ImFriendShipMapper extends BaseMapper<ImFriendShipEntity> {
     )
     List<CheckFriendShipResp> checkFriendShipBlackBoth(CheckFriendShipReq toId);
 
-    @Select(" select max(friend_sequence) from im_friendship where app_id = #{appId} AND from_id = #{userId} ")
+    @Select(" select max(friend_sequence) from vela_friendship where app_id = #{appId} AND from_id = #{userId} ")
     Long getFriendShipMaxSeq(Integer appId,String userId);
 
     @Select(
-            " select to_id from im_friendship where from_id = #{userId} AND app_id = #{appId} and status = 1 and black = 1 "
+            " select to_id from vela_friendship where from_id = #{userId} AND app_id = #{appId} and status = 1 and black = 1 "
     )
     List<String> getAllFriendId(String userId,Integer appId);
 }

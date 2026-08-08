@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vela Phase 1 连通性测试方案</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f7fa; color: #1a1a2e; padding: 40px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 28px; margin-bottom: 8px; color: #16213e; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 32px; }
+
+  /* 架构总览 */
+  .arch-section {
+    background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .arch-section h2 { font-size: 20px; margin-bottom: 20px; color: #16213e; }
+
+  /* 三层验证 */
+  .phases { display: flex; gap: 20px; margin-bottom: 24px; }
+  .phase {
+    flex: 1; background: #f8f9fc; border-radius: 10px; padding: 20px;
+    border: 2px solid transparent; transition: border 0.3s;
+  }
+  .phase.active { border-color: #4a6cf7; background: #eef2ff; }
+  .phase h3 { font-size: 16px; margin-bottom: 8px; }
+  .phase .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 12px; font-weight: 600; margin-bottom: 12px;
+  }
+  .phase.p1 .badge { background: #dcfce7; color: #166534; }
+  .phase.p2 .badge { background: #fef3c7; color: #92400e; }
+  .phase.p3 .badge { background: #fce7f3; color: #9d174d; }
+  .phase ul { list-style: none; }
+  .phase li { font-size: 13px; padding: 4px 0; color: #555; }
+  .phase li:before { content: "▸ "; color: #999; }
+
+  /* 测试流程 */
+  .flow-container { display: flex; flex-direction: column; gap: 0; }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px 0; border-bottom: 1px solid #eee;
+  }
+  .flow-step:last-child { border-bottom: none; }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px; color: white;
+  }
+  .step-num.green { background: #22c55e; }
+  .step-num.blue { background: #3b82f6; }
+  .step-num.orange { background: #f59e0b; }
+  .step-num.purple { background: #8b5cf6; }
+  .step-num.red { background: #ef4444; }
+  .step-num.teal { background: #14b8a6; }
+  .step-content { flex: 1; }
+  .step-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .step-desc { font-size: 13px; color: #666; margin-bottom: 6px; }
+  .step-api {
+    display: inline-block; background: #1e293b; color: #e2e8f0;
+    padding: 3px 10px; border-radius: 6px; font-family: monospace;
+    font-size: 12px; margin-right: 8px;
+  }
+  .step-method {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; margin-right: 4px;
+  }
+  .method-post { background: #dcfce7; color: #166534; }
+
+  /* 依赖图 */
+  .deps { display: flex; gap: 16px; flex-wrap: wrap; }
+  .dep-group { flex: 1; min-width: 200px; }
+  .dep-group h4 { font-size: 13px; color: #999; margin-bottom: 10px; text-transform: uppercase; }
+  .dep-item {
+    background: #f1f5f9; border-radius: 8px; padding: 10px 14px;
+    margin-bottom: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px;
+  }
+  .dep-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: #22c55e; }
+  .dot-blue { background: #3b82f6; }
+  .dot-orange { background: #f59e0b; }
+  .dep-port { margin-left: auto; font-family: monospace; font-size: 12px; color: #64748b; }
+
+  /* 修复说明 */
+  .fix-box {
+    background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 24px;
+  }
+  .fix-box h3 { color: #dc2626; font-size: 15px; margin-bottom: 8px; }
+  .fix-box code {
+    background: #1e293b; color: #f8fafc; padding: 2px 8px;
+    border-radius: 4px; font-size: 12px;
+  }
+  .fix-box .old { text-decoration: line-through; color: #dc2626; }
+  .fix-box .new { color: #16a34a; font-weight: 600; }
+
+  .footer { text-align: center; color: #999; font-size: 12px; margin-top: 32px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Vela IM — Phase 1 连通性测试方案</h1>
+  <p class="subtitle">分支 feat/connectivity-test | 创建时间 2026-08-08 | 验证后端 REST API 全链路可用性</p>
+
+  <!-- 修复说明 -->
+  <div class="fix-box">
+    <h3>🔧 关键修复：TCP logicUrl 指向</h3>
+    <p style="font-size: 13px; line-height: 1.8;">
+      vela-tcp 的 config.yml 中 <code>logicUrl</code> 指向已清空的旧服务端口：
+      <span class="old">http://127.0.0.1:8000/v1</span> →
+      <span class="new">http://127.0.0.1:8888/v1</span>（网关）
+    </p>
+  </div>
+
+  <!-- 三层验证 -->
+  <div class="arch-section">
+    <h2>三层验证策略</h2>
+    <div class="phases">
+      <div class="phase p1 active">
+        <span class="badge">Phase 1 — 当前执行</span>
+        <h3>REST API 脚本验证</h3>
+        <ul>
+          <li>Python 脚本调 REST API</li>
+          <li>注册 → 登录 → 加好友</li>
+          <li>发消息 → 同步消息</li>
+          <li>不需要前端和 TCP</li>
+        </ul>
+      </div>
+      <div class="phase p2">
+        <span class="badge">Phase 2 — 后续</span>
+        <h3>TCP 协议验证</h3>
+        <ul>
+          <li>Python TCP 客户端</li>
+          <li>TCP 登录 → 发 P2P</li>
+          <li>接收 ACK 确认</li>
+          <li>扩展现有 login.py</li>
+        </ul>
+      </div>
+      <div class="phase p3">
+        <span class="badge">Phase 3 — 后续</span>
+        <h3>浏览器端到端</h3>
+        <ul>
+          <li>Web 前端对接真实 API</li>
+          <li>登录页去掉 demo-token</li>
+          <li>聊天页去掉 Mock 数据</li>
+          <li>浏览器收发消息</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 依赖服务 -->
+  <div class="arch-section">
+    <h2>Phase 1 需启动的服务</h2>
+    <div class="deps">
+      <div class="dep-group">
+        <h4>中间件 (docker-compose)</h4>
+        <div class="dep-item"><span class="dep-dot dot-orange"></span> MySQL <span class="dep-port">:3306</span></div>
+        <div class="dep-item"><span class="dep-dot dot-orange"></span> Redis <span class="dep-port">:6379</span></div>
+        <div class="dep-item"><span class="dep-dot dot-orange"></span> RabbitMQ <span class="dep-port">:5672</span></div>
+        <div class="dep-item"><span class="dep-dot dot-orange"></span> ZooKeeper <span class="dep-port">:2181</span></div>
+      </div>
+      <div class="dep-group">
+        <h4>微服务</h4>
+        <div class="dep-item"><span class="dep-dot dot-blue"></span> vela-gateway <span class="dep-port">:8888</span></div>
+        <div class="dep-item"><span class="dep-dot dot-blue"></span> vela-service-user <span class="dep-port">:8010</span></div>
+        <div class="dep-item"><span class="dep-dot dot-blue"></span> vela-service-friendship <span class="dep-port">:8011</span></div>
+        <div class="dep-item"><span class="dep-dot dot-blue"></span> vela-service-message <span class="dep-port">:8014</span></div>
+      </div>
+      <div class="dep-group">
+        <h4>测试脚本</h4>
+        <div class="dep-item"><span class="dep-dot dot-green"></span> phase1_api_test.py</div>
+        <div class="dep-item" style="font-size:12px;color:#888;">deploy/scripts/ 目录下</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 测试流程 -->
+  <div class="arch-section">
+    <h2>Phase 1 测试流程（10 步）</h2>
+    <div class="flow-container">
+      <div class="flow-step">
+        <div class="step-num green">1</div>
+        <div class="step-content">
+          <div class="step-title">导入用户 A (test_conn_a)</div>
+          <div class="step-desc">通过用户服务导入测试用户 A，写入 vela_user_data 表</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/user/importUser?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num green">2</div>
+        <div class="step-content">
+          <div class="step-title">导入用户 B (test_conn_b)</div>
+          <div class="step-desc">同上，导入第二个测试用户</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/user/importUser?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num blue">3</div>
+        <div class="step-content">
+          <div class="step-title">导入好友关系 (A ↔ B)</div>
+          <div class="step-desc">双向导入好友关系，状态为 FRIEND_STATUS_NORMAL，绕过审批流程</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/friendship/importFriendShip?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num blue">4</div>
+        <div class="step-content">
+          <div class="step-title">验证好友关系</div>
+          <div class="step-desc">调用 checkFriend 确认 A 和 B 之间的好友关系已建立</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/friendship/checkFriend?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num orange">5</div>
+        <div class="step-content">
+          <div class="step-title">用户 A 登录</div>
+          <div class="step-desc">登录返回路由信息（TCP/WebSocket 地址），clientType=0 (WEBAPI)</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/user/login?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num orange">6</div>
+        <div class="step-content">
+          <div class="step-title">用户 B 登录</div>
+          <div class="step-desc">同上，B 也登录获取路由信息</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/user/login?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num purple">7</div>
+        <div class="step-content">
+          <div class="step-title">发送权限校验</div>
+          <div class="step-desc">这是 TCP 网关通过 Feign 调用的接口，验证 A 能否给 B 发消息（好友关系 + 黑名单 + 禁言检查）</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/message/checkSend</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num red">8</div>
+        <div class="step-content">
+          <div class="step-title">发送 P2P 消息 (A → B)</div>
+          <div class="step-desc">核心步骤：调用消息服务发送一条测试消息，返回 messageKey 和 messageSequence</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/message/send?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num teal">9</div>
+        <div class="step-content">
+          <div class="step-title">同步用户 B 的离线消息</div>
+          <div class="step-desc">B 从 lastSequence=0 拉取离线消息，验证能收到 A 发的消息</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/message/syncOfflineMessage?appId=10000</span>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="step-num teal">10</div>
+        <div class="step-content">
+          <div class="step-title">同步用户 A 的离线消息（对照组）</div>
+          <div class="step-desc">验证 A 只收到自己的消息，不会收到发给 B 的消息</div>
+          <span class="step-method method-post">POST</span>
+          <span class="step-api">/v1/message/syncOfflineMessage?appId=10000</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Vela IM Project — Phase 1 Connectivity Test Plan | Branch: feat/connectivity-test
+  </div>
+</div>
+</body>
+</html>

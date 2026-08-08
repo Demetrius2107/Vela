@@ -1,0 +1,89 @@
+# =============================================================================
+# Vela IM — 中间件环境（仅 MySQL + Redis + RabbitMQ + ZooKeeper）
+# 用途：本地开发时用 IDEA 启动 Java 服务，中间件用 Docker 跑
+# 使用方式：
+#   docker-compose -f docker-compose.middleware.yml up -d        # 启动全部中间件
+#   docker-compose -f docker-compose.middleware.yml down          # 停止全部中间件
+#   docker-compose -f docker-compose.middleware.yml down -v       # 停止 + 清空数据
+#   docker-compose -f docker-compose.middleware.yml ps            # 查看状态
+#   docker-compose -f docker-compose.middleware.yml logs -f mysql # 查看某服务日志
+# =============================================================================
+
+services:
+
+  mysql:
+    image: mysql:5.7
+    container_name: vela-mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: vela
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docs/MySQL/im-core-study.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./docs/MySQL/im-core-send.sql:/docker-entrypoint-initdb.d/02-data.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6.2
+    container_name: vela-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    container_name: vela-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: zookeeper:3.6
+    container_name: vela-zk
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+    volumes:
+      - zk-data:/data
+      - zk-datalog:/datalog
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  zk-data:
+  zk-datalog:

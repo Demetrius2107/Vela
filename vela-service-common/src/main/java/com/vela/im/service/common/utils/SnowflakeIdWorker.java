@@ -3,6 +3,7 @@ package com.vela.im.service.common.utils;
 
 import cn.hutool.core.date.SystemClock;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * <p>Title: SnowflakeIdWorker</p>
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.1
  */
 @Slf4j
+@Component
 public class SnowflakeIdWorker {
 
     /**
@@ -91,6 +93,13 @@ public class SnowflakeIdWorker {
             throw new IllegalArgumentException(String.format("cmallshop.workerId范围: 0 ~ %d 目前: %d", WORKER_ID_MAX, workerId));
         }
         WORKER_ID = workerId;
+    }
+
+    /**
+     * 默认构造函数，workerId=1
+     */
+    public SnowflakeIdWorker() {
+        this(1);
     }
 
     // ==============================Methods=================================

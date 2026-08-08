@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5f7fa"/>
+      <stop offset="100%" stop-color="#e8ecf3"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="680" height="900" fill="url(#bgGrad)"/>
+
+  <!-- Title -->
+  <text x="340" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#16213e">Vela Phase 1 连通性测试流程</text>
+  <text x="340" y="58" text-anchor="middle" font-size="12" fill="#888">feat/connectivity-test 分支 | 10步REST API全链路验证</text>
+
+  <!-- Fix notice -->
+  <rect x="40" y="74" width="600" height="36" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="56" y="97" font-size="11" fill="#dc2626" font-weight="600">🔧 logicUrl 修复:</text>
+  <text x="160" y="97" font-size="11" fill="#dc2626" text-decoration="line-through">http://127.0.0.1:8000/v1</text>
+  <text x="330" y="97" font-size="11" fill="#dc2626">→</text>
+  <text x="350" y="97" font-size="11" fill="#16a34a" font-weight="600">http://127.0.0.1:8888/v1</text>
+
+  <!-- Step 1: Import User A -->
+  <rect x="40" y="126" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="151" r="16" fill="#22c55e"/>
+  <text x="68" y="156" text-anchor="middle" font-size="14" font-weight="700" fill="white">1</text>
+  <text x="96" y="146" font-size="13" font-weight="600" fill="#1a1a2e">导入用户 A (test_conn_a)</text>
+  <text x="96" y="164" font-size="11" fill="#666" font-family="monospace">POST /v1/user/importUser?appId=10000</text>
+
+  <!-- Arrow -->
+  <path d="M 340 178 L 340 188" stroke="#cbd5e1" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Step 2: Import User B -->
+  <rect x="40" y="190" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="215" r="16" fill="#22c55e"/>
+  <text x="68" y="220" text-anchor="middle" font-size="14" font-weight="700" fill="white">2</text>
+  <text x="96" y="210" font-size="13" font-weight="600" fill="#1a1a2e">导入用户 B (test_conn_b)</text>
+  <text x="96" y="228" font-size="11" fill="#666" font-family="monospace">POST /v1/user/importUser?appId=10000</text>
+
+  <path d="M 340 242 L 340 252" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 3: Import Friendship -->
+  <rect x="40" y="254" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="279" r="16" fill="#3b82f6"/>
+  <text x="68" y="284" text-anchor="middle" font-size="14" font-weight="700" fill="white">3</text>
+  <text x="96" y="274" font-size="13" font-weight="600" fill="#1a1a2e">导入好友关系 (A ↔ B)</text>
+  <text x="96" y="292" font-size="11" fill="#666" font-family="monospace">POST /v1/friendship/importFriendShip?appId=10000</text>
+
+  <path d="M 340 306 L 340 316" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 4: Check Friend -->
+  <rect x="40" y="318" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="343" r="16" fill="#3b82f6"/>
+  <text x="68" y="348" text-anchor="middle" font-size="14" font-weight="700" fill="white">4</text>
+  <text x="96" y="338" font-size="13" font-weight="600" fill="#1a1a2e">验证好友关系</text>
+  <text x="96" y="356" font-size="11" fill="#666" font-family="monospace">POST /v1/friendship/checkFriend?appId=10000</text>
+
+  <path d="M 340 370 L 340 380" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 5: Login A -->
+  <rect x="40" y="382" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="407" r="16" fill="#f59e0b"/>
+  <text x="68" y="412" text-anchor="middle" font-size="14" font-weight="700" fill="white">5</text>
+  <text x="96" y="402" font-size="13" font-weight="600" fill="#1a1a2e">用户 A 登录 → 返回路由信息</text>
+  <text x="96" y="420" font-size="11" fill="#666" font-family="monospace">POST /v1/user/login?appId=10000</text>
+
+  <path d="M 340 434 L 340 444" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 6: Login B -->
+  <rect x="40" y="446" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="471" r="16" fill="#f59e0b"/>
+  <text x="68" y="476" text-anchor="middle" font-size="14" font-weight="700" fill="white">6</text>
+  <text x="96" y="466" font-size="13" font-weight="600" fill="#1a1a2e">用户 B 登录 → 返回路由信息</text>
+  <text x="96" y="484" font-size="11" fill="#666" font-family="monospace">POST /v1/user/login?appId=10000</text>
+
+  <path d="M 340 498 L 340 508" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 7: Check Send Permission -->
+  <rect x="40" y="510" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="535" r="16" fill="#8b5cf6"/>
+  <text x="68" y="540" text-anchor="middle" font-size="14" font-weight="700" fill="white">7</text>
+  <text x="96" y="530" font-size="13" font-weight="600" fill="#1a1a2e">发送权限校验 (TCP网关Feign接口)</text>
+  <text x="96" y="548" font-size="11" fill="#666" font-family="monospace">POST /v1/message/checkSend</text>
+
+  <path d="M 340 562 L 340 572" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 8: Send P2P Message -->
+  <rect x="40" y="574" width="600" height="56" rx="10" fill="#fef2f2" stroke="#ef4444" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="68" cy="602" r="16" fill="#ef4444"/>
+  <text x="68" y="607" text-anchor="middle" font-size="14" font-weight="700" fill="white">8</text>
+  <text x="96" y="594" font-size="13" font-weight="700" fill="#dc2626">★ 发送 P2P 消息 (A → B)</text>
+  <text x="96" y="612" font-size="11" fill="#666" font-family="monospace">POST /v1/message/send?appId=10000 → 返回 messageKey + seq</text>
+  <text x="96" y="624" font-size="10" fill="#999">核心验证步骤</text>
+
+  <path d="M 340 632 L 340 642" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 9: Sync B -->
+  <rect x="40" y="644" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="669" r="16" fill="#14b8a6"/>
+  <text x="68" y="674" text-anchor="middle" font-size="14" font-weight="700" fill="white">9</text>
+  <text x="96" y="664" font-size="13" font-weight="600" fill="#1a1a2e">同步用户 B 离线消息 → 验证收到 A 的消息</text>
+  <text x="96" y="682" font-size="11" fill="#666" font-family="monospace">POST /v1/message/syncOfflineMessage?appId=10000</text>
+
+  <path d="M 340 696 L 340 706" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- Step 10: Sync A -->
+  <rect x="40" y="708" width="600" height="50" rx="10" fill="white" filter="url(#shadow)"/>
+  <circle cx="68" cy="733" r="16" fill="#14b8a6"/>
+  <text x="68" y="738" text-anchor="middle" font-size="14" font-weight="700" fill="white">10</text>
+  <text x="96" y="728" font-size="13" font-weight="600" fill="#1a1a2e">同步用户 A 离线消息（对照组）</text>
+  <text x="96" y="746" font-size="11" fill="#666" font-family="monospace">POST /v1/message/syncOfflineMessage?appId=10000</text>
+
+  <!-- Services box -->
+  <rect x="40" y="780" width="290" height="96" rx="10" fill="white" filter="url(#shadow)"/>
+  <text x="56" y="800" font-size="12" font-weight="700" fill="#999" letter-spacing="1">需启动的中间件</text>
+  <text x="56" y="820" font-size="12" fill="#f59e0b">● MySQL :3306</text>
+  <text x="56" y="838" font-size="12" fill="#f59e0b">● Redis :6379</text>
+  <text x="56" y="856" font-size="12" fill="#f59e0b">● RabbitMQ :5672 / ZK :2181</text>
+
+  <rect x="350" y="780" width="290" height="96" rx="10" fill="white" filter="url(#shadow)"/>
+  <text x="366" y="800" font-size="12" font-weight="700" fill="#999" letter-spacing="1">需启动的微服务</text>
+  <text x="366" y="820" font-size="12" fill="#3b82f6">● vela-gateway :8888</text>
+  <text x="366" y="838" font-size="12" fill="#3b82f6">● vela-service-user :8010</text>
+  <text x="366" y="856" font-size="12" fill="#3b82f6">● vela-service-friendship :8011 + message :8014</text>
+</svg>

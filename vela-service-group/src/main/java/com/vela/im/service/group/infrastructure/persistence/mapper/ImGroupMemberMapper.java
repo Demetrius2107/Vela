@@ -13,10 +13,10 @@ import java.util.List;
 @Repository
 public interface ImGroupMemberMapper extends BaseMapper<ImGroupMemberEntity> {
 
-    @Select("select group_id from im_group_member where app_id = #{appId} AND member_id = #{memberId} ")
+    @Select("select group_id from vela_group_member where app_id = #{appId} AND member_id = #{memberId} ")
     public List<String> getJoinedGroupId(Integer appId, String memberId);
 
-    @Select("select group_id from im_group_member where app_id = #{appId} AND member_id = #{memberId} and role != #{role}" )
+    @Select("select group_id from vela_group_member where app_id = #{appId} AND member_id = #{memberId} and role != #{role}" )
     public List<String> syncJoinedGroupId(Integer appId, String memberId, int role);
 
 
@@ -37,12 +37,12 @@ public interface ImGroupMemberMapper extends BaseMapper<ImGroupMemberEntity> {
             " alias, " +
             " join_time ," +
             " join_type " +
-            " from im_group_member where app_id = #{appId} AND group_id = #{groupId} ")
+            " from vela_group_member where app_id = #{appId} AND group_id = #{groupId} ")
     public List<GroupMemberDto> getGroupMember(Integer appId, String groupId);
 
     @Select("select " +
             " member_id " +
-            " from im_group_member where app_id = #{appId} AND group_id = #{groupId} and role != 3")
+            " from vela_group_member where app_id = #{appId} AND group_id = #{groupId} and role != 3")
     public List<String> getGroupMemberId(Integer appId, String groupId);
 
 
@@ -61,7 +61,7 @@ public interface ImGroupMemberMapper extends BaseMapper<ImGroupMemberEntity> {
 //            " alias, " +
 //            " join_time ," +
 //            " join_type " +
-            " from im_group_member where app_id = #{appId} AND group_id = #{groupId} and role in (1,2) ")
+            " from vela_group_member where app_id = #{appId} AND group_id = #{groupId} and role in (1,2) ")
     public List<GroupMemberDto> getGroupManager(String groupId, Integer appId);
 
 }

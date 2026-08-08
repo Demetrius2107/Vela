@@ -1,0 +1,60 @@
+<svg viewBox="0 0 680 400" role="img">
+  <title>Vela IM 架构深度五层评估</title>
+  <desc>从L1主流程到L5决策论证的五层架构成熟度评估</desc>
+  <defs>
+    <style>
+      .th{font:14px sans-serif;font-weight:500;fill:#26215C}
+      .ts{font:12px sans-serif;fill:#888780}
+      .t{font:13px sans-serif;fill:#444441}
+      .ok{font:12px sans-serif;fill:#0F6E56}
+      .warn{font:12px sans-serif;fill:#854F0B}
+      .bad{font:12px sans-serif;fill:#A32D2D}
+    </style>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <text x="340" y="28" text-anchor="middle" class="th" font-size="15">架构深度: 功能广但深度不足</text>
+
+  <g transform="translate(40,55)">
+    <rect width="600" height="48" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+    <text x="20" y="20" class="th">L1 主流程跑通</text>
+    <text x="20" y="38" class="ok">已完成 — P2P/群聊/离线/会话/好友/群组 全链路跑通</text>
+    <text x="570" y="28" text-anchor="end" class="ok" font-size="20">✓</text>
+  </g>
+
+  <g transform="translate(40,115)">
+    <rect width="600" height="48" rx="8" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+    <text x="20" y="20" class="th">L2 异常边界覆盖</text>
+    <text x="20" y="38" class="ok">已完成 — 重试/ACK重推/降级/补偿/并发锁/时钟容错</text>
+    <text x="570" y="28" text-anchor="end" class="ok" font-size="20">✓</text>
+  </g>
+
+  <g transform="translate(40,175)">
+    <rect width="600" height="48" rx="8" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.5"/>
+    <text x="20" y="20" class="th">L3 高并发性能</text>
+    <text x="20" y="38" class="warn">未优化 — 无MQ削峰/无批量推送/无同会话保序/无本地缓存</text>
+    <text x="570" y="28" text-anchor="end" class="warn" font-size="20">!</text>
+  </g>
+
+  <g transform="translate(40,235)">
+    <rect width="600" height="48" rx="8" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+    <text x="20" y="20" class="th">L4 容灾降级自愈</text>
+    <text x="20" y="38" class="bad">未实现 — 无熔断器/无健康检查/无多活/仅Redis-MQ降级</text>
+    <text x="570" y="28" text-anchor="end" class="bad" font-size="20">✗</text>
+  </g>
+
+  <g transform="translate(40,295)">
+    <rect width="600" height="48" rx="8" fill="#FCEBEB" stroke="#E24B4A" stroke-width="0.5"/>
+    <text x="20" y="20" class="th">L5 决策论证文档</text>
+    <text x="20" y="38" class="bad">缺失 — 技术选型无论证/架构决策无记录</text>
+    <text x="570" y="28" text-anchor="end" class="bad" font-size="20">✗</text>
+  </g>
+
+  <line x1="340" y1="55" x2="340" y2="343" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="3,3"/>
+
+  <g transform="translate(50,360)">
+    <text class="ts">现状: 功能覆盖 = 2026年微信级 · 架构深度 = 2013年IM水平</text>
+  </g>
+</svg>

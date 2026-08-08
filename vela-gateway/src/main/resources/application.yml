@@ -1,5 +1,5 @@
 server:
-  port: 8888
+  port: 8889
 
 spring:
   application:
@@ -87,12 +87,12 @@ spring:
           filters:
             - StripPrefix=0
 
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter:
-              replenishRate: 100
-              burstCapacity: 200
+      #default-filters:
+      #  - name: RequestRateLimiter
+      #    args:
+      #      redis-rate-limiter:
+      #        replenishRate: 100
+      #        burstCapacity: 200
 
   redis:
     host: 127.0.0.1

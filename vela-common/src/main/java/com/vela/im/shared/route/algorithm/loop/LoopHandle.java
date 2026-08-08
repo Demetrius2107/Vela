@@ -5,6 +5,7 @@ package com.vela.im.shared.route.algorithm.loop;
 import com.vela.im.shared.types.enums.UserErrorCode;
 import com.vela.im.shared.exception.ApplicationException;
 import com.vela.im.shared.route.RouteHandle;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * Copyright © 2026 wanqiu All rights reserved
  */
+@Component
 public class LoopHandle implements RouteHandle {
 
     // 保证线程安全
