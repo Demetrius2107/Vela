@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication(scanBasePackages = {"com.vela.im.service.message", "com.vela.im.service.common", "com.vela.im.shared"})
 @EnableFeignClients
-@MapperScan("com.vela.im.service.message.infrastructure.persistence.mapper")
+@MapperScan({"com.vela.im.service.message.infrastructure.persistence.mapper", "com.vela.im.service.common.entity"})
 public class MessageApplication {
     public static void main(String[] args) {
         SpringApplication.run(MessageApplication.class, args);
