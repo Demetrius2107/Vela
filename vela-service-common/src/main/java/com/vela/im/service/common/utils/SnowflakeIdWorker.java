@@ -95,6 +95,13 @@ public class SnowflakeIdWorker {
         WORKER_ID = workerId;
     }
 
+    /**
+     * 默认构造函数，workerId=1
+     */
+    public SnowflakeIdWorker() {
+        this(1);
+    }
+
     // ==============================Methods=================================
 
     /**
